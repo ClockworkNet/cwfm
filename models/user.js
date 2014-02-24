@@ -4,12 +4,20 @@ exports.build = function(mongoose) {
 		username: String,
 		realname: String,
 		avatar: String,
-		score: Number,
-		playlist: {type: mongoose.Schema.Types.ObjectId, ref: 'Playlist'},
 		urls: [{
 			name: String,
 			url: String
-		}]
+		}],
+		authType: String,
+		auth: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Auth'
+		},
+		score: Number,
+		playlist: {
+			type: mongoose.Schema.Types.ObjectId, 
+			ref: 'Playlist'
+		}
 	});
 
 	return mongoose.model(name, schema);

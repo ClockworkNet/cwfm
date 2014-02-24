@@ -13,6 +13,7 @@ var http = require('http');
 var path = require('path');
 
 var app = express();
+var io = require('socket.io');
 
 // all environments
 app.set('port', process.env.PORT || 3000);
@@ -23,11 +24,11 @@ app.use(express.logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(express.methodOverride());
-app.use(express.cookieParser('your secret here'));
-app.use(express.session());
+app.use(express.cookieParser(config.cookieKey));
+app.use(express.session({secret: config.sessionKey}));
 app.use(app.router);
 //app.use(require('stylus').middleware(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // development only
 if ('development' == app.get('env')) {
@@ -46,29 +47,37 @@ var route = function(handler) {
 	}
 }
 
-app.get('/', route(routes.home.index));
-
-// Set up the database connection
+// Set up the database connection. Once the connection is established,
+// we can generate the routes for all of the API calls.
 var mongoose = require('mongoose');
 mongoose.connect(config.database);
 
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
+
 db.on('open', function() {
+
+	var encrypt = require('sha1');
+	var Auth = require('./models/auth').build(mongoose, encrypt, config);
 	var User = require('./models/user').build(mongoose);
-	app.get('/users', route(routes.user.list, User));
-	app.get('/users/list', route(routes.user.list, User));
-	app.get('/users/detail/:id', route(routes.user.detail, User));
-	app.post('/users/create', route(routes.user.create, User));
-	app.post('/users/update/:id', route(routes.user.update, User));
+	var secure = route(routes.user.verify, User);
+
+	app.get('/user', secure, route(routes.user.list, User));
+	app.get('/user/list', secure, route(routes.user.list, User));
+	app.get('/user/detail/:username', secure, route(routes.user.detail, User));
+	app.get('/user/me', route(routes.user.me, User));
+	app.post('/user/create', route(routes.user.create, User, Auth));
+	app.post('/user/login', route(routes.user.login, User, Auth, config));
+	app.post('/user/logout', route(routes.user.logout, User));
+	app.post('/user/update', secure, route(routes.user.update, User));
 
 	var Room = require('./models/room').build(mongoose);
-	app.get('/room', route(routes.room.list, Room));
 	app.get('/room/list', route(routes.room.list, Room));
-	app.get('/room/detail/:id', route(routes.room.detail, Room));
-	app.post('/room/create', route(routes.room.create, Room));
-	app.post('/room/dj', route(routes.room.dj, Room));
-	app.post('/room/undj', route(routes.room.undj, Room));
+	app.get('/room/detail/:abbr', route(routes.room.detail, Room));
+	app.post('/room/create', secure, route(routes.room.create, Room));
+	app.post('/room/join/:abbr', secure, route(routes.room.join, Room, User));
+	app.post('/room/dj', secure, route(routes.room.dj, Room, User));
+	app.post('/room/undj', secure, route(routes.room.undj, Room, User));
 
 	var Song = require('./models/song').build(mongoose);
 	app.get('/song/search', route(routes.song.search, Song));
@@ -76,14 +85,21 @@ db.on('open', function() {
 	app.get('/song/:id', route(routes.song.stream, Song));
 
 	var Playlist = require('./models/playlist').build(mongoose);
-	app.get('/playlist/list', route(routes.playlist.list, Playlist));
-	app.get('/playlist/detail/:id', route(routes.playlist.detail, Playlist));
-	app.post('/playlist/create', route(routes.playlist.create, Playlist));
-	app.delete('/playlist/:id', route(routes.playlist.delete, Playlist));
-	app.post('/playlist/select/:id', route(routes.playlist.select, Playlist));
-	app.post('/playlist/song/add/:id', route(routes.playlist.add, Playlist));
+	app.get('/playlist/list', secure, route(routes.playlist.list, Playlist));
+	app.get('/playlist/detail/:id', secure, route(routes.playlist.detail, Playlist));
+	app.post('/playlist/create', secure, route(routes.playlist.create, Playlist));
+	app.delete('/playlist/delete/:id', secure, route(routes.playlist.delete, Playlist));
+	app.post('/playlist/select/:id', secure, route(routes.playlist.select, Playlist));
+	app.post('/playlist/update/:pid/song/:action/:sid', secure, route(routes.playlist.update, Playlist));
+
+	// UI
+	app.get('/', route(routes.home.index));
+	app.get('/room', route(routes.home.room, Room));
 });
 
-http.createServer(app).listen(app.get('port'), function(){
+
+var server = http.createServer(app);
+server.listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
+io.listen(server);

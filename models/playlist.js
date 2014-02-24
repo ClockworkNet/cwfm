@@ -7,5 +7,5 @@ exports.build = function(mongoose) {
 		songs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Song' }]
 	});
 
-	return mongoose.model('Room', schema);
+	return mongoose.model(name, schema);
 }

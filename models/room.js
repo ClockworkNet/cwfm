@@ -2,6 +2,7 @@ exports.build = function(mongoose) {
 	var name = 'Room';
 	var schema = mongoose.Schema({
 		name: String,
+		abbr: String,
 		description: String,
 		song: mongoose.Schema.Types.ObjectId,
 		members: [{

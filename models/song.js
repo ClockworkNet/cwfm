@@ -8,5 +8,5 @@ exports.build = function(mongoose) {
 		length: Number
 	});
 
-	return mongoose.model('Room', schema);
+	return mongoose.model(name, schema);
 }
