@@ -30,6 +30,10 @@ app.use(app.router);
 //app.use(require('stylus').middleware(path.join(__dirname, 'public')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
+app.configure('delevelopment', function() {
+	app.locals.pretty = true;
+});
+
 // development only
 if ('development' == app.get('env')) {
   app.use(express.errorHandler());
@@ -93,7 +97,7 @@ db.on('open', function() {
 	app.post('/playlist/update/:pid/song/:action/:sid', secure, route(routes.playlist.update, Playlist));
 
 	// UI
-	app.get('/', route(routes.home.index));
+	app.get('/', route(routes.home.index, User));
 	app.get('/room', route(routes.home.room, Room));
 });
 

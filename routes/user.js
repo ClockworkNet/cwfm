@@ -64,6 +64,11 @@ exports.login = function(req, res, next, User, Auth) {
 
 		var auth = user.auth;
 
+		if (!auth) {
+			console.error("Missing authentication mechanisim for user", user);
+			return res.jsonp(401, {error: "Bad credentials"});
+		}
+
 		if (auth.isLocked()) {
 			res.jsonp(401, {error: "Maximum login attempts exceeded"});
 		}

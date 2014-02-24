@@ -1,7 +1,22 @@
 doctype html
-html
-  head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
-  body
-    block content
+html.no-js(ng-app="cwfmApp")
+	head
+		title= title
+		meta(http-equiv='Content-type', content='text/html; charset=utf-8')
+		meta(http-equiv='X-UA-Compatible', content='IE=edge')
+		meta(content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0', name='viewport')
+		link(rel='shortcut icon', href='/public/img/favicon.ico')
+		link(rel="apple-touch-icon-precomposed", href="/public/img/apple-touch-icon-iphone.png")
+		link(rel="apple-touch-icon-precomposed", sizes="72x72", href="/public/img/apple-touch-icon-ipad.png")
+		link(rel="apple-touch-icon-precomposed", sizes="114x114", href="/public/img/apple-touch-icon-iphone4.png")
+
+		link(rel='stylesheet', href='/public/css/normalize.css')
+		link(rel='stylesheet', href='/public/css/main.css')
+
+		script(src="/public/js/jquery-1.8.3.min.js")
+		script(src="/public/js/json2.min.js")
+		script(src="/public/js/angular.min.js")
+
+		block scripts
+	body
+		block content

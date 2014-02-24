@@ -1,40 +1,31 @@
 if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 
-cwfm.roomlist  =  { poll : 1000 };
+cwfm.roomlist = {};
 
-cwfm.roomlist.ctrl  =  function( $scope, $http, $roomservice ) {
+cwfm.roomlist.ctrl  =  function( $scope, $http, $user ) {
+
+	$scope.rooms  =  [];
+	$scope.user   =  {};
+
+	$user.change(function(user) {
+		$scope.user = user;
+	});
 
 	var init  =  function( ) {
-		setInterval( refresh, cwfm.roomlist.poll );
-		$scope.rooms  =  [];
+		$scope.load_rooms();
 	};
 
-	var refresh  =  function( ) {
-		$http.get( '/room/list' ).success( function( rsp ) {
-			console.info(rsp);
-			$scope.rooms = rsp.rooms;
-		} );
+	var set_rooms = function( rsp ) {
+		$scope.rooms = rsp && rsp.rooms ? rsp.rooms : [];
+	};
+
+	$scope.load_rooms  =  function( ) {
+		$http.get('/room/list').success(set_rooms);
 	};
 
 	$scope.make_room  =  function( ) {
-		$http.post( '/room/create', $scope.new_room );
+		$http.post( '/room/create', $scope.new_room, set_rooms );
 	}
-
-	$scope.create_user  =  function( ) {
-		$http.post( '/user/create', $scope.new_user, function( rsp ) {
-			rsp.password = null;
-			rsp.salt = null;
-			$scope.user = rsp;
-		} );
-	}
-
-	$scope.login  =  function( ) {
-		$http.post( '/user/login', $scope.user );
-	};
 
 	init( );
 };
-
-angular.module( 'cwfmMainApp', [ 'cwfmFilters' ] )
-    .controller( 'cwfmRoomlistCtrl', [ '$scope', '$http', cwfm.roomlist.ctrl ] )
-;

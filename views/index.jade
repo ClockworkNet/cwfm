@@ -1,5 +1,57 @@
 extends layout
 
+block scripts
+	script(src="/public/js/cwfm.filters.js")
+	script(src="/public/js/cwfm.roomlist.js")
+	script(src="/public/js/cwfm.user.js")
+	script(src="/public/js/cwfm.home.app.js")
+
 block content
-  h1= title
-  p Welcome to #{title}
+	div#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
+		h2(ng-show="user.auth") Welcome back {{user.username}}!
+
+		h3 {{error}}
+
+		code {{user}}
+
+		div(ng-show="user.auth")
+			button(ng-click="logout()") Log out
+
+		div(ng-hide="user.auth")
+			h3 Log in
+			ul
+				li
+					input(ng-model="user.username", placeholder="Username")
+				li 
+					input(ng-model="user.password", type="password", placeholder="Password")
+				li
+					button(ng-click="login()") Log in
+
+			h3 Create an Account
+			ul
+				li
+					input(ng-model="new_user.username", placeholder="Username")
+				li 
+					input(ng-model="new_user.password1", type="password", placeholder="Create a password")
+				li 
+					input(ng-model="new_user.password2", type="password", placeholder="Enter your password again")
+				li
+					button(ng-click="create_user()") Create an Account
+
+	div#cwfmRoomlistCtrl(ng-controller="cwfmRoomlistCtrl")
+		div(ng-show="user.auth")
+			h2 Make a room
+			ul
+				li
+					input(ng-model="new_room.name", placeholder="Name")
+				li
+					input(ng-model="new_room.abbr", placeholder="Abbreviation")
+				li
+					textarea(ng-model="new_room.description", placeholder="Description")
+				li
+					button(ng-click="make_room") Create a room
+
+			h2 Join a room
+			ul
+				li(ng-repeat="room in rooms")
+					a(href="/room/?{{room.abbr}}") {{room.name}}
