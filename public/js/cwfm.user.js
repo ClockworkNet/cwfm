@@ -3,19 +3,19 @@ if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 cwfm.user = {};
 
 cwfm.user.service  =  function() {
-	var user     = {};
-	var handlers = [];
+	var user      = {};
+	var listeners = [];
 	return {
 		change: function (callback) {
-			handlers.push(callback);
+			listeners.push(callback);
 		}
 		, get: function () {
 			return user;
 		}
 		, set: function (data) {
 			user = typeof(data) == 'object' ? data : {};
-			angular.forEach(handlers, function(handler) {
-				handler(user);
+			angular.forEach(listeners, function(listener) {
+				listener(user);
 			});
 		}
 	}

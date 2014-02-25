@@ -84,6 +84,7 @@ exports.login = function(req, res, next, User, Auth) {
 			auth.save();
 
 			req.session.username = user.username;
+			user.auth = auth._id;
 			res.jsonp(user);
 		}
 		else {

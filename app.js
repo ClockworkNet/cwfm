@@ -98,7 +98,7 @@ db.on('open', function() {
 
 	// UI
 	app.get('/', route(routes.home.index, User));
-	app.get('/room', route(routes.home.room, Room));
+	app.get('/room', route(routes.home.room, Room, User));
 });
 
 

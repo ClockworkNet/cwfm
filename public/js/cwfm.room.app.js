@@ -1,10 +1,11 @@
 var cwfmApp = angular.module( 'cwfmApp', [ 'cwfmFilters' ] );
 
 cwfmApp
-    .service( '$roomservice', cwfm.room.service )
-    .controller( 'cwfmUserCtrl', [ '$scope', '$http', cwfm.user.ctrl ] )
-    .controller( 'cwfmRoomListCtrl', [ '$scope', '$http', '$roomservice', cwfm.roomlist.ctrl ] )
-    .controller( 'cwfmRoomCtrl', [ '$scope', '$http', '$roomservice', cwfm.room.ctrl ] )
-    .controller( 'cwfmPlaylistCtrl', [ '$scope', '$http', '$roomservice', cwfm.playlist.ctrl ] )
-    .controller( 'cwfmChatterCtrl', [ '$scope', '$http', '$roomservice', cwfm.chatter.ctrl ] )
+	.factory( '$socket', cwfm.socket.factory )
+	.service( '$roomservice', [ '$socket' ], cwfm.room.service )
+	.service( '$user', cwfm.user.service )
+	.controller( 'cwfmUserCtrl', [ '$scope', '$http', '$user', cwfm.user.ctrl ] )
+	.controller( 'cwfmPlayerCtrl', [ '$scope', '$http', '$roomservice', cwfm.player.ctrl ] )
+	.controller( 'cwfmPlaylistCtrl', [ '$scope', '$http', '$roomservice', cwfm.playlist.ctrl ] )
+	.controller( 'cwfmChatterCtrl', [ '$scope', '$http', '$roomservice', cwfm.chatter.ctrl ] )
 ;

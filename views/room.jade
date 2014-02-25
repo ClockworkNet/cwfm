@@ -1,5 +1,99 @@
 extends layout
 
+block scripts
+	script(src="/public/js/cwfm.filters.js")
+	script(src="/public/js/cwfm.socket.js")
+	script(src="/public/js/cwfm.room.js")
+	script(src="/public/js/cwfm.user.js")
+	script(src="/public/js/cwfm.player.js")
+	script(src="/public/js/cwfm.playlist.js")
+	script(src="/public/js/cwfm.chatter.js")
+	script(src="/public/js/cwfm.room.app.js")
+
 block content
-  h1= title
-  p Welcome to #{title}
+	div#jplayer.jp-jplayer
+
+	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl")
+		h1 Welcome to {{room.name}}
+		p {{room.description}}
+
+		input#mute-button(type="checkbox", ng-model="muted", ng-click="toggle_muting()")
+		label(for="mute-button") Mute?
+
+		dl(ng-if="room.song.length")
+			dt Now Playing
+			dd {{song_title()}}
+
+			dt Time Remaining
+			dd {{song_remaining() | time}}
+
+			dt Played By
+			dd {{room.dj.name}}
+
+			dt Score
+			dd {{room.song.score}}
+
+		h2 DJs
+			ul
+				li(ng-repeat="member in room.members | filter:is_dj:member").
+					{{is_dj(member) | checkmark}}{{member.name}} ({{member.points}})
+
+		h2 Room members
+			ul
+				li(ng-repeat="member in room.members | filter:not(is_dj):member").
+					{{is_dj(member) | checkmark}}{{member.name}} ({{member.points}})
+
+		h2 Actions
+		ul
+			li(ng-show="room.song.length")
+				a(ng-click="api('upvote')", href="#upvote") Upvote
+			li(ng-show="room.song.length")
+				a(ng-click="api('downvote')", href="#downvote") Downvote
+			li(ng-hide="me.dj")
+				a(ng-click="api('dj')", href="#dj") Start DJing
+			li(ng-show="me.dj")
+				a(ng-click="api('undj')", href="#undj") Stop DJing
+			li(ng-show="me.isadmin || is_current_dj(me)")
+				a(ng-click="api('skipsong')", href="#skip") Skip Song
+
+	div#cwfmPlaylistCtrl.playlist_wrapp(ng-controller="cwfmPlaylistCtrl")
+		div.playlist_select_wrap
+			div.playlist_current_wrap
+				a#playlist_current(href="#", ng-click="browselists()") {{selected.title || 'Select a Playlist...'}}
+			ul#playlists_list(ng-hide="playlists.length")
+				li
+					a#new_playlist New Playlist
+					form
+						label Title: input(ng-model="selected.title")
+						input#new-public(type="checkbox", ng-model="selected.public")
+						label(for="new-public") Public?
+						a(ng-show="selected.plid", ng-click="save()", href="#save") Save
+						a(ng-hide="selected.plid", ng-click="save()", href="#create") Create
+				li(ng-repeat="playlist in playlists | filter:playlistquery")
+					a.playlists_item(ng-click="select(playlist)", href="#load", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}").
+						{{playlist.title}}
+		div.songlist_wrap(ng-show="selected")
+			div.add_song_wrap
+				label#add_song_label(for="add_song") Add a Song
+				input#add_song(ng-model="query", placeholder="Add a Song")
+				a(href="#cancel-search", ng-show="query", ng-click="closesongsearch()") (X)
+
+		ul#song_results_list.songs_list(ng-show="results.length")
+			li.songs_item(ng-repeat="song in results", ng-class-odd="'odd'",  ng-class-even="'even'", ng-class="{'last':$last}")
+				a(ng-click="addsong(song)", href="#add") {{song.label}}
+
+		div#myqueue_wrap(ng-show="songs")
+			ul#my_queue.songs_list
+				li.songs_item(ng-repeat="song in songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}").
+					{{song.label}}
+					a.remove(ng-click="removesong(song)", href="#remove") [x]
+
+	div#cwfmChatterCtrl(ng-controller="cwfmChatterCtrl")
+		a#brandname.brand(data-toggle="modal", role="button", href="#aboutModal"): img(src="/public/img/cwfm.svg", alt="CWFM")
+		p: input(ng-model="message")
+		p: a(href="#send", ng-click="send()") Send
+		ul
+			li(ng-repeat="m in sorted()")
+				strong.username {{m.username}}:
+				span.message {{m.message}}
+				em {{m.time}}
