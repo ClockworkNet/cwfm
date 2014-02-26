@@ -111,18 +111,21 @@ exports.create = function(req, res, next, Room, User) {
 	});
 };
 
+// Called when a user joins a room
 exports.join = function(req, res, next, Room, User, io) {
 	User.findOne({username: req.session.username}, function(e, user) {
 		if (e) {
 			console.error(e);
 			res.jsonp(500, {error: "Error joining room"});
 		}
-		Room.findOne({abbr: req.params.room}, function(e, room) {
+		Room.findOne({abbr: req.params.room})
+		.populate('djs listeners song')
+		.exec(function(e, room) {
 			if (e) {
 				console.error(e);
 				res.jsonp(500, {error: "Error finding room"});
 			}
-			room.members.push(user);
+			room.listeners.push(user);
 			room.save();
 
 			io.sockets.in(room.abbr).emit('member.joined', user);
@@ -131,11 +134,10 @@ exports.join = function(req, res, next, Room, User, io) {
 	});
 };
 
-// Called when a user connects to a room
+// Called when a user connects to a room to listen in on the socket
 exports.listen = function(data, socket, Room, io) {
 	Room.findOne({abbr: data.room}, function(e, room) {
 		if (e) throw e;
-		socket.set('uid', null);// @todo get the username somehow?
 		socket.join(room.abbr);
 	});
 };
@@ -145,21 +147,20 @@ exports.leave = function(data, socket, Room, User, io) {
 	socket.leave(data.room);
 	Room.findOne({abbr: data.room}, function(e, room) {
 		if (!room) return;
-		var uid = socket.get('uid');
-		room.removeUser(uid);
+		room.removeUser(socket.handshake.session.username);
 		room.save();
 	});
 };
 
 // Called when a socket connection is dropped
 exports.exit = function(socket, Room, User, io) {
-	var uid = socket.get('uid');
+	var username = socket.handshake.session.username;
 	Room.find().exec(function(e, rooms) {
 		rooms.forEach(function(room) {
-			room.removeUser(uid);
+			room.removeUser(username);
 			room.save();
 		});
-		io.sockets.emit('member.departed', {uid: uid});
+		io.sockets.emit('member.departed', {username: username});
 	});
 };
 

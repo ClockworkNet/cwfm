@@ -2,25 +2,6 @@ if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 
 cwfm.user = {};
 
-cwfm.user.service  =  function() {
-	var user      = {};
-	var listeners = [];
-	return {
-		change: function (callback) {
-			listeners.push(callback);
-		}
-		, get: function () {
-			return user;
-		}
-		, set: function (data) {
-			user = typeof(data) == 'object' ? data : {};
-			angular.forEach(listeners, function(listener) {
-				listener(user);
-			});
-		}
-	}
-};
-
 cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 
 	var init  =  function( ) {

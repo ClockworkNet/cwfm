@@ -5,7 +5,7 @@ cwfm.roomlist = {};
 cwfm.roomlist.ctrl  =  function( $scope, $http, $user ) {
 
 	$scope.rooms  =  [];
-	$scope.user   =  {};
+	$scope.user   =  $user.get();
 
 	$user.change(function(user) {
 		$scope.user = user;

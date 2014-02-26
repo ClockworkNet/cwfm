@@ -1,5 +1,12 @@
-var config = require('./config').settings;
-var express = require('express');
+var config   = require('./config').settings;
+var express  = require('express');
+var http     = require('http');
+var path     = require('path');
+var cookie   = require('cookie');
+var connect  = require('connect');
+var io       = require('socket.io');
+
+var sessionStore = new express.session.MemoryStore();
 
 var routes = {
 	home: require('./routes'),
@@ -9,23 +16,24 @@ var routes = {
 	playlist: require('./routes/playlist')
 };
 
-var http = require('http');
-var path = require('path');
-
 var app = express();
-var io = require('socket.io');
 
 // all environments
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+
 app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(express.methodOverride());
-app.use(express.cookieParser(config.cookieKey));
-app.use(express.session({secret: config.sessionKey}));
+app.use(express.cookieParser(config.cookieSecret));
+app.use(express.session({
+	secret: config.sessionSecret, 
+	key: config.sessionKey,
+	store: sessionStore
+}));
 app.use(app.router);
 //app.use(require('stylus').middleware(path.join(__dirname, 'public')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
@@ -37,18 +45,6 @@ app.configure('delevelopment', function() {
 // development only
 if ('development' == app.get('env')) {
   app.use(express.errorHandler());
-}
-
-var route = function(handler) {
-	var args = Array.prototype.slice.call(arguments, 0);
-	var dependencies = args.length > 1 ? args.slice(1) : [];
-	return function() {
-		var args = Array.prototype.slice.call(arguments, 0);
-		for (var i=0; i<dependencies.length; i++) {
-			args.push(dependencies[i]);
-		}
-		handler.apply(express, args);
-	}
 }
 
 
@@ -69,6 +65,19 @@ var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
 db.on('open', function() {
+
+	// Used to inject dependencies into the function used to handle a route
+	var route = function(handler) {
+		var args = Array.prototype.slice.call(arguments, 0);
+		var dependencies = args.length > 1 ? args.slice(1) : [];
+		return function() {
+			var args = Array.prototype.slice.call(arguments, 0);
+			for (var i=0; i<dependencies.length; i++) {
+				args.push(dependencies[i]);
+			}
+			handler.apply(express, args);
+		}
+	}
 
 	var encrypt = require('sha1');
 	var Auth = require('./models/auth').build(mongoose, encrypt, config);
@@ -108,8 +117,25 @@ db.on('open', function() {
 	app.post('/room/say/:abbr', secure, route(routes.room.say, Room, User, io));
 	app.post('/room/skip/:abbr', secure, route(routes.room.skip, Room, User, Playlist, io));
 
+	// Wire up authentication to the socket connections
+	io.set('authorization', function(data, accept) {
+		if (!data.headers.cookie) {
+			return accept('Unauthorized', false);
+		}
+		data.cookie = cookie.parse(data.headers.cookie);
+		data.sessionId = connect.utils.parseSignedCookie(data.cookie[config.sessionKey], config.sessionSecret);
+		sessionStore.get(data.sessionId, function(e, session) {
+			if (e || !session) {
+				console.error(e, data);
+				return accept("No session found", false);
+			}
+			data.session = session;
+			accept(null, true);
+		});
+	});
+
 	io.sockets.on('connection', function(socket) {
-		socket.on('subscribe', route(routes.room.join, socket, Room, User, io));
+		socket.on('subscribe', route(routes.room.listen, socket, Room, User, io));
 		socket.on('unsubscribe', route(routes.room.leave, socket, Room, User, io));
 		socket.on('disconnect', route(routes.room.exit, socket, Room, User, io));
 	});
