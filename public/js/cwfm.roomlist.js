@@ -16,6 +16,7 @@ cwfm.roomlist.ctrl  =  function( $scope, $http, $user ) {
 	};
 
 	var set_rooms = function( rsp ) {
+		console.info(rsp);
 		$scope.rooms = rsp && rsp.rooms ? rsp.rooms : [];
 	};
 

@@ -23,4 +23,4 @@ cwfm.socket.factory = function ($rootScope) {
 			})
 		}
 	};
-});
+};

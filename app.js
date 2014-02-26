@@ -51,6 +51,15 @@ var route = function(handler) {
 	}
 }
 
+
+// Fire up the server and the socket listener
+var server = http.createServer(app);
+server.listen(app.get('port'), function(){
+  console.log('Express server listening on port ' + app.get('port'));
+});
+var io = io.listen(server);
+
+
 // Set up the database connection. Once the connection is established,
 // we can generate the routes for all of the API calls.
 var mongoose = require('mongoose');
@@ -75,14 +84,6 @@ db.on('open', function() {
 	app.post('/user/logout', route(routes.user.logout, User));
 	app.post('/user/update', secure, route(routes.user.update, User));
 
-	var Room = require('./models/room').build(mongoose);
-	app.get('/room/list', route(routes.room.list, Room));
-	app.get('/room/detail/:abbr', route(routes.room.detail, Room));
-	app.post('/room/create', secure, route(routes.room.create, Room));
-	app.post('/room/join/:abbr', secure, route(routes.room.join, Room, User));
-	app.post('/room/dj', secure, route(routes.room.dj, Room, User));
-	app.post('/room/undj', secure, route(routes.room.undj, Room, User));
-
 	var Song = require('./models/song').build(mongoose);
 	app.get('/song/search', route(routes.song.search, Song));
 	app.get('/song/detail/:id', route(routes.song.detail, Song));
@@ -96,14 +97,24 @@ db.on('open', function() {
 	app.post('/playlist/select/:id', secure, route(routes.playlist.select, Playlist));
 	app.post('/playlist/update/:pid/song/:action/:sid', secure, route(routes.playlist.update, Playlist));
 
+	var Room = require('./models/room').build(mongoose);
+	app.get('/room/list', route(routes.room.list, Room));
+	app.get('/room/detail/:abbr', route(routes.room.detail, Room));
+	app.get('/room/chat/:abbr', route(routes.room.chat, Room));
+	app.post('/room/create', secure, route(routes.room.create, Room, User));
+	app.post('/room/join/:abbr', secure, route(routes.room.join, Room, User, io));
+	app.post('/room/dj', secure, route(routes.room.dj, Room, User, Playlist, io));
+	app.post('/room/undj', secure, route(routes.room.undj, Room, User, io));
+	app.post('/room/say/:abbr', secure, route(routes.room.say, Room, User, io));
+	app.post('/room/skip/:abbr', secure, route(routes.room.skip, Room, User, Playlist, io));
+
+	io.sockets.on('connection', function(socket) {
+		socket.on('subscribe', route(routes.room.join, socket, Room, User, io));
+		socket.on('unsubscribe', route(routes.room.leave, socket, Room, User, io));
+		socket.on('disconnect', route(routes.room.exit, socket, Room, User, io));
+	});
+
 	// UI
 	app.get('/', route(routes.home.index, User));
 	app.get('/room', route(routes.home.room, Room, User));
 });
-
-
-var server = http.createServer(app);
-server.listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
-});
-io.listen(server);

@@ -1,5 +1,7 @@
 if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 
+cwfm.player = {};
+
 cwfm.player.ctrl = function($scope, $http, $roomservice) {
 
     var init  =  function( ) {
