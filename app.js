@@ -118,8 +118,8 @@ db.on('open', function() {
 	app.post('/room/create', secure, route(routes.room.create, Room, User));
 	app.post('/room/delete/:abbr', secure, route(routes.room.delete, Room, User));
 	app.post('/room/join/:abbr', secure, route(routes.room.join, Room, User, io));
-	app.post('/room/dj', secure, route(routes.room.dj, Room, User, Playlist, io));
-	app.post('/room/undj', secure, route(routes.room.undj, Room, User, io));
+	app.post('/room/dj/:abbr', secure, route(routes.room.dj, Room, User, Playlist, io));
+	app.post('/room/undj/:abbr', secure, route(routes.room.undj, Room, User, io));
 	app.post('/room/say/:abbr', secure, route(routes.room.say, Room, User, io));
 	app.post('/room/skip/:abbr', secure, route(routes.room.skip, Room, User, Playlist, io));
 

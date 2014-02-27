@@ -8,36 +8,51 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room ) {
 	$scope.room = {};
 	$scope.abbr = window.location.search.substr(1);
 
+	var addUser = function(collection, user) {
+		var them = $scope.room[collection];
+		if (!them) {
+			$scope.room[collection] = [];
+		}
+		for (var i=0; i<them.length; i++) {
+			if (them[i].username == user.username) {
+				return;
+			}
+		}
+		$scope.room[collection].push(user);
+		console.info(user.username, "joined the", collection, $scope.room);
+	};
+
+	var removeUser = function(collection, user) {
+		var them = $scope.room[collection];
+		if (!them) return;
+		for (var i=0; i<them.length; i++) {
+			if (them[i].username == user.username) {
+				$scope.room[collection].splice(i, 1);
+				console.info(user.username, "left the", collection, $scope.room);
+				return;
+			}
+		}
+	};
+
 	$room.change(function(room) {
 		$scope.room = room;
 	});
 
-	$socket.on('dj', function(djs) {
-		$scope.room.djs = djs;
+	$socket.on('dj.joined', function(dj) {
+		addUser('djs', dj);
+	});
+
+	$socket.on('dj.departed', function(dj) {
+		removeUser('djs', dj);
 	});
 
 	$socket.on('member.joined', function(user) {
-		if (!$scope.room.listeners) {
-			$scope.room.listeners = [];
-		}
-		var them = $scope.room.listeners;
-		for (var i=0; i<them.length; i++) {
-			if (them[i].username == user.username) {
-				return;
-			}
-		}
-		$scope.room.listeners.push(user);
+		addUser('listeners', user);
 	});
 
 	$socket.on('member.departed', function(user) {
-		var them = $scope.room.listeners;
-		if (!them) return;
-		for (var i=0; i<them.length; i++) {
-			if (them[i].username == user.username) {
-				$scope.room.listeners.splice(i, 1);
-				return;
-			}
-		}
+		removeUser('listeners', user);
+		removeUser('djs', user);
 	});
 
 	$http.post('/room/join/' + $scope.abbr, {})

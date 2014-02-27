@@ -9,6 +9,10 @@ var nextSong = function(room, io) {
 		room.dj.playlist.rotate().save();
 	}
 
+	if (songTimers[room.abbr]) {
+		clearTimeout(songTimers[room.abbr]);
+	}
+
 	// If the DJ table is empty, abandon all hope
 	if (!room.djs || !room.djs.length) {
 		room.dj = null;
@@ -66,6 +70,26 @@ var playSong = function(room, song, io) {
 };
 
 
+// Utility for looking up a room and user.
+var getRoomAndUser = function(abbr, Room, username, User, then) {
+	User.findOne({username: username}, function(e, user) {
+		if (e || !user) {
+			console.error(e);
+			return then({error: "Error joining room"}, null, user);
+		}
+		Room.findOne({abbr: abbr})
+		.populate('djs listeners song')
+		.exec(function(e, room) {
+			if (e) {
+				console.error(e);
+				return then({error: "Error finding room"}, room, user);
+			}
+			return then(null, room, user);
+		});
+	});
+};
+
+
 exports.list = function(req, res, next, Room) {
 	var rooms = Room.find({}, function(e, a) {
 		if (e) console.error(e);
@@ -90,17 +114,8 @@ exports.chat = function(req, res, next, Room) {
 };
 
 exports.create = function(req, res, next, Room, User) {
-	User.findOne({username: req.session.username}, function(e, user) {
-		if (e) {
-			console.error(e);
-			return res.jsonp(500, {error: "Error getting user"});
-		}
-		if (!user) {
-			console.error("User not found", req.session.username);
-			return res.jsonp(401, {error: "Unauthorized"});
-		}
-
-		var room = new Room(req.body);
+	getRoomAndUser(req.body.abbr, Room, req.session.username, User, function(e, room, user) {
+		if (e) return res.jsonp(500, e);
 		room.join('owners', user);
 		room.save(function(e, room) {
 			if (e) return res.jsonp(500, {error: e});
@@ -113,51 +128,33 @@ exports.create = function(req, res, next, Room, User) {
 };
 
 exports.delete = function(req, res, next, Room, User) {
-	Room.findOne({abbr: req.params.abbr}, function(e, room) {
-		if (e || !room) {
-			console.error("Error deleting room", e, room);
-			return res.jsonp(500, {error: "Error deleting room"});
+	getRoomAndUser(req.params.abbr, Room, req.session.username, User, function(e, room, user) {
+		if (e) return res.jsonp(500, e);
+		if (!user.admin && room.indexOf('owners', user) < 0) {
+			return res.jsonp(401, {error: "You must be an owner to delete a room"});
 		}
-		User.findOne({username: req.session.username}, function(e, user) {
-			if (e || !user) {
-				console.error("Error finding user", e, req.session.username);
-				return res.jsonp(500, {error: "Error finding user"});
+		room.remove(function(e, room) {
+			if (e || !room) {
+				console.error("Error removing room", e, room);
+				return res.jsonp(500, {error: "Could not delete room"});
 			}
-			if (!user.admin && room.indexOf('owners', user) < 0) {
-				//return res.jsonp(401, {error: "You must be an owner to delete a room"});
-			}
-			room.remove(function(e, room) {
-				if (e || !room) {
-					console.error("Error removing room", e, room);
-					return res.jsonp(500, {error: "Could not delete room"});
-				}
-				Room.find({}, function(e, a) {
-					return res.jsonp({rooms: a});
-				});
+			Room.find({}, function(e, a) {
+				return res.jsonp({rooms: a});
 			});
-		})
+		});
 	});
 };
 
 // Called when a user joins a room
 exports.join = function(req, res, next, Room, User, io) {
-	User.findOne({username: req.session.username}, function(e, user) {
-		if (e) {
-			console.error(e);
-			return res.jsonp(500, {error: "Error joining room"});
-		}
-		Room.findOne({abbr: req.params.abbr})
-		.populate('djs listeners song')
-		.exec(function(e, room) {
-			if (e) {
-				console.error(e);
-				return res.jsonp(500, {error: "Error finding room"});
-			}
-			room.join('listeners', user);
-			room.save();
-			res.jsonp(room);
-			io.sockets.in(room.abbr).emit('member.joined', user);
-		});
+	getRoomAndUser(req.params.abbr, Room, req.session.username, User, function(e, room, user) {
+		if (e) return res.jsonp(500, e);
+
+		room.join('listeners', user);
+		room.save();
+
+		res.jsonp(room);
+		io.sockets.in(room.abbr).emit('member.joined', user);
 	});
 };
 
@@ -174,24 +171,16 @@ exports.listen = function(data, callback, socket, Room, io) {
 exports.leave = function(data, callback, socket, Room, User, io) {
 	socket.leave(data.abbr);
 	console.info(socket.id, "is leaving", data.abbr);
-	if (!socket.handshake || !socket.handshake.session || !socket.handshake.session.username) {
+	var username = socket.handshake && socket.handshake.session ? socket.handshake.session.username : null;
+	if (!username) {
 		console.info("No session information found. Skipping room departure");
 		return;
 	}
-	User.findOne({username: socket.handshake.session.username}, function(e, user) {
-		if (e || !user) {
-			console.error("Error leaving room", e, user);
-			return;
-		}
-		Room.findOne({abbr: data.abbr}, function(e, room) {
-			if (!room) {
-				console.info("Could not find room", data.abbr);
-				return;
-			}
-			room.removeUser(user);
-			room.save();
-			io.sockets.in(room.abbr).emit('member.departed', user);
-		});
+	getRoomAndUser(data.abbr, Room, username, User, function(e, room, user) {
+		if (e) return;
+		room.removeUser(user);
+		room.save();
+		io.sockets.in(room.abbr).emit('member.departed', user);
 	});
 };
 
@@ -220,18 +209,23 @@ exports.dj = function(req, res, next, Room, User, Playlist, io) {
 				console.error(e);
 				return res.jsonp(404, {error: "Room not found"});
 			}
-			room.joins('djs', user);
+			room.join('djs', user);
 			room.save();
-			if (!room.song) {
+			if (!room.song && user.playlist) {
 				playSong(room, user.playlist.songAt(0), io);
 			}
-			io.sockets.in(room.abbr).emit('dj', {djs: room.djs});
+			io.sockets.in(room.abbr).emit('dj.joined', user);
 		});
 	});
 };
 
 exports.undj = function(req, res, next, Room, User, io) {
-	// @todo
+	getRoomAndUser(req.params.abbr, Room, req.session.username, User, function(e, room, user) {
+		if (e) return res.jsonp(500, e);
+		room.leave('djs', user);
+		room.save();
+		io.sockets.in(room.abbr).emit('dj.departed', user);
+	});
 };
 
 exports.say = function(req, res, next, Room, User, io) {

@@ -68,14 +68,19 @@ exports.build = function(mongoose) {
 		return this;
 	};
 
+	schema.methods.leave = function(collection, user) {
+		var ix = this.indexOf(collection, user);
+		if (ix >= 0) {
+			this[collection].splice(ix, 1);
+		}
+		return this;
+	};
+
 	schema.methods.removeUser = function(user) {
 		var cols = ['djs', 'listeners'];
 		var room = this;
 		cols.forEach(function(col) {
-			var ix = room.indexOf(col, user);
-			if (ix >= 0) {
-				room[col] = room[col].splice(ix, 1);
-			}
+			room.leave(col, user);
 		});
 		return room;
 	};

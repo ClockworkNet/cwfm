@@ -15,32 +15,46 @@ block scripts
 block content
 	div#jplayer.jp-jplayer
 
+	div#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
+		div(ng-show="user.auth")
+			button(ng-click="logout()") Log out
+
+		div(ng-hide="user.auth")
+			h3 Log in
+			ul
+				li
+					input(ng-model="user.username", placeholder="Username")
+				li 
+					input(ng-model="user.password", type="password", placeholder="Password")
+				li
+					button(ng-click="login()") Log in
+
 	div#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
 		h1 Welcome to {{room.name}}
 		p {{room.description}}
 
-		h2(ng-show="room.djs") DJs
+		h2(ng-show="room.djs.length") DJs
 		ul
 			li(ng-repeat="dj in room.djs").
 				{{dj.username}}
 
-		h2(ng-show="room.listeners") Listeners
+		h2(ng-show="room.listeners.length") Listeners
 		ul
 			li(ng-repeat="listener in room.listeners").
 				{{listener.username}}
 
 
 	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl")
-		div.player(ng-show="song.length")
-			input#mute-button(type="checkbox", ng-model="muted", ng-click="toggle_muting()")
+		div.player(ng-show="room.song")
+			input#mute-button(type="checkbox", ng-model="muted", ng-click="toggleMuting()")
 			label(for="mute-button") Mute?
 
-		dl(ng-show="song.length")
+		dl(ng-show="room.song")
 			dt Now Playing
-			dd {{song_title()}}
+			dd {{room.song.title}}
 
 			dt Time Remaining
-			dd {{song_remaining() | time}}
+			dd {{songRemaining() | time}}
 
 			dt Played By
 			dd {{room.dj.name}}
@@ -50,16 +64,16 @@ block content
 
 		h2 Actions
 		ul
-			li(ng-show="room.song.length")
-				a(ng-click="api('upvote')", href="#upvote") Upvote
-			li(ng-show="room.song.length")
-				a(ng-click="api('downvote')", href="#downvote") Downvote
-			li(ng-hide="me.dj")
-				a(ng-click="api('dj')", href="#dj") Start DJing
-			li(ng-show="me.dj")
-				a(ng-click="api('undj')", href="#undj") Stop DJing
-			li(ng-show="me.isadmin || is_current_dj(me)")
-				a(ng-click="api('skipsong')", href="#skip") Skip Song
+			li(ng-show="room.song")
+				a(ng-click="upvote()", href="#upvote") Upvote
+			li(ng-show="room.song")
+				a(ng-click="downvote()", href="#downvote") Downvote
+			li(ng-hide="djing()")
+				a(ng-click="dj()", href="#dj") Start DJing
+			li(ng-show="djing()")
+				a(ng-click="undj()", href="#undj") Stop DJing
+			li(ng-show="me.admin || currentDj(me)")
+				a(ng-click="skipSong()", href="#skip") Skip Song
 
 	div#cwfmPlaylistCtrl.playlist_wrapp(ng-controller="cwfmPlaylistCtrl")
 		div.playlist_select_wrap

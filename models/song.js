@@ -4,8 +4,14 @@ exports.build = function(mongoose) {
 		name: String,
 		artist: String,
 		album: String,
-		started: Date,
-		length: Number
+		type: String, // ogg, wav, mp4, mp3, fla
+		length: Number,
+		upvotes: Number,
+		downvotes: Number
+	});
+
+	schema.virtual('score').get(function() {
+		return this.upvotes - this.downvotes;
 	});
 
 	return mongoose.model(name, schema);

@@ -2,9 +2,9 @@ if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 
 cwfm.player = {};
 
-cwfm.player.ctrl = function($scope, $http, $socket, $room) {
+cwfm.player.ctrl = function($scope, $http, $socket, $room, $user) {
 	$scope.room = {};
-	$scope.song = {};
+	$scope.me   = {};
 
 	// Wrapper for calling jPlayer functions
 	$scope.player = function() {
@@ -13,14 +13,36 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room) {
 
 	$scope.player({canplay: $scope.playSong});
 
-
 	$room.change(function(room) {
 		$scope.room = room;
-		$scope.song = room.song;
+		$scope.playSong();
 	});
 
+	$user.change(function(user) {
+		$scope.me = user;
+		$scope.$apply();
+	});
+
+	var oops = function(e) {
+		console.error(e);
+	};
+
+	var addMe = function() {
+		$scope.room.djs.push($scope.me);
+	};
+
+	var removeMe = function() {
+		$scope.room.djs.some(function(dj, ix) {
+			if (dj.username == $scope.me.username) {
+				$scope.room.djs = $scope.room.djs.splice(ix, 1);
+				return true;
+			}
+			return false;
+		});
+	};
+
 	$socket.on('song', function(song) {
-		$scope.song = song;
+		$scope.room.song = song;
 		if (!$scope.muted) {
 			$scope.playSong();
 		}
@@ -29,56 +51,39 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room) {
 		}
 	});
 
-	var get_filetype  =  function( path ) {
-		var ext  =  path.substr( path.lastIndexOf( '.' ) + 1 );
-		switch ( ext ) {
-			case 'mp3':
-				return 'mp3';
-			case 'mp4':
-			case 'aac':
-				return 'mp4';
-			case 'ogg':
-				return 'oga';
-			case 'fla':
-			case 'flv':
-				return 'fla';
-			case 'wav':
-				return 'wav';
-			default:
-				return 0
-		}
+	$scope.djing = function(who) {
+		if (!$scope.room || !$scope.room.djs) return false;
+		if (!who) who = $scope.me;
+		var un = who && who.username ? who.username : who;
+		return $scope.room.djs.some(function(dj) {
+			return dj.username == un;
+		});
 	};
 
 	$scope.stopSong = function( ) {
 		$scope.player( 'stop' );
 	};
 
-	$scope.playSong = function( ) {
-		if (!$scope.song) return;
-		var type = get_filetype(path);
+	$scope.playSong = function(song) {
+		song = song ? song : $scope.song;
+		if (!song) return;
 		var data = {
-			path: $scope.song.path,
-			type: get_filetype($scope.song.path)
+			path: '/song/' + song._id,
+			type: song.type
 		};
+		var start = $scope.songPlayed();
 		$scope.player('setMedia', data);
+		$scope.player('play', start);
 	};
 
-	$scope.song_title  =  function( ) {
-		var song  =  $scope.song;
-		if ( ! song ) return '...';
-		if ( song.title != '' ) return song.title;
-		var path  =  song.relpath;
-		return path;
-	};
-
-	$scope.song_played  =  function( ) {
+	$scope.songPlayed  =  function( ) {
 		var song  =  $scope.room.song;
 		if ( ! song || ! song.length ) return 0;
 		var now  =  Date.now() / 1000.0;
 		return now - song.started;
 	};
 
-	$scope.song_remaining  =  function( ) {
+	$scope.songRemaining  =  function( ) {
 		var song  =  $scope.room.song;
 		if ( ! song || ! song.length ) return 0;
 		var now  =  Date.now() / 1000.0;
@@ -86,7 +91,7 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room) {
 		return end - now;
 	};
 
-	$scope.toggle_muting  =  function( ) {
+	$scope.toggleMuting  =  function( ) {
 		if ( $scope.muted ) {
 			$scope.stopSong( );
 		}
@@ -99,5 +104,19 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room) {
 		return function( item ) {
 			return ! func( item );
 		};
+	};
+
+	$scope.dj = function() {
+		$http.post('/room/dj/' + $scope.room.abbr, {})
+			.success(addMe);
+	};
+
+	$scope.undj = function() {
+		$http.post('/room/undj/' + $scope.room.abbr, {})
+			.success(removeMe);
+	};
+
+	$scope.skipSong = function() {
+		$http.post('/room/skip/' + $scope.room.abbr, {});
 	};
 };
