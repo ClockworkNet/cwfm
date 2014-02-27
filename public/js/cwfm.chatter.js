@@ -2,13 +2,14 @@ if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 
 cwfm.chatter  =  { };
 
-cwfm.chatter.ctrl  =  function( $scope, $http, $roomservice ) {
+cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
+	console.info("@todo: implement this"); return;
 
     $scope.polling  =  1000;
     $scope.last_id  =  0;
 
     var refresh  =  function( ) {
-        var apiurl   =  '/api/chatter/' + $roomservice.get_name( ) + '/' + $scope.last_id;
+        var apiurl   =  '/api/chatter/' + $room.get_name( ) + '/' + $scope.last_id;
         var request  =  $http.get( apiurl );
 
         request.success( function( rsp ) {
@@ -40,7 +41,7 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $roomservice ) {
     };
 
     $scope.send  =  function( ) {
-        var apiurl  = '/api/say/' + $roomservice.get_name( );
+        var apiurl  = '/api/say/' + $room.get_name( );
         $http({
             method : 'POST'
             , url  : apiurl

@@ -1,8 +1,8 @@
 if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 
 cwfm.playlist       =  {};
-cwfm.playlist.ctrl  =  function( $scope, $http, $roomservice ) {
-
+cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $room ) {
+	console.info("@todo: implement this"); return;
     var nothing  =  function( rsp ) { };
 
     // @todo
@@ -45,9 +45,9 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $roomservice ) {
     };
 
     var init  =  function( ) {
-        $scope.roomname  =  $roomservice.get_name( );
+        $scope.roomname  =  $room.get_name( );
 
-        $roomservice.on( 'songchange', on_songchange, $scope );
+        $room.on( 'songchange', on_songchange, $scope );
         $scope.$watch( 'query', $scope.search );
 
         get( 'showplaylists', [], on_showplaylists );
@@ -89,7 +89,7 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $roomservice ) {
 
     $scope.select  =  function( pl ) {
         $scope.selected = pl;
-        post( [ 'selectplaylist', $roomservice.get_name( ) ], { plid : pl.plid }, on_loadplaylist );
+        post( [ 'selectplaylist', $room.get_name( ) ], { plid : pl.plid }, on_loadplaylist );
     };
 
     $scope.search  =  function( ) {

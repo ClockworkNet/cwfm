@@ -4,6 +4,10 @@ cwfm.user = {};
 
 cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 
+	$user.change(function(user) {
+		$scope.user = user;
+	});
+
 	var init  =  function( ) {
 		$scope.user  = $user.get();
 		$scope.error = null;
@@ -12,7 +16,6 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 
 	var set_user = function(rsp) {
 		$user.set(rsp);
-		$scope.user = $user.get();
 	};
 
 	var oops  =  function(e) {

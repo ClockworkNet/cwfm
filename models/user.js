@@ -2,6 +2,7 @@ exports.build = function(mongoose) {
 	var name = 'User';
 	var schema = mongoose.Schema({
 		username: String,
+		admin: Boolean,
 		realname: String,
 		avatar: String,
 		urls: [{

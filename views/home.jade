@@ -1,7 +1,6 @@
 extends layout
 
 block scripts
-	script(src="/socket.io/socket.io.js")
 	script(src="/public/js/cwfm.filters.js")
 	script(src="/public/js/cwfm.data.js")
 	script(src="/public/js/cwfm.roomlist.js")
@@ -13,8 +12,6 @@ block content
 		h2(ng-show="user.auth") Welcome back {{user.username}}!
 
 		h3 {{error}}
-
-		code {{user}}
 
 		div(ng-show="user.auth")
 			button(ng-click="logout()") Log out
@@ -56,4 +53,5 @@ block content
 			h2 Join a room
 			ul
 				li(ng-repeat="room in rooms")
+					a(href="#delete", ng-click="delete_room(room)") [x] 
 					a(href="/room/?{{room.abbr}}") {{room.name}}

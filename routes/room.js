@@ -58,7 +58,8 @@ var playSong = function(room, song, io) {
 	room.save();
 
 	// Send a message to all clients in the room
-	io.sockets.in(room.abbr).emit('song.changed', room);
+	song.started = room.songStarted;
+	io.sockets.in(room.abbr).emit('song.changed', song);
 
 	// Schedule the next song
 	songTimers[room.abbr] = setTimeout(function() {nextSong(room, io);}, song.length * 1000);
@@ -100,7 +101,7 @@ exports.create = function(req, res, next, Room, User) {
 		}
 
 		var room = new Room(req.body);
-		room.owners.push(user._id);
+		room.join('owners', user);
 		room.save(function(e, room) {
 			if (e) return res.jsonp(500, {error: e});
 			Room.find({}, function(e, a) {
@@ -111,56 +112,96 @@ exports.create = function(req, res, next, Room, User) {
 	});
 };
 
+exports.delete = function(req, res, next, Room, User) {
+	Room.findOne({abbr: req.params.abbr}, function(e, room) {
+		if (e || !room) {
+			console.error("Error deleting room", e, room);
+			return res.jsonp(500, {error: "Error deleting room"});
+		}
+		User.findOne({username: req.session.username}, function(e, user) {
+			if (e || !user) {
+				console.error("Error finding user", e, req.session.username);
+				return res.jsonp(500, {error: "Error finding user"});
+			}
+			if (!user.admin && room.indexOf('owners', user) < 0) {
+				//return res.jsonp(401, {error: "You must be an owner to delete a room"});
+			}
+			room.remove(function(e, room) {
+				if (e || !room) {
+					console.error("Error removing room", e, room);
+					return res.jsonp(500, {error: "Could not delete room"});
+				}
+				Room.find({}, function(e, a) {
+					return res.jsonp({rooms: a});
+				});
+			});
+		})
+	});
+};
+
 // Called when a user joins a room
 exports.join = function(req, res, next, Room, User, io) {
 	User.findOne({username: req.session.username}, function(e, user) {
 		if (e) {
 			console.error(e);
-			res.jsonp(500, {error: "Error joining room"});
+			return res.jsonp(500, {error: "Error joining room"});
 		}
-		Room.findOne({abbr: req.params.room})
+		Room.findOne({abbr: req.params.abbr})
 		.populate('djs listeners song')
 		.exec(function(e, room) {
 			if (e) {
 				console.error(e);
-				res.jsonp(500, {error: "Error finding room"});
+				return res.jsonp(500, {error: "Error finding room"});
 			}
-			room.listeners.push(user);
+			room.join('listeners', user);
 			room.save();
-
-			io.sockets.in(room.abbr).emit('member.joined', user);
 			res.jsonp(room);
+			io.sockets.in(room.abbr).emit('member.joined', user);
 		});
 	});
 };
 
 // Called when a user connects to a room to listen in on the socket
-exports.listen = function(data, socket, Room, io) {
-	Room.findOne({abbr: data.room}, function(e, room) {
+exports.listen = function(data, callback, socket, Room, io) {
+	Room.findOne({abbr: data.abbr}, function(e, room) {
 		if (e) throw e;
 		socket.join(room.abbr);
+		console.info(socket.id, "is listening to", room.abbr);
 	});
 };
 
 // Called when user leaves a room
-exports.leave = function(data, socket, Room, User, io) {
-	socket.leave(data.room);
-	Room.findOne({abbr: data.room}, function(e, room) {
-		if (!room) return;
-		room.removeUser(socket.handshake.session.username);
-		room.save();
+exports.leave = function(data, callback, socket, Room, User, io) {
+	socket.leave(data.abbr);
+	console.info(socket.id, "is leaving", data.abbr);
+	if (!socket.handshake || !socket.handshake.session || !socket.handshake.session.username) {
+		console.info("No session information found. Skipping room departure");
+		return;
+	}
+	User.findOne({username: socket.handshake.session.username}, function(e, user) {
+		if (e || !user) {
+			console.error("Error leaving room", e, user);
+			return;
+		}
+		Room.findOne({abbr: data.abbr}, function(e, room) {
+			if (!room) {
+				console.info("Could not find room", data.abbr);
+				return;
+			}
+			room.removeUser(user);
+			room.save();
+			io.sockets.in(room.abbr).emit('member.departed', user);
+		});
 	});
 };
 
 // Called when a socket connection is dropped
-exports.exit = function(socket, Room, User, io) {
-	var username = socket.handshake.session.username;
-	Room.find().exec(function(e, rooms) {
-		rooms.forEach(function(room) {
-			room.removeUser(username);
-			room.save();
+exports.exit = function(username, Room, User, io) {
+	User.findOne({username: username}, function(e, user) {
+		if (!user) return;
+		Room.find({}, function(e, a) {
+			a.forEach(function(r) {r.removeUser(user);});
 		});
-		io.sockets.emit('member.departed', {username: username});
 	});
 };
 
@@ -179,7 +220,7 @@ exports.dj = function(req, res, next, Room, User, Playlist, io) {
 				console.error(e);
 				return res.jsonp(404, {error: "Room not found"});
 			}
-			room.djs.push(user);
+			room.joins('djs', user);
 			room.save();
 			if (!room.song) {
 				playSong(room, user.playlist.songAt(0), io);

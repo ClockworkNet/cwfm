@@ -1,6 +1,7 @@
 extends layout
 
 block scripts
+	script(src="/public/js/jquery.jplayer.min.js")
 	script(src="/public/js/cwfm.filters.js")
 	script(src="/public/js/cwfm.data.js")
 	script(src="/public/js/cwfm.socket.js")
@@ -14,14 +15,27 @@ block scripts
 block content
 	div#jplayer.jp-jplayer
 
-	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl")
+	div#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
 		h1 Welcome to {{room.name}}
 		p {{room.description}}
 
-		input#mute-button(type="checkbox", ng-model="muted", ng-click="toggle_muting()")
-		label(for="mute-button") Mute?
+		h2(ng-show="room.djs") DJs
+		ul
+			li(ng-repeat="dj in room.djs").
+				{{dj.username}}
 
-		dl(ng-if="room.song.length")
+		h2(ng-show="room.listeners") Listeners
+		ul
+			li(ng-repeat="listener in room.listeners").
+				{{listener.username}}
+
+
+	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl")
+		div.player(ng-show="song.length")
+			input#mute-button(type="checkbox", ng-model="muted", ng-click="toggle_muting()")
+			label(for="mute-button") Mute?
+
+		dl(ng-show="song.length")
 			dt Now Playing
 			dd {{song_title()}}
 
@@ -33,16 +47,6 @@ block content
 
 			dt Score
 			dd {{room.song.score}}
-
-		h2 DJs
-			ul
-				li(ng-repeat="member in room.members | filter:is_dj:member").
-					{{is_dj(member) | checkmark}}{{member.name}} ({{member.points}})
-
-		h2 Room members
-			ul
-				li(ng-repeat="member in room.members | filter:not(is_dj):member").
-					{{is_dj(member) | checkmark}}{{member.name}} ({{member.points}})
 
 		h2 Actions
 		ul

@@ -1,6 +1,7 @@
 if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 
 cwfm.socket = {};
+
 cwfm.socket.factory = function ($rootScope) {
 	var socket = io.connect();
 	return {

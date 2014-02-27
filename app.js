@@ -75,7 +75,12 @@ db.on('open', function() {
 			for (var i=0; i<dependencies.length; i++) {
 				args.push(dependencies[i]);
 			}
-			handler.apply(express, args);
+			try {
+				handler.apply(express, args);
+			}
+			catch (e) {
+				console.error(e);
+			}
 		}
 	}
 
@@ -111,6 +116,7 @@ db.on('open', function() {
 	app.get('/room/detail/:abbr', route(routes.room.detail, Room));
 	app.get('/room/chat/:abbr', route(routes.room.chat, Room));
 	app.post('/room/create', secure, route(routes.room.create, Room, User));
+	app.post('/room/delete/:abbr', secure, route(routes.room.delete, Room, User));
 	app.post('/room/join/:abbr', secure, route(routes.room.join, Room, User, io));
 	app.post('/room/dj', secure, route(routes.room.dj, Room, User, Playlist, io));
 	app.post('/room/undj', secure, route(routes.room.undj, Room, User, io));
@@ -135,12 +141,13 @@ db.on('open', function() {
 	});
 
 	io.sockets.on('connection', function(socket) {
-		socket.on('subscribe', route(routes.room.listen, socket, Room, User, io));
-		socket.on('unsubscribe', route(routes.room.leave, socket, Room, User, io));
-		socket.on('disconnect', route(routes.room.exit, socket, Room, User, io));
+		//@todo: get user on disconnect
+		socket.on('listen', route(routes.room.listen, socket, Room, User, io));
+		socket.on('leave', route(routes.room.leave, socket, Room, User, io));
+		socket.on('disconnect', route(routes.room.exit, Room, User, io));
 	});
 
 	// UI
-	app.get('/', route(routes.home.index, User));
+	app.get('/', route(routes.home.home, User));
 	app.get('/room', route(routes.home.room, Room, User));
 });

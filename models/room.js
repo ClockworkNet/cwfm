@@ -13,9 +13,21 @@ exports.build = function(mongoose) {
 		description: String,
 		dateCreated: Date,
 
-		owners: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-		djs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-		listeners: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+		owners: [{ 
+			type: mongoose.Schema.Types.ObjectId, 
+			ref: 'User',
+			unique: true
+		}],
+		djs: [{
+			type: mongoose.Schema.Types.ObjectId, 
+			ref: 'User',
+			unique: true
+		}],
+		listeners: [{
+			type: mongoose.Schema.Types.ObjectId, 
+			ref: 'User',
+			unique: true
+		}],
 
 		dj: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 		song: { type: mongoose.Schema.Types.ObjectId, ref: 'Song' },
@@ -29,25 +41,43 @@ exports.build = function(mongoose) {
 	});
 
 	schema.methods.indexOf = function(collection, model) {
-		var findId = typeof(model) == 'object' ? model._id : model;
-		this[collection].forEach(function(item, index) {
-			var itemId = typeof(item) == 'object' ? item._id : item;
-			if (itemId == findId) {
-				return index;
+		if (!this[collection]) return -1;
+
+		var findId = model && model._id ? model._id : model;
+
+		if (!findId) return -1;
+		findId = findId.toString();
+
+		for (var ix=0; ix<this[collection].length; ix++) {
+			var item = this[collection][ix];
+			if (!item) continue;
+			var itemId = item._id ? item._id.toString() : item.toString();
+			if (findId == itemId) {
+				return ix;
 			}
-		});
+		}
 		return -1;
+	};
+
+	schema.methods.join = function(collection, user) {
+		var ix = this.indexOf(collection, user);
+		if (ix < 0) {
+			if (!this[collection]) this[collection] = [];
+			this[collection].push(user);
+		}
+		return this;
 	};
 
 	schema.methods.removeUser = function(user) {
 		var cols = ['djs', 'listeners'];
+		var room = this;
 		cols.forEach(function(col) {
-			var ix = this.indexOf(col, user);
+			var ix = room.indexOf(col, user);
 			if (ix >= 0) {
-				this[col] = this[col].splice(ix, 1);
+				room[col] = room[col].splice(ix, 1);
 			}
 		});
-		return this;
+		return room;
 	};
 
 	return mongoose.model('Room', schema);
