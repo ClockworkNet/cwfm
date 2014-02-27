@@ -5,13 +5,23 @@ exports.list = function(req, res, next, User){
 };
 
 exports.detail = function(req, res, next, User) {
-	var user = User.findOne({username: req.params.username}, function(e, user) {
+	User.findOne({username: req.params.username}, function(e, user) {
+		if (e) {
+			console.error(e);
+			return res.jsonp(500, {error: "Error getting detail"});
+		}
 		res.jsonp(user);
 	});
 };
 
 exports.me = function(req, res, next, User) {
-	var user = User.findOne({username: req.session.username}, function(e, user) {
+	User.findOne({username: req.session.username})
+	.populate('playlists')
+	.exec(function(e, user) {
+		if (e) {
+			console.error(e);
+			return res.jsonp(500, {error: "Error getting detail"});
+		}
 		res.jsonp(user);
 	});
 }

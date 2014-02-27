@@ -75,6 +75,7 @@ block content
 			li(ng-show="me.admin || currentDj(me)")
 				a(ng-click="skipSong()", href="#skip") Skip Song
 
+
 	div#cwfmPlaylistCtrl.playlist_wrapp(ng-controller="cwfmPlaylistCtrl")
 		div.playlist_select_wrap
 			div.playlist_current_wrap
@@ -83,12 +84,14 @@ block content
 				li
 					a#new_playlist New Playlist
 					form
-						label Title: input(ng-model="selected.title")
+						label(for="playlist-title") Title: 
+						input#planylist-title(ng-model="selected.title")
 						input#new-public(type="checkbox", ng-model="selected.public")
+						br
 						label(for="new-public") Public?
 						a(ng-show="selected.plid", ng-click="save()", href="#save") Save
 						a(ng-hide="selected.plid", ng-click="save()", href="#create") Create
-				li(ng-repeat="playlist in playlists | filter:playlistquery")
+				li(ng-repeat="playlist in me.playlists | filter:playlistquery")
 					a.playlists_item(ng-click="select(playlist)", href="#load", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}").
 						{{playlist.title}}
 		div.songlist_wrap(ng-show="selected")
@@ -106,6 +109,7 @@ block content
 				li.songs_item(ng-repeat="song in songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}").
 					{{song.label}}
 					a.remove(ng-click="removesong(song)", href="#remove") [x]
+
 
 	div#cwfmChatterCtrl(ng-controller="cwfmChatterCtrl")
 		a#brandname.brand(data-toggle="modal", role="button", href="#aboutModal"): img(src="/public/img/cwfm.svg", alt="CWFM")

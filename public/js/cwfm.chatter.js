@@ -13,7 +13,6 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
 	});
 
 	var pullChat = function() {
-		console.info('pulling');
 		$http.get('/room/chat/' + $scope.room.abbr)
 		.success(function(chat) {
 			$scope.chat = chat;

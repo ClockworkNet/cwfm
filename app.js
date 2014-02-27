@@ -5,6 +5,8 @@ var path     = require('path');
 var cookie   = require('cookie');
 var connect  = require('connect');
 var io       = require('socket.io');
+var fs       = require('fs');
+var mm       = require('musicmetadata');
 
 var sessionStore = new express.session.MemoryStore();
 
@@ -102,6 +104,7 @@ db.on('open', function() {
 	app.get('/song/search', route(routes.song.search, Song));
 	app.get('/song/detail/:id', route(routes.song.detail, Song));
 	app.get('/song/:id', route(routes.song.stream, Song));
+	app.post('/song/scan', secure, route(routes.song.scan, Song, fs, mm));
 
 	var Playlist = require('./models/playlist').build(mongoose);
 	app.get('/playlist/list', secure, route(routes.playlist.list, Playlist));
