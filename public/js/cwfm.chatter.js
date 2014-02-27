@@ -3,54 +3,36 @@ if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 cwfm.chatter  =  { };
 
 cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
-	console.info("@todo: implement this"); return;
+	$scope.room    = {};
+	$scope.chat    = [];
+	$scope.message = '';
 
-    $scope.polling  =  1000;
-    $scope.last_id  =  0;
+	$room.change(function(room) {
+		$scope.room = room;
+		pullChat();
+	});
 
-    var refresh  =  function( ) {
-        var apiurl   =  '/api/chatter/' + $room.get_name( ) + '/' + $scope.last_id;
-        var request  =  $http.get( apiurl );
+	var pullChat = function() {
+		console.info('pulling');
+		$http.get('/room/chat/' + $scope.room.abbr)
+		.success(function(chat) {
+			$scope.chat = chat;
+		});
+	};
 
-        request.success( function( rsp ) {
-            for (var i=0; i<rsp.length; i++) {
-                $scope.add_message(rsp[i]);
-            }
-            setTimeout( refresh, $scope.polling );
-        });
+	$socket.on('chat', function(data) {
+		if (!$scope.chat) $scope.chat = [];
+		$scope.chat.push(data);
+	});
 
-        request.error( function( rsp ) {
-            console.error(rsp);
-        });
-    };
+	var clearMessage = function() {
+		$scope.message = '';
+	}
 
-    $scope.sorted  =  function() {
-        if ( ! $scope.messages ) return [];
-        return $scope.messages.sort(function(a, b) {
-            return b.time - a.time;
-        });
-    };
+	$scope.send  =  function() {
+		$http.post('/room/say/' + $scope.room.abbr, {message: $scope.message})
+			.success(clearMessage);
+	};
 
-    $scope.add_message  =  function( o ) {
-        if (! o || ! o.message) return;
-        if (!$scope.messages) $scope.messages = [];
-        $scope.messages[o.id]  =  o;
-        if (o.id > $scope.last_id) {
-            $scope.last_id  =  o.id;
-        }
-    };
-
-    $scope.send  =  function( ) {
-        var apiurl  = '/api/say/' + $room.get_name( );
-        $http({
-            method : 'POST'
-            , url  : apiurl
-            , data : $.param( { 'message' : $scope.message } )
-            , headers : {'Content-Type': 'application/x-www-form-urlencoded'}
-        }).success( function( rsp ) {
-            $scope.message  =  '';
-        });
-    };
-
-    refresh( );
+	pullChat();
 };

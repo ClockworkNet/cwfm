@@ -111,10 +111,10 @@ db.on('open', function() {
 	app.post('/playlist/select/:id', secure, route(routes.playlist.select, Playlist));
 	app.post('/playlist/update/:pid/song/:action/:sid', secure, route(routes.playlist.update, Playlist));
 
-	var Room = require('./models/room').build(mongoose);
+	var Room = require('./models/room').build(mongoose, config);
 	app.get('/room/list', route(routes.room.list, Room));
 	app.get('/room/detail/:abbr', route(routes.room.detail, Room));
-	app.get('/room/chat/:abbr', route(routes.room.chat, Room));
+	app.get('/room/chat/:abbr', secure, route(routes.room.chat, Room, User));
 	app.post('/room/create', secure, route(routes.room.create, Room, User));
 	app.post('/room/delete/:abbr', secure, route(routes.room.delete, Room, User));
 	app.post('/room/join/:abbr', secure, route(routes.room.join, Room, User, io));

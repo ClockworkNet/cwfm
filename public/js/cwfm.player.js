@@ -20,7 +20,6 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user) {
 
 	$user.change(function(user) {
 		$scope.me = user;
-		$scope.$apply();
 	});
 
 	var oops = function(e) {

@@ -1,4 +1,4 @@
-exports.build = function(mongoose) {
+exports.build = function(mongoose, config) {
 	var name = 'Room';
 	var schema = mongoose.Schema({
 		name: {
@@ -84,6 +84,23 @@ exports.build = function(mongoose) {
 		});
 		return room;
 	};
+
+	schema.methods.say = function(user, msg) {
+		var item = {
+			user: user,
+			message: msg,
+			posted: Date.now()
+		};
+
+		if (!this.chat) this.chat = [];
+		this.chat.push(item);
+
+		while (this.chat.length > config.maxChat) {
+			this.chat.push.shift();
+		}
+
+		return item;
+	}
 
 	return mongoose.model('Room', schema);
 }

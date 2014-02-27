@@ -109,10 +109,11 @@ block content
 
 	div#cwfmChatterCtrl(ng-controller="cwfmChatterCtrl")
 		a#brandname.brand(data-toggle="modal", role="button", href="#aboutModal"): img(src="/public/img/cwfm.svg", alt="CWFM")
+		ul
+			li(ng-repeat="m in chat")
+				strong.username {{m.user.username}}:
+				span.message {{m.message}}
+				br
+				em {{m.posted}}
 		p: input(ng-model="message")
 		p: a(href="#send", ng-click="send()") Send
-		ul
-			li(ng-repeat="m in sorted()")
-				strong.username {{m.username}}:
-				span.message {{m.message}}
-				em {{m.time}}
