@@ -27,11 +27,6 @@ exports.build = function(mongoose) {
 		modified: Date
 	});
 
-	// Alias for duration
-	schema.virtual('length').get(function() {
-		return this.duration;
-	});
-
 	schema.virtual('score').get(function() {
 		return this.upvotes - this.downvotes;
 	});

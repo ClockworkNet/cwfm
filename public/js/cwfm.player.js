@@ -77,16 +77,16 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user) {
 
 	$scope.songPlayed  =  function( ) {
 		var song  =  $scope.room.song;
-		if ( ! song || ! song.length ) return 0;
+		if ( ! song || ! song.duration ) return 0;
 		var now  =  Date.now() / 1000.0;
 		return now - song.started;
 	};
 
 	$scope.songRemaining  =  function( ) {
 		var song  =  $scope.room.song;
-		if ( ! song || ! song.length ) return 0;
+		if ( ! song || ! song.duration ) return 0;
 		var now  =  Date.now() / 1000.0;
-		var end  =  song.started + song.length;
+		var end  =  song.started + song.duration;
 		return end - now;
 	};
 

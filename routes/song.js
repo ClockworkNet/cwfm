@@ -12,10 +12,18 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 
 		stream.on('error', function(e) {
 			console.error("Error opening stream", e);
+			return false;
 		});
 
 		var parser = mm(stream, {duration: true});
 		parser.on('metadata', function(result) {
+			console.info(result);
+
+			if (!result || !result.duration) {
+				console.error("Could not read duration metadata for file", filename, result);
+				return;
+			}
+
 			Song.findOne({path: filename}, function(e, song) {
 
 				if (e) {
@@ -30,7 +38,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 
 				for (var key in result) {
 					if (!result.hasOwnProperty(key)) continue;
-					song[key] = result.key;
+					song[key] = result[key];
 				}
 
 				song.modified = Date.now();
@@ -69,21 +77,22 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 	}
 
 	this.search = function(req, res, next){
-		var users = Song.find(req.query, function(arr, data) {
-			res.jsonp({songs: arr});
+		var users = Song.find(req.query, function(e, a) {
+			if (e) {
+				console.error(e);
+				return res.jsonp(500, {error: "Error searching songs"});
+			}
+			res.jsonp({songs: a});
 		});
 	};
 
 	this.detail = function(req, res, next) {
-		var id = req.params.id;
-		var song = Song.findById(id, function(song) {
+		Song.findById(req.params.id, function(e, song) {
+			if (e) {
+				console.error(e);
+				return res.jsonp(500, {error: "Error finding song"});
+			}
 			res.jsonp(song);
-		});
-	};
-
-	this.create = function(req, res, next) {
-		Song.create(req.body, function(e, user) {
-			res.jsonp(user);
 		});
 	};
 
@@ -102,7 +111,18 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 	};
 
 	this.stream = function(req, res, next) {
-		throw {error: "Not implemented"};
+		Song.findById(req.params.id, function(e, song) {
+			if (e) {
+				console.error(e);
+				return res.send(500, "Error sending file");
+			}
+			if (!song || !song.path) {
+				return res.send(404, "Song not found");
+			}
+			res.sendfile(song.path, function(e) {
+				console.error("Error sending song", song, e);
+			});
+		});
 	};
 
 	this.startWatch = function() {
