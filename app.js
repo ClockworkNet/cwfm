@@ -32,7 +32,7 @@ app.use(app.router);
 //app.use(require('stylus').middleware(path.join(__dirname, 'public')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
-app.configure('delevelopment', function() {
+app.configure('development', function() {
 	app.locals.pretty = true;
 });
 
@@ -60,7 +60,7 @@ db.on('error', console.error.bind(console, 'connection error:'));
 
 db.on('open', function() {
 
-	// Returns a new method that applys the controller context to the
+	// Returns a new method that binds the controller context to the
 	// method and appends any specified arguments to the parameter list
 	var apply = function(controller, method, args) {
 
@@ -105,7 +105,7 @@ db.on('open', function() {
 		room: new routes.room.Controller(Room, User, Playlist, Song, io),
 		song: new routes.song.Controller(config.songDir, Song, User, fs, path, mm),
 		user: new routes.user.Controller(User, Auth),
-		playlist: new routes.playlist.Controller(Playlist, Song)
+		playlist: new routes.playlist.Controller(Playlist, Song, User)
 	};
 
 	var secure = apply(controllers.user, 'verify');
@@ -130,7 +130,7 @@ db.on('open', function() {
 	app.post('/playlist/create', secure, apply(controllers.playlist, 'create'));
 	app.delete('/playlist/delete/:id', secure, apply(controllers.playlist, 'delete'));
 	app.post('/playlist/select/:id', secure, apply(controllers.playlist, 'select'));
-	app.post('/playlist/update/:pid/song/:action/:sid', secure, apply(controllers.playlist, 'update'));
+	app.post('/playlist/update/:id', secure, apply(controllers.playlist, 'update'));
 
 	app.get('/room/list', apply(controllers.room, 'list'));
 	app.get('/room/detail/:abbr', apply(controllers.room, 'detail'));

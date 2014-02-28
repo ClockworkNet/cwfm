@@ -17,7 +17,7 @@ exports.Controller = function(User, Auth) {
 
 	this.me = function(req, res, next) {
 		User.findOne({username: req.session.username})
-		.populate('playlists')
+		.populate('playlist')
 		.exec(function(e, user) {
 			if (e) {
 				console.error(e);

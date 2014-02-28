@@ -1,0 +1,23 @@
+{
+	"name": "cwfm",
+	"version": "0.0.0",
+	"homepage": "https://github.com/ClockworkNet/cwfm",
+	"authors": [
+		"Barrett Alexander <barrett@clockwork.net>"
+	],
+	"description": "Clockwork.FM",
+	"private": true,
+	"ignore": [
+		"**/.*",
+		"node_modules",
+		"public/bowery",
+		"test",
+		"tests"
+	],
+	"dependencies": {
+		"jquery": "*",
+		"jplayer": "*",
+		"json2": "*",
+		"angular": "*"
+	}
+}

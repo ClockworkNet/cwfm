@@ -133,6 +133,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 			}
 			console.info("Watching song directory", dir);
 			fs.watch(dir, function(event, filename) {
+				if (!filename) return;
 				updateSong(path.join(dir, filename));
 			});
 		});
