@@ -12,5 +12,7 @@ exports.settings = {
 	sessionKey: 'cwfm.sid',
 
 	// The maximum number of chat records to keep for a room
-	maxChat: 40
+	maxChat: 40,
+
+	songDir: '/Users/barrett/Music',
 };

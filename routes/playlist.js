@@ -1,25 +1,27 @@
-exports.list = function(req, res, next, Playlist) {
-	
-};
+exports.Controller = function(Playlist, Song) {
+	this.list = function(req, res, next) {
+		
+	};
 
-exports.detail = function(req, res, next, Playlist) {
+	this.detail = function(req, res, next) {
 
-};
+	};
 
-exports.create = function(req, res, next, Playlist) {
+	this.create = function(req, res, next) {
 
-};
+	};
 
-exports.delete = function(req, res, next, Playlist) {
+	this.delete = function(req, res, next) {
 
-};
+	};
 
-exports.select = function(req, res, next, Playlist) {
+	this.select = function(req, res, next) {
 
-};
+	};
 
-exports.update = function(req, res, next, Playlist) {
-	var action = req.params.action;
-	var pid = req.params.pid;
-	var sid = req.params.sid;
+	this.update = function(req, res, next) {
+		var action = req.params.action;
+		var pid = req.params.pid;
+		var sid = req.params.sid;
+	};
 };

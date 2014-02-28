@@ -10,14 +10,6 @@ var mm       = require('musicmetadata');
 
 var sessionStore = new express.session.MemoryStore();
 
-var routes = {
-	home: require('./routes'),
-	room: require('./routes/room'),
-	song: require('./routes/song'),
-	user: require('./routes/user'),
-	playlist: require('./routes/playlist')
-};
-
 var app = express();
 
 // all environments
@@ -68,63 +60,88 @@ db.on('error', console.error.bind(console, 'connection error:'));
 
 db.on('open', function() {
 
-	// Used to inject dependencies into the function used to handle a route
-	var route = function(handler) {
-		var args = Array.prototype.slice.call(arguments, 0);
-		var dependencies = args.length > 1 ? args.slice(1) : [];
+	// Returns a new method that applys the controller context to the
+	// method and appends any specified arguments to the parameter list
+	var apply = function(controller, method, args) {
+
+		if (!controller) {
+			throw new Error("Invalid controller");
+		}
+
+		if (typeof(controller[method]) != 'function') {
+			throw new Error("Invalid method on controller: " + method);
+		}
+
 		return function() {
-			var args = Array.prototype.slice.call(arguments, 0);
-			for (var i=0; i<dependencies.length; i++) {
-				args.push(dependencies[i]);
-			}
+			var params = Array.prototype.slice.call(arguments, 0);
+			if (args) params = params.concat(args);
 			try {
-				handler.apply(express, args);
+				controller[method].apply(controller, params);
 			}
 			catch (e) {
 				console.error(e);
 			}
-		}
-	}
+		};
+	};
 
-	var encrypt = require('sha1');
-	var Auth = require('./models/auth').build(mongoose, encrypt, config);
-	var User = require('./models/user').build(mongoose);
-	var secure = route(routes.user.verify, User);
+	var encrypt  = require('sha1');
 
-	app.get('/user', secure, route(routes.user.list, User));
-	app.get('/user/list', secure, route(routes.user.list, User));
-	app.get('/user/detail/:username', secure, route(routes.user.detail, User));
-	app.get('/user/me', route(routes.user.me, User));
-	app.post('/user/create', route(routes.user.create, User, Auth));
-	app.post('/user/login', route(routes.user.login, User, Auth, config));
-	app.post('/user/logout', route(routes.user.logout, User));
-	app.post('/user/update', secure, route(routes.user.update, User));
-
-	var Song = require('./models/song').build(mongoose);
-	app.get('/song/search', route(routes.song.search, Song));
-	app.get('/song/detail/:id', route(routes.song.detail, Song));
-	app.get('/song/:id', route(routes.song.stream, Song));
-	app.post('/song/scan', secure, route(routes.song.scan, Song, fs, mm));
-
+	var Auth     = require('./models/auth').build(mongoose, encrypt, config);
+	var User     = require('./models/user').build(mongoose);
+	var Song     = require('./models/song').build(mongoose);
 	var Playlist = require('./models/playlist').build(mongoose);
-	app.get('/playlist/list', secure, route(routes.playlist.list, Playlist));
-	app.get('/playlist/detail/:id', secure, route(routes.playlist.detail, Playlist));
-	app.post('/playlist/create', secure, route(routes.playlist.create, Playlist));
-	app.delete('/playlist/delete/:id', secure, route(routes.playlist.delete, Playlist));
-	app.post('/playlist/select/:id', secure, route(routes.playlist.select, Playlist));
-	app.post('/playlist/update/:pid/song/:action/:sid', secure, route(routes.playlist.update, Playlist));
+	var Room     = require('./models/room').build(mongoose, config);
 
-	var Room = require('./models/room').build(mongoose, config);
-	app.get('/room/list', route(routes.room.list, Room));
-	app.get('/room/detail/:abbr', route(routes.room.detail, Room));
-	app.get('/room/chat/:abbr', secure, route(routes.room.chat, Room, User));
-	app.post('/room/create', secure, route(routes.room.create, Room, User));
-	app.post('/room/delete/:abbr', secure, route(routes.room.delete, Room, User));
-	app.post('/room/join/:abbr', secure, route(routes.room.join, Room, User, io));
-	app.post('/room/dj/:abbr', secure, route(routes.room.dj, Room, User, Playlist, io));
-	app.post('/room/undj/:abbr', secure, route(routes.room.undj, Room, User, io));
-	app.post('/room/say/:abbr', secure, route(routes.room.say, Room, User, io));
-	app.post('/room/skip/:abbr', secure, route(routes.room.skip, Room, User, Playlist, io));
+	var routes = {
+		home: require('./routes'),
+		room: require('./routes/room'),
+		song: require('./routes/song'),
+		user: require('./routes/user'),
+		playlist: require('./routes/playlist')
+	};
+
+	var controllers = {
+		home: new routes.home.Controller(Room, User),
+		room: new routes.room.Controller(Room, User, Playlist, Song, io),
+		song: new routes.song.Controller(config.songDir, Song, User, fs, path, mm),
+		user: new routes.user.Controller(User, Auth),
+		playlist: new routes.playlist.Controller(Playlist, Song)
+	};
+
+	var secure = apply(controllers.user, 'verify');
+
+	app.get('/user', secure, apply(controllers.user, 'list'));
+	app.get('/user/list', secure, apply(controllers.user, 'list'));
+	app.get('/user/detail/:username', secure, apply(controllers.user, 'detail'));
+	app.get('/user/me', apply(controllers.user, 'me'));
+	app.post('/user/create', apply(controllers.user, 'create'));
+	app.post('/user/login', apply(controllers.user, 'login'));
+	app.post('/user/logout', apply(controllers.user, 'logout'));
+	app.post('/user/update', secure, apply(controllers.user, 'update'));
+
+	app.get('/song/search', apply(controllers.song, 'search'));
+	app.get('/song/detail/:id', apply(controllers.song, 'detail'));
+	app.get('/song/:id', apply(controllers.song, 'stream'));
+	app.post('/song/scan', secure, apply(controllers.song, 'scan'));
+	controllers.song.startWatch();
+
+	app.get('/playlist/list', secure, apply(controllers.playlist, 'list'));
+	app.get('/playlist/detail/:id', secure, apply(controllers.playlist, 'detail'));
+	app.post('/playlist/create', secure, apply(controllers.playlist, 'create'));
+	app.delete('/playlist/delete/:id', secure, apply(controllers.playlist, 'delete'));
+	app.post('/playlist/select/:id', secure, apply(controllers.playlist, 'select'));
+	app.post('/playlist/update/:pid/song/:action/:sid', secure, apply(controllers.playlist, 'update'));
+
+	app.get('/room/list', apply(controllers.room, 'list'));
+	app.get('/room/detail/:abbr', apply(controllers.room, 'detail'));
+	app.get('/room/chat/:abbr', secure, apply(controllers.room, 'chat'));
+	app.post('/room/create', secure, apply(controllers.room, 'create'));
+	app.post('/room/delete/:abbr', secure, apply(controllers.room, 'delete'));
+	app.post('/room/join/:abbr', secure, apply(controllers.room, 'join'));
+	app.post('/room/dj/:abbr', secure, apply(controllers.room, 'dj'));
+	app.post('/room/undj/:abbr', secure, apply(controllers.room, 'undj'));
+	app.post('/room/say/:abbr', secure, apply(controllers.room, 'say'));
+	app.post('/room/skip/:abbr', secure, apply(controllers.room, 'skip'));
 
 	// Wire up authentication to the socket connections
 	io.set('authorization', function(data, accept) {
@@ -145,12 +162,12 @@ db.on('open', function() {
 
 	io.sockets.on('connection', function(socket) {
 		//@todo: get user on disconnect
-		socket.on('listen', route(routes.room.listen, socket, Room, User, io));
-		socket.on('leave', route(routes.room.leave, socket, Room, User, io));
-		socket.on('disconnect', route(routes.room.exit, Room, User, io));
+		socket.on('listen', apply(controllers.room, 'listen', socket));
+		socket.on('leave', apply(controllers.room, 'leave', socket));
+		socket.on('disconnect', apply(controllers.room, 'exit'));
 	});
 
 	// UI
-	app.get('/', route(routes.home.home, User));
-	app.get('/room', route(routes.home.room, Room, User));
+	app.get('/', apply(controllers.home, 'home'));
+	app.get('/room', apply(controllers.home, 'room'));
 });

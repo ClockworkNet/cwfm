@@ -1,13 +1,35 @@
 exports.build = function(mongoose) {
 	var name = 'Song';
 	var schema = mongoose.Schema({
-		name: String,
-		artist: String,
+		title: String,
+		artist: [String],
+		albumartist: [String],
 		album: String,
+		year: Number,
+		track: {
+			no: Number,
+			of: Number
+		},
+		disk: {
+			no: Number,
+			of: Number
+		},
+		picture: {
+			format: String,
+			data: Buffer
+		},
 		type: String, // ogg, wav, mp4, mp3, fla
-		length: Number,
+		path: String,
+		duration: Number,
 		upvotes: Number,
-		downvotes: Number
+		downvotes: Number,
+		added: Date,
+		modified: Date
+	});
+
+	// Alias for duration
+	schema.virtual('length').get(function() {
+		return this.duration;
 	});
 
 	schema.virtual('score').get(function() {
