@@ -1,36 +1,43 @@
 exports.Controller = function(dir, Song, User, fs, path, mm) {
+	var allowed = ['.mp3', '.m4a', '.ogg', '.flac', '.wma', '.wmv'];
 
 	var updateSong = function(filename) {
 		if (!filename || filename.length == 0) return;
 
-		var allowed = ['.mp3', '.m4a', '.ogg', '.flac', '.wma', '.wmv'];
 		if (allowed.indexOf(path.extname(filename)) < 0) {
 			return;
 		}
 
-		fs.open(filename, 'r', function(e, fd) {
-			if (e || !fd) {
-				console.error("Error opening file", filename, e);
-				return;
-			}
-			var parser = mm(fd, {duration: true});
-			parser.on('metadata', function(result) {
-				Song.find({path: filename}, function(e, song) {
-					if (e) {
-						console.error("Error seeking song", e);
-						return;
-					}
-					if (!song) {
-						song = new Song();
-						song.added = Date.now();
-					}
-					for (var key in result) {
-						if (!result.hasOwnProperty(key)) continue;
-						song[key] = result.key;
-					}
-					song.modified = Date.now();
-					song.save();
-				});
+		var stream = fs.createReadStream(filename);
+
+		stream.on('error', function(e) {
+			console.error("Error opening stream", e);
+		});
+
+		var parser = mm(stream, {duration: true});
+		parser.on('metadata', function(result) {
+			Song.findOne({path: filename}, function(e, song) {
+
+				if (e) {
+					console.error("Error seeking song", e);
+					return;
+				}
+
+				if (!song) {
+					song = new Song();
+					song.added = Date.now();
+				}
+
+				for (var key in result) {
+					if (!result.hasOwnProperty(key)) continue;
+					song[key] = result.key;
+				}
+
+				song.modified = Date.now();
+				song.path     = filename;
+
+				console.info("Saving song", song);
+				song.save();
 			});
 		});
 	};
