@@ -125,12 +125,16 @@ exports.Controller = function(Playlist, Song, User) {
 				if (req.body.description) playlist.description = req.body.description;
 
 				if (req.body.songs) {
-					playlist.songs = req.body.songs;
+					playlist.songs = []
+					req.body.songs.forEach(function(song) {
+						var sid = song._id ? song._id : song;
+						playlist.songs.push(sid);
+					});
 				}
 
 				playlist.save(function(e) {
 					if (e) {
-						console.error(e);
+						console.error("Error updating playlist", e, playlist);
 						return res.jsonp(500, {error: "Error saving playlist"});
 					}
 					return res.jsonp(playlist);

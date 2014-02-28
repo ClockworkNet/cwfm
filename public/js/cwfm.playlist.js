@@ -1,18 +1,18 @@
 if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 
 cwfm.playlist       =  {};
-cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
+cwfm.playlist.ctrl  =  function( $scope, $http, $util, $room, $user ) {
 
-	this.minQueryLength  = 3;
-	this.searchRequest   = null;
-	this.searchThrottle  = 200;
+	var minQueryLength  = 3;
+	var searchRequest   = null;
+	var searchThrottle  = 200;
 
 	$scope.me           = $user.get();
 	$scope.playlists    = [];
 	$scope.room         = $room.get();
-	$scope.results      = [];
+	$scope.result       = {};
 	$scope.new_playlist = {};
-	$scope.error        = '';
+	$scope.message      = '';
 
 	$http.get('/playlist/list')
 	.success(function(playlists) {
@@ -35,14 +35,12 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 			$scope.me.playlist = playlist;
 		})
 		.error(function(e) {
-			$scope.error = e.error;
+			$scope.message = e;
 		});
 	};
 
 	$scope.search = function() {
-		console.info('kyup', arguments);
-		if ($scope.query.length < this.minQueryLength) {
-			console.info('tiny');
+		if ($scope.query.length < minQueryLength) {
 			return;
 		}
 
@@ -52,22 +50,47 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 			console.info('throttling search');
 		}
 
-		console.info('searching', $scope.query);
-		this.searchRequest = $http.get('/song/search/?q=' + $scope.query);
-		this.searchRequest.success(angular.bind(this, function(songs) {
-			console.info(songs);
-			$scope.results = songs;
-			this.searchRequest = null;
-		}));
-		this.searchRequest.error(angular.bind(this, function(e) {
-			$scope.results = [];
-			$scope.error = e.error;
-			this.searchRequest = null;
-		}));
+		var data = $util.querystring.encode({q: $scope.query});
+		var url  = '/song/search/?' + data;
+		searchRequest = $http.get(url);
+
+		searchRequest.success(function(result) {
+			console.info(url, result);
+			$scope.result = result;
+			searchRequest = null;
+		});
+
+		searchRequest.error(function(e) {
+			$scope.message = e;
+			searchRequest = null;
+		});
+	};
+
+	$scope.add = function(song) {
+		if (!$scope.me.playlist) {
+			$scope.message = {error: "Select a playlist first"};
+			return;
+		}
+		if (!$scope.me.playlist.songs) {
+			$scope.me.playlist.songs = [];
+		}
+		$scope.me.playlist.songs.unshift(song);
+		$scope.save();
 	};
 
 	$scope.save = function() {
-		
+		if (!$scope.me.playlist) {
+			$scope.message = {error: "Select a playlist first"};
+			return;
+		}
+		$http.post('/playlist/update/' + $scope.me.playlist._id, $scope.me.playlist)
+		.success(function(playlist) {
+			$scope.message = {info: "Saved playlist!"};
+		})
+		.error(function(e) {
+			console.error('error saving playlist', e);
+			$scope.message = e;
+		});
 	};
 
 	$scope.create = function() {
@@ -75,11 +98,34 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 		.success(function(playlist) {
 			$scope.playlists.unshift(playlist);
 			$scope.me.playlist = playlist;
-			$scope.error = '';
+			$scope.message = {};
 		})
 		.error(function(e) {
 			console.error('error', e);
-			$scope.error = e.error;
+			$scope.message = e;
+		});
+	};
+
+	$scope.songName = function(song) {
+		if (song.title) {
+			return song.title;
+		}
+		if (song.path) {
+			var slash = song.path.lastIndexOf('/');
+			var dot   = song.path.lastIndexOf('.');
+			return song.path.substr(slash + 1, dot - slash - 1);
+		}
+		return song._id;
+	};
+
+	$scope.notInPlaylist = function(song) {
+		return ! $scope.inPlaylist(song);
+	};
+
+	$scope.inPlaylist = function(song) {
+		if (!$scope.me.playlist || !$scope.me.playlist.songs) return false;
+		return $scope.me.playlist.songs.some(function(ps) {
+			return ps._id == song._id;
 		});
 	};
 }

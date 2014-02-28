@@ -3,6 +3,7 @@ extends layout
 block scripts
 	script(src="/public/bowery/jplayer/jquery.jplayer/jquery.jplayer.js")
 	script(src="/public/js/cwfm.filters.js")
+	script(src="/public/js/cwfm.util.js")
 	script(src="/public/js/cwfm.data.js")
 	script(src="/public/js/cwfm.socket.js")
 	script(src="/public/js/cwfm.room.js")
@@ -14,20 +15,6 @@ block scripts
 
 block content
 	div#jplayer.jp-jplayer
-
-	div#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
-		div(ng-show="user.auth")
-			button(ng-click="logout()") Log out
-
-		div(ng-hide="user.auth")
-			h3 Log in
-			ul
-				li
-					input(ng-model="user.username", placeholder="Username")
-				li 
-					input(ng-model="user.password", type="password", placeholder="Password")
-				li
-					button(ng-click="login()") Log in
 
 	div#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
 		h1 Welcome to {{room.name}}
@@ -77,7 +64,8 @@ block content
 
 
 	div#cwfmPlaylistCtrl.playlist_wrapp(ng-controller="cwfmPlaylistCtrl")
-		div(ng-show="error") {{error}}
+		div(ng-show="message.error") {{message.error}}
+		div(ng-show="message.info") {{message.info}}
 		div.queue_wrap
 			div.queue(ng-show="me.playlist.name")
 				h3 Queue
@@ -86,13 +74,13 @@ block content
 					input#add_song(ng-model="query", ng-keyup="search()", placeholder="Add a Song")
 
 				ul#song_results_list.songs_list(ng-show="query.length")
-					li.songs_item(ng-repeat="song in results", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
-						a(ng-click="add(song)", href="#add") {{song.title}}
+					li.songs_item(ng-repeat="song in result.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
+						a(ng-click="add(song)", href="#add") {{songName(song)}}
 
 				div#myqueue_wrap
 					ul#my_queue.songs_list
-						li.songs_item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}").
-							{{song.label}}
+						li.songs_item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}") 
+							span {{songName(song)}}
 							a.remove(ng-click="removesong(song)", href="#remove") [x]
 
 		dif.library_wrap
@@ -120,3 +108,17 @@ block content
 				em {{m.posted}}
 		p: input(ng-model="message")
 		p: a(href="#send", ng-click="send()") Send
+
+	div#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
+		div(ng-show="user.auth")
+			button(ng-click="logout()") Log out
+
+		div(ng-hide="user.auth")
+			h3 Log in
+			ul
+				li
+					input(ng-model="user.username", placeholder="Username")
+				li 
+					input(ng-model="user.password", type="password", placeholder="Password")
+				li
+					button(ng-click="login()") Log in

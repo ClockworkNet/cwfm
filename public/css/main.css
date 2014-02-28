@@ -178,6 +178,7 @@ html, body {
 	background: #ddd;/* 100% width footer bg color */
 	min-width: 320px;
 }
+/*
 #cwfmRoomCtrl {
 	position: absolute;
 	top:0;
@@ -218,7 +219,7 @@ html, body {
     width: 100%;
     height: 5em;
 }
-
+*/
 h1 {
 	font-family: "BrandonGrotesqueBlack",sans-serif;
 	text-transform: uppercase;

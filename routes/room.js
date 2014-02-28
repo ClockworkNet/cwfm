@@ -59,12 +59,15 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 
 	// Plays a song and schedules the call for playing the next song
 	var playSong = function(room, song) {
+		if (!song) return;
+
+		var started = Date.now();
 		room.song = song;
-		room.songStarted = Date.now();
+		room.songStarted = started;
 		room.save();
 
 		// Send a message to all clients in the room
-		song.started = room.songStarted;
+		song.started = started;
 		io.sockets.in(room.abbr).emit('song.changed', song);
 
 		// Schedule the next song

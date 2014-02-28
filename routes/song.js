@@ -77,7 +77,20 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 	}
 
 	this.search = function(req, res, next){
-		var users = Song.find(req.query, function(e, a) {
+		var terms = null;
+		try {
+			terms = new RegExp(req.query.q, 'i');
+		}
+		catch (e) {
+			console.error("Received weird search", req.query, e);
+			return res.jsonp([]);
+		}
+		var query = Song.find({path: terms})
+		.or({title: terms})
+		.or({album: terms})
+		.or({artist: terms}) 
+		.or({albumartist: terms});
+		query.exec(function(e, a) {
 			if (e) {
 				console.error(e);
 				return res.jsonp(500, {error: "Error searching songs"});
