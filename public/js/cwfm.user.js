@@ -37,14 +37,20 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 
 	$scope.login  =  function( ) {
 		$http.post('/user/login', $scope.user)
-			.success(set_user)
-			.error(oops);
+		.success(function(user) {
+			set_user(user);
+			$user.trigger('login');
+		})
+		.error(oops);
 	};
 
 	$scope.logout  =  function( ) {
 		$http.post('/user/logout', {})
-			.success(set_user)
-			.error(oops);
+		.success(function(user) {
+			set_user(user);
+			$user.trigger('logout');
+		})
+		.error(oops);
 	}
 
 	init( );

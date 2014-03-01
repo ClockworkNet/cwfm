@@ -4,19 +4,27 @@ cwfm.data = {};
 
 cwfm.data.service  =  function() {
 	var data      = {};
-	var listeners = [];
+	var listeners = {};
 	return {
 		change: function (callback) {
-			listeners.push(callback);
+			this.on('change', callback);
+		}
+		, on: function(event, callback) {
+			if (!listeners[event]) listeners[event] = [];
+			listeners[event].push(callback);
+		}
+		, trigger: function(event) {
+			if (!listeners[event]) return;
+			angular.forEach(listeners[event], function(listener) {
+				listener(data);
+			});
 		}
 		, get: function () {
 			return data;
 		}
-		, set: function (data) {
-			data = typeof(data) == 'object' ? data : {};
-			angular.forEach(listeners, function(listener) {
-				listener(data);
-			});
+		, set: function (value) {
+			data = typeof(value) == 'object' ? value : {};
+			this.trigger('change');
 		}
 	}
 };

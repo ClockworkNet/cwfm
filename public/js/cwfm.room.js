@@ -3,7 +3,7 @@ if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 cwfm.room  =  { ping: 1000 };
 
 // Connects to the server via a socket and monitors all of the changes to the room
-cwfm.room.ctrl  =  function( $scope, $http, $socket, $room ) {
+cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 
 	$scope.room = {};
 	$scope.abbr = window.location.search.substr(1);
@@ -36,6 +36,14 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room ) {
 
 	$room.change(function(room) {
 		$scope.room = room;
+	});
+
+	$user.on('login', function(user) {
+		window.location.reload();
+	});
+
+	$user.on('logout', function(user) {
+		window.location = '/';
 	});
 
 	$socket.on('dj.joined', function(dj) {
