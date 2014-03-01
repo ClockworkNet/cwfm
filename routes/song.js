@@ -1,5 +1,6 @@
 exports.Controller = function(dir, Song, User, fs, path, mm) {
 	var allowed = ['.mp3', '.m4a', '.ogg', '.flac', '.wma', '.wmv'];
+	var skipMeta = ['picture'];
 
 	var updateSong = function(filename) {
 		if (!filename || filename.length == 0) return;
@@ -38,6 +39,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 
 				for (var key in result) {
 					if (!result.hasOwnProperty(key)) continue;
+					if (skipMeta.indexOf(key) >= 0) continue;
 					song[key] = result[key];
 				}
 
@@ -133,7 +135,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 				return res.send(404, "Song not found");
 			}
 			res.sendfile(song.path, function(e) {
-				console.error("Error sending song", song, e);
+				if (e) console.error("Error sending song", e, song);
 			});
 		});
 	};

@@ -1,7 +1,7 @@
 if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 
 cwfm.playlist       =  {};
-cwfm.playlist.ctrl  =  function( $scope, $http, $util, $room, $user ) {
+cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 
 	var minQueryLength  = 3;
 	var searchRequest   = null;
@@ -27,6 +27,33 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $util, $room, $user ) {
 	$room.change(function(room) {
 		$scope.room = room;
 	});
+
+	$socket.on('song.changed', function(song) {
+		if (!$scope.me.playlist) return;
+
+		var meId = $scope.me._id;
+		$scope.room.djs.some(function(dj) {
+			var djId = dj._id ? dj._id : dj;
+			// If you're a DJ, let's refresh your playlist
+			if (meId == djId) {
+				$scope.load();
+				return true;
+			}
+			return false;
+		});
+	});
+
+	$scope.load = function(playlist) {
+		if (!playlist) playlist = $scope.me.playlist;
+		if (!playlist) return;
+
+		var plid = playlist._id ? playlist._id : playlist;
+
+		$http.get('/playlist/detail/' + plid)
+		.success(function(playlist) {
+			$scope.me.playlist = playlist;
+		});
+	};
 
 	$scope.select = function(playlist) {
 		if (!playlist) return;

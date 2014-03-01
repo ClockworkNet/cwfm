@@ -2,9 +2,10 @@ if ( typeof cwfm == 'undefined' ) var cwfm  =  {};
 
 cwfm.player = {};
 
-cwfm.player.ctrl = function($scope, $http, $socket, $room, $user) {
-	$scope.room = {};
-	$scope.me   = {};
+cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $timeout) {
+	$scope.room      = {};
+	$scope.me        = {};
+	$scope.remaining = 0;
 
 	// Wrapper for calling jPlayer functions
 	$scope.player = function() {
@@ -40,12 +41,20 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user) {
 		});
 	};
 
-	$socket.on('song', function(song) {
+	$socket.on('song.stopped', function(room) {
+		$scope.room.song = null;
+		$scope.room.songStarted = null;
+		$scope.stopSong();
+	});
+
+	$socket.on('song.changed', function(song) {
 		$scope.room.song = song;
 		if (!$scope.muted) {
+			console.info("Playing song", song);
 			$scope.playSong();
 		}
 		else {
+			console.info("Muted on song", song);
 			$scope.player('clearMedia');
 		}
 	});
@@ -64,30 +73,44 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user) {
 	};
 
 	$scope.playSong = function(song) {
-		song = song ? song : $scope.song;
+		song = song ? song : $scope.room.song;
 		if (!song) return;
-		var data = {
-			path: '/song/' + song._id,
-			type: song.type
-		};
+		var type = song.type ? song.type : 'mp3';
+		var data = {};
+		data[type] = '/song/' + song._id;
 		var start = $scope.songPlayed();
+		console.info("Requesting", data, "Starting at", start);
 		$scope.player('setMedia', data);
 		$scope.player('play', start);
 	};
 
-	$scope.songPlayed  =  function( ) {
+	$scope.songPlayed  =  function() {
 		var song  =  $scope.room.song;
 		if ( ! song || ! song.duration ) return 0;
-		var now  =  Date.now() / 1000.0;
-		return now - song.started;
+		var now   =  Date.now() / 1000.0;
+		var start = $scope.songStartTime();
+		return now - start;
 	};
 
-	$scope.songRemaining  =  function( ) {
+	$scope.songStartTime = function() {
+		if (!$scope.room.songStarted) return 0;
+		return Date.parse($scope.room.songStarted) / 1000.0;
+	};
+
+	$scope.songRemaining  =  function() {
 		var song  =  $scope.room.song;
 		if ( ! song || ! song.duration ) return 0;
-		var now  =  Date.now() / 1000.0;
-		var end  =  song.started + song.duration;
-		return end - now;
+		var now   = Date.now() / 1000.0;
+		var start = $scope.songStartTime();
+		var end   = start + song.duration;
+		var diff = end - now;
+		if (diff < 0) return 0;
+		return diff;
+	};
+
+	$scope.tick = function() {
+		$scope.remaining = $scope.songRemaining();
+		$timeout($scope.tick, 500);
 	};
 
 	$scope.toggleMuting  =  function( ) {
@@ -95,7 +118,7 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user) {
 			$scope.stopSong( );
 		}
 		else {
-			$scope.playSong( );
+			$scope.playSong();
 		}
 	};
 
@@ -118,4 +141,6 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user) {
 	$scope.skipSong = function() {
 		$http.post('/room/skip/' + $scope.room.abbr, {});
 	};
+
+	$scope.tick();
 };

@@ -41,7 +41,7 @@ block content
 			dd {{room.song.title}}
 
 			dt Time Remaining
-			dd {{songRemaining() | time}}
+			dd {{remaining | time}}
 
 			dt Played By
 			dd {{room.dj.name}}
@@ -59,7 +59,7 @@ block content
 				a(ng-click="dj()", href="#dj") Start DJing
 			li(ng-show="djing()")
 				a(ng-click="undj()", href="#undj") Stop DJing
-			li(ng-show="me.admin || currentDj(me)")
+			li
 				a(ng-click="skipSong()", href="#skip") Skip Song
 
 

@@ -144,6 +144,7 @@ db.on('open', function() {
 	app.post('/room/skip/:abbr', secure, apply(controllers.room, 'skip'));
 
 	// Wire up authentication to the socket connections
+	io.set('log level', 1);
 	io.set('authorization', function(data, accept) {
 		if (!data.headers.cookie) {
 			return accept('Unauthorized', false);

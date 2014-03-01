@@ -14,10 +14,6 @@ exports.build = function(mongoose) {
 			no: Number,
 			of: Number
 		},
-		picture: {
-			format: String,
-			data: Buffer
-		},
 		type: String, // ogg, wav, mp4, mp3, fla
 		path: String,
 		duration: Number,
@@ -30,6 +26,12 @@ exports.build = function(mongoose) {
 	schema.virtual('score').get(function() {
 		return this.upvotes - this.downvotes;
 	});
+
+	schema.methods.remaining = function(start) {
+		var now = Date.now();
+		start = typeof(start) == 'Date' ? Date.parse(start) : start;
+		return now - start;
+	};
 
 	return mongoose.model(name, schema);
 }
