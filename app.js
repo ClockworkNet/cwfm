@@ -122,9 +122,9 @@ db.on('open', function() {
 	app.post('/user/logout', apply(controllers.user, 'logout'));
 	app.post('/user/update', secure, apply(controllers.user, 'update'));
 
-	app.get('/song/search', apply(controllers.song, 'search'));
-	app.get('/song/detail/:id', apply(controllers.song, 'detail'));
-	app.get('/song/:id', apply(controllers.song, 'stream'));
+	app.get('/song/search', secure, apply(controllers.song, 'search'));
+	app.get('/song/detail/:id', secure, apply(controllers.song, 'detail'));
+	app.get('/song/:id', secure, apply(controllers.song, 'stream'));
 	app.post('/song/scan', secure, apply(controllers.song, 'scan'));
 	controllers.song.startWatch();
 

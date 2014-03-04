@@ -13,6 +13,10 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
 	});
 
 	var pullChat = function() {
+		if (!$scope.room) {
+			$scope.chat = [];
+			return;
+		}
 		$http.get('/chat/list/' + $scope.room.abbr)
 		.success(function(chat) {
 			$scope.chat = chat;
@@ -21,6 +25,7 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
 
 	$socket.on('chat', function(data) {
 		if (!$scope.chat) $scope.chat = [];
+		console.info(data);
 		$scope.chat.push(data);
 	});
 

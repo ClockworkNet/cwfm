@@ -5,7 +5,10 @@ cwfm.player = {};
 cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $timeout) {
 	$scope.room      = {};
 	$scope.me        = {};
+
+	$scope.played    = 0;
 	$scope.remaining = 0;
+	$scope.percent   = 0;
 
 	// Wrapper for calling jPlayer functions
 	$scope.player = function() {
@@ -97,19 +100,28 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $timeout) {
 		return Date.parse($scope.room.songStarted) / 1000.0;
 	};
 
-	$scope.songRemaining  =  function() {
+	$scope.calcSong  =  function() {
 		var song  =  $scope.room.song;
-		if ( ! song || ! song.duration ) return 0;
-		var now   = Date.now() / 1000.0;
-		var start = $scope.songStartTime();
-		var end   = start + song.duration;
-		var diff = end - now;
-		if (diff < 0) return 0;
-		return diff;
+		if ( ! song || ! song.duration ) {
+			$scope.remaining = 0;
+			$scope.percent = 0;
+			return;
+		}
+		var now    = Date.now() / 1000.0;
+		var start  = $scope.songStartTime();
+		var end    = start + song.duration;
+		var passed = now - start;
+		passed     = (passed < 0) ? 0 : passed;
+		var remain = end - now;
+		remain     = (remain < 0) ? 0 : remain;
+
+		$scope.remaining = remain;
+		$scope.played    = passed;
+		$scope.percent   = passed / song.duration;
 	};
 
 	$scope.tick = function() {
-		$scope.remaining = $scope.songRemaining();
+		$scope.calcSong();
 		$timeout($scope.tick, 500);
 	};
 

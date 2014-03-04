@@ -13,102 +13,26 @@ block scripts
 	script(src="/public/js/cwfm.chatter.js")
 	script(src="/public/js/cwfm.room.app.js")
 
-block content
+block left 
 	div#jplayer.jp-jplayer
 
 	div#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
-		h1 Welcome to {{room.name}}
-		p {{room.description}}
+		div(ng-show="room.abbr")
+			a#brandname.brand(data-toggle="modal", role="button", href="#aboutModal"): img(src="/public/img/cwfm.svg", alt="CWFM")
+			h1 Welcome to {{room.name}}
+			p {{room.description}}
 
-		h2(ng-show="room.djs.length") DJs
-		ul
-			li(ng-repeat="dj in room.djs").
-				{{dj.username}}
+			h2(ng-show="room.djs.length") DJs
+			ul
+				li(ng-repeat="dj in room.djs").
+					{{dj.username}}
 
-		h2(ng-show="room.listeners.length") Listeners
-		ul
-			li(ng-repeat="listener in room.listeners").
-				{{listener.username}}
+			h2(ng-show="room.listeners.length") Listeners
+			ul
+				li(ng-repeat="listener in room.listeners").
+					{{listener.username}}
 
-
-	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl")
-		div.player(ng-show="room.song")
-			input#mute-button(type="checkbox", ng-model="muted", ng-click="toggleMuting()")
-			label(for="mute-button") Mute?
-
-		dl(ng-show="room.song")
-			dt Now Playing
-			dd {{room.song.title}}
-
-			dt Time Remaining
-			dd {{remaining | time}}
-
-			dt Played By
-			dd {{room.dj.name}}
-
-			dt Score
-			dd {{room.song.score}}
-
-		h2 Actions
-		ul
-			li(ng-show="room.song")
-				a(ng-click="upvote()", href="#upvote") Upvote
-			li(ng-show="room.song")
-				a(ng-click="downvote()", href="#downvote") Downvote
-			li(ng-hide="djing()")
-				a(ng-click="dj()", href="#dj") Start DJing
-			li(ng-show="djing()")
-				a(ng-click="undj()", href="#undj") Stop DJing
-			li
-				a(ng-click="skipSong()", href="#skip") Skip Song
-
-
-	div#cwfmPlaylistCtrl.playlist_wrapp(ng-controller="cwfmPlaylistCtrl")
-		div(ng-show="message.error") {{message.error}}
-		div(ng-show="message.info") {{message.info}}
-		div.queue_wrap
-			div.queue(ng-show="me.playlist.name")
-				h3 Queue
-				h4 {{me.playlist.name}}
-				div.add_song_wrap
-					input#add_song(ng-model="query", ng-keyup="search()", placeholder="Add a Song")
-
-				ul#song_results_list.songs_list(ng-show="query.length")
-					li.songs_item(ng-repeat="song in result.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
-						a(ng-click="add(song)", href="#add") {{songName(song)}}
-
-				div#myqueue_wrap
-					ul#my_queue.songs_list
-						li.songs_item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}") 
-							span {{songName(song)}}
-							a.remove(ng-click="removesong(song)", href="#remove") [x]
-
-		dif.library_wrap
-			dif.library
-				h3 Library
-				ul.playlists
-					li.new_playlist
-						a#new_playlist New Playlist
-						form
-							label(for="playlist-name") Name: 
-							input#playlist-name(ng-model="new_playlist.name")
-							a(ng-click="create()", href="#create") Create
-					li(ng-repeat="playlist in playlists")
-						a.playlists_item(ng-click="select(playlist)", href="#load", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}").
-							{{playlist.name}}
-
-
-	div#cwfmChatterCtrl(ng-controller="cwfmChatterCtrl")
-		a#brandname.brand(data-toggle="modal", role="button", href="#aboutModal"): img(src="/public/img/cwfm.svg", alt="CWFM")
-		ul
-			li(ng-repeat="m in chat")
-				strong.username {{m.user.username}}:
-				span.message {{m.content}}
-				br
-				em {{m.posted}}
-		p: input(ng-model="message")
-		p: a(href="#send", ng-click="send()") Send
-
+block content
 	div#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
 		div(ng-show="user.auth")
 			button(ng-click="logout()") Log out
@@ -122,3 +46,85 @@ block content
 					input(ng-model="user.password", type="password", placeholder="Password")
 				li
 					button(ng-click="login()") Log in
+
+
+	div#cwfmChatterCtrl(ng-controller="cwfmChatterCtrl")
+		div(ng-show="room.abbr")
+			ul
+				li(ng-repeat="m in chat")
+					strong.username {{m.author.username}}:
+					span.message {{m.content}}
+					br
+					em {{m.posted}}
+			p: input(ng-model="message")
+			p: a(href="#send", ng-click="send()") Send
+
+
+	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl")
+		div(ng-show="room.abbr")
+			div.player(ng-show="room.song")
+				input#mute-button(type="checkbox", ng-model="muted", ng-click="toggleMuting()")
+				label(for="mute-button") Mute?
+
+			div.progress(ng-show="room.song")
+				div.progress-bar(role="progressbar", style="width: {{percent}}%") {{played | time}}
+
+			dl(ng-show="room.song")
+				dt Now Playing
+				dd {{room.song.title}}
+
+				dt Played By
+				dd {{room.dj.name}}
+
+				dt Score
+				dd {{room.song.score}}
+
+			h2 Actions
+			ul
+				li(ng-show="room.song")
+					a(ng-click="upvote()", href="#upvote") Upvote
+				li(ng-show="room.song")
+					a(ng-click="downvote()", href="#downvote") Downvote
+				li(ng-hide="djing()")
+					a(ng-click="dj()", href="#dj") Start DJing
+				li(ng-show="djing()")
+					a(ng-click="undj()", href="#undj") Stop DJing
+				li
+					a(ng-click="skipSong()", href="#skip") Skip Song
+
+
+block right
+	div#cwfmPlaylistCtrl.playlist_wrapp(ng-controller="cwfmPlaylistCtrl")
+		div(ng-show="me.auth")
+			div(ng-show="message.error") {{message.error}}
+			div(ng-show="message.info") {{message.info}}
+			div.queue_wrap
+				div.queue(ng-show="me.playlist.name")
+					h3 Queue
+					h4 {{me.playlist.name}}
+					div.add_song_wrap
+						input#add_song(ng-model="query", ng-keyup="search()", placeholder="Add a Song")
+
+					ul#song_results_list.songs_list(ng-show="query.length")
+						li.songs_item(ng-repeat="song in result.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
+							a(ng-click="add(song)", href="#add") {{songName(song)}}
+
+					div#myqueue_wrap
+						ul#my_queue.songs_list
+							li.songs_item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}") 
+								span {{songName(song)}}
+								a.remove(ng-click="removesong(song)", href="#remove") [x]
+
+			dif.library_wrap
+				dif.library
+					h3 Library
+					ul.playlists
+						li.new_playlist
+							a#new_playlist New Playlist
+							form
+								label(for="playlist-name") Name: 
+								input#playlist-name(ng-model="new_playlist.name")
+								a(ng-click="create()", href="#create") Create
+						li(ng-repeat="playlist in playlists")
+							a.playlists_item(ng-click="select(playlist)", href="#load", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}").
+								{{playlist.name}}

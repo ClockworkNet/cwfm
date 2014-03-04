@@ -101,9 +101,8 @@ exports.Controller = function(User, Auth) {
 
 	this.logout = function(req, res, next) {
 		if (!req.session.user) return res.jsonp({});
-		var user = req.session.user;
-		user.lastLogout = Date.now();
-		user.save();
-		return res.jsonp({});
+		User.update({lastLogout: Date.now()}, {_id: req.session.user._id}, function(e, n) {
+			return res.jsonp({});
+		});
 	};
 };

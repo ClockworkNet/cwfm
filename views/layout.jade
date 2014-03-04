@@ -12,12 +12,22 @@ html.no-js(ng-app="cwfmApp")
 
 		link(rel='stylesheet', href='/public/css/normalize.css')
 		link(rel='stylesheet', href='/public/css/main.css')
+		link(rel='stylesheet', href='/public/bowery/bootstrap/dist/css/bootstrap.min.css')
+		link(rel='stylesheet', href='/public/bowery/bootstrap/dist/css/bootstrap-theme.min.css')
 
 		script(src="/public/bowery/jquery/dist/jquery.min.js")
 		script(src="/public/bowery/json2/json2.js")
 		script(src="/public/bowery/angular/angular.min.js")
 		script(src="/socket.io/socket.io.js")
+		script(src="/public/bowery/bootstrap/dist/js/bootstrap.min.js")
 
 		block scripts
 	body
-		block content
+		div.col-md-3
+			block left
+
+		div.col-md-6
+			block content
+
+		div.col-md-3
+			block right
