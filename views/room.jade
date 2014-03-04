@@ -32,32 +32,26 @@ block left
 				li(ng-repeat="listener in room.listeners").
 					{{listener.username}}
 
-block content
+block main 
 	div#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
-		div(ng-show="user.auth")
-			button(ng-click="logout()") Log out
-
-		div(ng-hide="user.auth")
-			h3 Log in
-			ul
-				li
-					input(ng-model="user.username", placeholder="Username")
-				li 
-					input(ng-model="user.password", type="password", placeholder="Password")
-				li
-					button(ng-click="login()") Log in
+		include includes/user
 
 
 	div#cwfmChatterCtrl(ng-controller="cwfmChatterCtrl")
 		div(ng-show="room.abbr")
-			ul
-				li(ng-repeat="m in chat")
-					strong.username {{m.author.username}}:
+			ul.list-group
+				li.list-group-item(ng-repeat="m in chat | filter:content")
 					span.message {{m.content}}
 					br
+					strong.username {{m.author.username}}
+					br
 					em {{m.posted}}
-			p: input(ng-model="message")
-			p: a(href="#send", ng-click="send()") Send
+			form.form-inline
+				div.input-group
+					input.form-control(ng-model="message", placeholder="Say something...")
+					span.input-group-btn
+						a.btn.btn-default(href="#send", ng-click="send()") 
+							span.glyphicon.glyphicon-comment
 
 
 	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl")
@@ -118,13 +112,16 @@ block right
 			dif.library_wrap
 				dif.library
 					h3 Library
-					ul.playlists
-						li.new_playlist
-							a#new_playlist New Playlist
-							form
-								label(for="playlist-name") Name: 
-								input#playlist-name(ng-model="new_playlist.name")
-								a(ng-click="create()", href="#create") Create
-						li(ng-repeat="playlist in playlists")
+					ul.playlists.list-group
+						li.new_playlist.list-group-item
+							h4 New Playlist
+							form.form-inline
+								div.input-group
+									label.sr-only(for="playlist-name") Name 
+									input#playlist-name.form-control(ng-model="new_playlist.name", placeholder="Playlist name")
+									span.input-group-btn
+										button.btn.btn-default(ng-click="create()", href="#create") 
+											span.glyphicon.glyphicon-plus-sign
+						li.list-group-item(ng-repeat="playlist in playlists")
 							a.playlists_item(ng-click="select(playlist)", href="#load", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}").
 								{{playlist.name}}

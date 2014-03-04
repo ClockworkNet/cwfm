@@ -2,7 +2,7 @@ exports.Controller = function(Playlist, Song, User) {
 	this.list = function(req, res, next) {
 		Playlist.find({owners: req.session.user._id}, function(e, a) {
 			if (e) {
-				console.error(e);
+				console.trace(e);
 				return res.jsonp(500, {error: "Error getting playlists"});
 			}
 			return res.jsonp(a);
@@ -14,7 +14,7 @@ exports.Controller = function(Playlist, Song, User) {
 		.populate('owners songs')
 		.exec(function(e, playlist) {
 			if (e) {
-				console.error(e);
+				console.trace(e);
 				return res.jsonp(500, {error: "Error getting playlist"});
 			}
 			return res.jsonp(playlist);
@@ -26,7 +26,7 @@ exports.Controller = function(Playlist, Song, User) {
 		playlist.owners = [req.session.user._id];
 		playlist.save(function(e) {
 			if (e) {
-				console.error(e, req.body);
+				console.trace(e, req.body);
 				return res.jsonp(500, {error: "Error saving playlist"});
 			}
 			return res.jsonp(playlist);
@@ -43,7 +43,7 @@ exports.Controller = function(Playlist, Song, User) {
 			}
 			Playlist.remove({_id: playlist._id}, function(e) {
 				if (e) {
-					console.error(e);
+					console.trace(e);
 					return res.jsonp(500, {error: "Error deleting your list"});
 				}
 				return res.jsonp(playlist);
@@ -61,16 +61,10 @@ exports.Controller = function(Playlist, Song, User) {
 			if (!playlist.isOwner(req.session.user)) {
 				return res.jsonp(401, {error: "That's not your playlist, silly!"});
 			}
-			if (req.session.user.playlist == playlist._id) {
-				return res.jsonp(playlist);
-			}
 			User.update({_id: req.session.user._id}, {playlist: playlist._id}, function(e, n) {
 				if (e) {
-					console.error(e);
+					console.trace(e, user);
 					return res.jsonp(500, {error: "Can't select your playlist"});
-				}
-				if (!n) {
-					return res.jsonp(404, {error: "Couldn't update user"});
 				}
 				return res.jsonp(playlist);
 			});
@@ -99,7 +93,7 @@ exports.Controller = function(Playlist, Song, User) {
 
 			playlist.save(function(e) {
 				if (e) {
-					console.error("Error updating playlist", e, playlist);
+					console.trace("Error updating playlist", e, playlist);
 					return res.jsonp(500, {error: "Error saving playlist"});
 				}
 				return res.jsonp(playlist);

@@ -16,7 +16,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 
 	var nextSong = function(room) {
 		if (!room) {
-			console.trace("No room");
+			console.error("No room");
 		}
 
 		if (songTimers[room.abbr]) {
@@ -60,13 +60,13 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 
 		User.findById(djId).populate('playlist').exec(function(e, dj) {
 			if (e || !dj) {
-				console.error("Error finding DJ", e, dj);
+				console.trace("Error finding DJ", e, dj);
 				return;
 			}
 			var songId = dj.playlist.songAt(0);
 			Song.findById(songId, function(e, song) {
 				if (e || !song) {
-					console.error("Error finding song to play", e, song);
+					console.trace("Error finding song to play", e, song);
 					return;
 				}
 				playSong(room, song);
@@ -99,7 +99,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 
 	this.list = function(req, res, next) {
 		var rooms = Room.find({}, function(e, a) {
-			if (e) console.error(e);
+			if (e) console.trace(e);
 			res.jsonp({rooms: a});
 		});
 	};
@@ -108,7 +108,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 		Room.findOne({abbr: req.params.abbr})
 		.populate('djs listeners song')
 		.exec(function(e, room) {
-			if (e) console.error(e);
+			if (e) console.trace(e);
 			res.jsonp(room);
 		});
 	};
@@ -123,7 +123,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			room.save(function(e) {
 				if (e) return res.jsonp(500, {error: e});
 				Room.find({}, function(e, a) {
-					if (e) console.error(e);
+					if (e) console.trace(e);
 					res.jsonp({rooms: a});
 				});
 			});
@@ -139,7 +139,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			}
 			room.remove(function(e) {
 				if (e) {
-					console.error("Error removing room", e, room);
+					console.trace("Error removing room", e, room);
 					return res.jsonp(500, {error: "Could not delete room"});
 				}
 				Room.find({}, function(e, a) {
@@ -214,14 +214,14 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 		.populate('playlist.songs')
 		.exec(function(e, user) {
 			if (e) {
-				console.error(e);
+				console.trace(e);
 				return res.jsonp(401, {error: "Not authorized"});
 			}
 			Room.findOne({abbr: req.params.abbr})
 			.populate('djs')
 			.exec(function(e, room) {
 				if (e || !room) {
-					console.error(e);
+					console.trace(e);
 					return res.jsonp(404, {error: "Room not found"});
 				}
 				room.join('djs', user);

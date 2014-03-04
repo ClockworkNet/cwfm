@@ -12,7 +12,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 		var stream = fs.createReadStream(filename);
 
 		stream.on('error', function(e) {
-			console.error("Error opening stream", e);
+			console.trace("Error opening stream", e);
 			return false;
 		});
 
@@ -28,7 +28,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 			Song.findOne({path: filename}, function(e, song) {
 
 				if (e) {
-					console.error("Error seeking song", e);
+					console.trace("Error seeking song", e);
 					return;
 				}
 
@@ -57,7 +57,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 		var fullpath = path.join(dir, filename);
 		fs.stat(filename, function(e, stats) {
 			if (e) {
-				console.error("Error getting stats for", path, e);
+				console.trace("Error getting stats for", path, e);
 				return;
 			}
 			if (stats.isFile()) {
@@ -66,7 +66,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 			if (stats.isDirectory()) {
 				fs.readdir(fullpath, function(e, paths) {
 					if (e) {
-						console.error("Error reading", filename, e);
+						console.trace("Error reading", filename, e);
 						return;
 					}
 					if (!paths) return;
@@ -84,7 +84,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 			terms = new RegExp(req.query.q, 'i');
 		}
 		catch (e) {
-			console.error("Received weird search", req.query, e);
+			console.trace("Received weird search", req.query, e);
 			return res.jsonp([]);
 		}
 		var query = Song.find({path: terms})
@@ -94,7 +94,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 		.or({albumartist: terms});
 		query.exec(function(e, a) {
 			if (e) {
-				console.error(e);
+				console.trace(e);
 				return res.jsonp(500, {error: "Error searching songs"});
 			}
 			res.jsonp({songs: a});
@@ -104,7 +104,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 	this.detail = function(req, res, next) {
 		Song.findById(req.params.id, function(e, song) {
 			if (e) {
-				console.error(e);
+				console.trace(e);
 				return res.jsonp(500, {error: "Error finding song"});
 			}
 			res.jsonp(song);
@@ -123,7 +123,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 	this.stream = function(req, res, next) {
 		Song.findById(req.params.id, function(e, song) {
 			if (e) {
-				console.error(e);
+				console.trace(e);
 				return res.send(500, "Error sending file");
 			}
 			if (!song || !song.path) {
@@ -131,7 +131,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 			}
 			res.sendfile(song.path, function(e) {
 				if (e) {
-					console.error("Error sending song", e, song);
+					console.trace("Error sending song", e, song);
 					song.failures++;
 					song.save();
 				}

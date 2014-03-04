@@ -2,14 +2,14 @@ exports.Controller = function(Room, User, Chat, io) {
 	this.list = function(req, res, next) {
 		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e || !room) {
-				console.error("Error getting room's chat list", e, room);
+				console.trace("Error getting room's chat list", e, room);
 				return res.jsonp([]);
 			}
 			Chat.find({room: room._id})
 			.populate('author')
 			.exec(function(e, a) {
 				if (e) {
-					console.error("Error getting chat list", e);
+					console.trace("Error getting chat list", e);
 				}
 				return res.jsonp(a);
 			});
@@ -22,7 +22,7 @@ exports.Controller = function(Room, User, Chat, io) {
 		}
 		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e || !room) {
-				console.error("Error saying something", e, room);
+				console.trace("Error saying something", e, room);
 				return res.jsonp(500, {error: "Error sending message"});
 			}
 			var user = new User(req.session.user);
@@ -34,7 +34,7 @@ exports.Controller = function(Room, User, Chat, io) {
 			});
 			chat.save(function(e) {
 				if (e) {
-					console.error("Error saving chat", e);
+					console.trace("Error saving chat", e);
 					return res.jsonp(500, {e: "Error saving chat"});
 				}
 				chat.populate('author room', function(e, chat) {

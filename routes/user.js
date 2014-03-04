@@ -8,7 +8,7 @@ exports.Controller = function(User, Auth) {
 	this.detail = function(req, res, next) {
 		User.findOne({username: req.params.username}, function(e, user) {
 			if (e) {
-				console.error(e);
+				console.trace(e);
 				return res.jsonp(500, {error: "Error getting detail"});
 			}
 			res.jsonp(user);
@@ -35,7 +35,7 @@ exports.Controller = function(User, Auth) {
 
 		user.save(function(e, user) {
 			if (e) {
-				console.error(e);
+				console.trace(e);
 				return res.jsonp(500, {error: "Error saving new account"});
 			}
 			req.session.user = user;
@@ -102,6 +102,7 @@ exports.Controller = function(User, Auth) {
 	this.logout = function(req, res, next) {
 		if (!req.session.user) return res.jsonp({});
 		User.update({lastLogout: Date.now()}, {_id: req.session.user._id}, function(e, n) {
+			req.session.user = null;
 			return res.jsonp({});
 		});
 	};

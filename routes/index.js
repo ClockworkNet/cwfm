@@ -5,7 +5,7 @@ exports.Controller = function(Room, User) {
 			user: req.session.user
 		};
 		res.render('home', data, function(e, html) {
-			if (e) console.error(e);
+			if (e) console.trace(e);
 			res.send(html);
 		});
 	};
@@ -16,12 +16,12 @@ exports.Controller = function(Room, User) {
 			.populate('djs listeners song')
 			.exec(function(e, room) {
 				if (e || ! room) {
-					console.error(e);
+					console.trace(e);
 					return res.redirect('/');
 				}
 				res.render('room', room, function(e, html) {
 					if (e) {
-						console.error(e);
+						console.trace(e);
 						res.send('');
 					}
 					else {
