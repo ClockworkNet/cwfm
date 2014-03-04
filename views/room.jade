@@ -103,7 +103,7 @@ block content
 		ul
 			li(ng-repeat="m in chat")
 				strong.username {{m.user.username}}:
-				span.message {{m.message}}
+				span.message {{m.content}}
 				br
 				em {{m.posted}}
 		p: input(ng-model="message")

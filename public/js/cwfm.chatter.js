@@ -29,8 +29,8 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
 	}
 
 	$scope.send  =  function() {
-		$http.post('/chat/say/' + $scope.room.abbr, {message: $scope.message})
-			.success(clearMessage);
+		$http.post('/chat/say/' + $scope.room.abbr, {content: $scope.message})
+		.success(clearMessage);
 	};
 
 	pullChat();
