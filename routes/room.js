@@ -82,6 +82,12 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			return;
 		}
 
+		if (!song._id) {
+			return Song.findById(song, function(e, song) {
+				playSong(room, song);
+			});
+		}
+
 		var started = Date.now();
 		room.song = song;
 		room.songStarted = started;
@@ -106,7 +112,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 
 	this.detail = function(req, res, next) {
 		Room.findOne({abbr: req.params.abbr})
-		.populate('djs listeners song')
+		.populate('djs dj listeners song')
 		.exec(function(e, room) {
 			if (e) console.trace(e);
 			res.jsonp(room);
@@ -162,7 +168,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 
 			// After joining, load the full room information and return it
 			Room.findById(room._id)
-			.populate('djs listeners song')
+			.populate('djs dj listeners song')
 			.exec(function(e, room) {
 				ensureSong(room);
 				res.jsonp(room);
@@ -211,7 +217,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 
 	this.dj = function(req, res, next) {
 		User.findById(req.session.user._id)
-		.populate('playlist.songs')
+		.populate('playlist')
 		.exec(function(e, user) {
 			if (e) {
 				console.trace(e);
@@ -229,7 +235,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 				if (!room.song && user.playlist) {
 					var song = user.playlist.songAt(0);
 					console.info("starting songs", song);
-					playSong(room, user.playlist.songAt(0), io);
+					playSong(room, song, io);
 				}
 				io.sockets.in(room.abbr).emit('dj.joined', user);
 			});

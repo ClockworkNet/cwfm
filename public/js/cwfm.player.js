@@ -6,6 +6,7 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $timeout) {
 	$scope.room      = {};
 	$scope.me        = {};
 
+	$scope.muted     = true;
 	$scope.played    = 0;
 	$scope.remaining = 0;
 	$scope.percent   = 0;
@@ -77,7 +78,7 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $timeout) {
 
 	$scope.playSong = function(song) {
 		song = song ? song : $scope.room.song;
-		if (!song) return;
+		if (!song || $scope.muted) return;
 		var type = song.type ? song.type : 'mp3';
 		var data = {};
 		data[type] = '/song/' + song._id;
@@ -104,20 +105,21 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $timeout) {
 		var song  =  $scope.room.song;
 		if ( ! song || ! song.duration ) {
 			$scope.remaining = 0;
+			$scope.played = 0;
 			$scope.percent = 0;
 			return;
 		}
-		var now    = Date.now() / 1000.0;
 		var start  = $scope.songStartTime();
 		var end    = start + song.duration;
+		var now    = Date.now() / 1000.0;
 		var passed = now - start;
 		passed     = (passed < 0) ? 0 : passed;
-		var remain = end - now;
+		var remain = song.duration - passed;
 		remain     = (remain < 0) ? 0 : remain;
 
 		$scope.remaining = remain;
 		$scope.played    = passed;
-		$scope.percent   = passed / song.duration;
+		$scope.percent   = ( passed / song.duration ) * 100;
 	};
 
 	$scope.tick = function() {
@@ -126,7 +128,8 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $timeout) {
 	};
 
 	$scope.toggleMuting  =  function( ) {
-		if ( $scope.muted ) {
+		$scope.muted = ! $scope.muted;
+		if ($scope.muted) {
 			$scope.stopSong( );
 		}
 		else {

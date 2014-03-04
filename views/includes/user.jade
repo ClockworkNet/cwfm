@@ -6,25 +6,27 @@ div(ng-show="user.auth")
 		span.glyphicon.glyphicon-log-out
 
 div(ng-hide="user.auth")
-	h3 Log in
-	form.form-inline(role="form")
-		div.form-group
-			input.form-control(ng-model="user.username", placeholder="Username")
-		div.form-group
-			input.form-control(ng-model="user.password", type="password", placeholder="Password")
-		button.btn.btn-default(ng-click="login()") Log in 
-			span.glyphicon.glyphicon-log-in 
+	div.col-md-6
+		h3 Log in
+		form(role="form")
+			div.form-group
+				input.form-control(ng-model="user.username", placeholder="Username")
+			div.form-group
+				input.form-control(ng-model="user.password", type="password", placeholder="Password")
+			button.btn.btn-default(ng-click="login()") Log in 
+				span.glyphicon.glyphicon-log-in 
 
-	h3 Create an Account
-	form(role="form")
-		div.form-group
-			label.sr-only(for="new-username") Create a username
-			input#new-username.form-control(ng-model="new_user.username", placeholder="Username")
-		div.form-group
-			label.sr-only(for="new-password1") Create a password
-			input#new-password1.form-control(ng-model="new_user.password1", type="password", placeholder="Create a password")
-		div.form-group
-			label.sr-only(for="new-password2") Enter your password again
-			input#new-password2.form-control(ng-model="new_user.password2", type="password", placeholder="Enter your password again")
-		button.btn.btn-default(ng-click="create_user()") Create an Account 
-			span.glyphicon.glyphicon-plus-sign
+	div.col-md-6
+		h3 Create an Account
+		form(role="form")
+			div.form-group
+				label.sr-only(for="new-username") Create a username
+				input#new-username.form-control(ng-model="new_user.username", placeholder="Username")
+			div.form-group
+				label.sr-only(for="new-password1") Create a password
+				input#new-password1.form-control(ng-model="new_user.password1", type="password", placeholder="Create a password")
+			div.form-group
+				label.sr-only(for="new-password2") Enter your password again
+				input#new-password2.form-control(ng-model="new_user.password2", type="password", placeholder="Enter your password again")
+			button.btn.btn-default(ng-click="create_user()") Create an Account 
+				span.glyphicon.glyphicon-plus-sign

@@ -253,11 +253,8 @@ h1 {
 	overflow-y: scroll;
 }
 .playlists_item {
-	display: block;
-	border-bottom: 1px solid #C5C5C5;
 	padding:  0.3em 0.5em;
 	text-decoration: none;
-	color: #333;
 }
 .playlists_item.even {
 	background: #E6E6E6;

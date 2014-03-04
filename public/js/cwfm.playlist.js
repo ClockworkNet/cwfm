@@ -93,6 +93,11 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 		});
 	};
 
+	$scope.clearSearch = function() {
+		$scope.query = '';
+		$scope.result = [];
+	};
+
 	$scope.add = function(song) {
 		if (!$scope.me.playlist) {
 			$scope.message = {error: "Select a playlist first"};
@@ -154,5 +159,9 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 		return $scope.me.playlist.songs.some(function(ps) {
 			return ps._id == song._id;
 		});
+	};
+
+	$scope.active = function(playlist) {
+		return playlist._id == $scope.me.playlist._id;
 	};
 }
