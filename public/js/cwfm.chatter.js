@@ -13,7 +13,7 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
 	});
 
 	var pullChat = function() {
-		$http.get('/room/chat/' + $scope.room.abbr)
+		$http.get('/chat/list/' + $scope.room.abbr)
 		.success(function(chat) {
 			$scope.chat = chat;
 		});
@@ -29,7 +29,7 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
 	}
 
 	$scope.send  =  function() {
-		$http.post('/room/say/' + $scope.room.abbr, {message: $scope.message})
+		$http.post('/chat/say/' + $scope.room.abbr, {message: $scope.message})
 			.success(clearMessage);
 	};
 

@@ -112,17 +112,12 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 	};
 
 	this.scan = function(req, res, next) {
-		User.findOne({username: req.session.username}, function(e, user) {
-			if (e) {
-				console.error(e);
-				return res.jsonp(500, {error: "Error scanning directory"});
-			}
-			if (!user || !user.admin) {
-				return res.jsonp(401, {error: "Not authorized"});
-			}
-			console.info('Starting scan', dir);
-			scan(dir, '');
-		});
+		if (!req.session.user.admin) {
+			return res.jsonp(401, {error: "Not authorized"});
+		}
+
+		console.info('Starting scan', dir);
+		scan(dir, '');
 	};
 
 	this.stream = function(req, res, next) {
@@ -135,7 +130,11 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 				return res.send(404, "Song not found");
 			}
 			res.sendfile(song.path, function(e) {
-				if (e) console.error("Error sending song", e, song);
+				if (e) {
+					console.error("Error sending song", e, song);
+					song.failures++;
+					song.save();
+				}
 			});
 		});
 	};

@@ -29,7 +29,6 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			User.findById(djId)
 			.populate('playlist')
 			.exec(function(e, dj) {
-				console.info("Rotating playlist", dj);
 				dj.playlist.rotate().save();
 			});
 		}
@@ -40,7 +39,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			room.song = null;
 			room.songStarted = null;
 			room.save();
-			console.info("No DJs in the room. Stopping music.", room);
+			console.info("No DJs in the room. Stopping music.", room.abbr, room.djs);
 			io.sockets.in(room.abbr).emit("song.stopped", room);
 			return;
 		}
@@ -98,47 +97,6 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	};
 
 
-	// Utility for looking up a room and user.
-	var getRoomAndUser = function(roomSettings, userSettings, then) {
-		if (typeof(roomSettings) != 'object') {
-			roomSettings = {
-				abbr: roomSettings,
-				prep: function(q) {
-					return q.populate('djs listeners song');
-				}
-			};
-		}
-		if (typeof(userSettings) != 'object') {
-			userSettings = {
-				username: userSettings,
-				prep: function(q) { return q; }
-			};
-		}
-
-		var userQ = User.findOne({username: userSettings.username});
-		if (userSettings.prep) {
-			userQ = userSettings.prep(userQ);
-		}
-		userQ.exec(function(e, user) {
-			if (e || !user) {
-				console.error("Error getting user", userSettings, e);
-				return then({error: "Error getting user"}, null, user);
-			}
-			var roomQ = Room.findOne({abbr: roomSettings.abbr});
-			if (roomSettings.prep) {
-				roomQ = roomSettings.prep(roomQ);
-			}
-			roomQ.exec(function(e, room) {
-				if (e) {
-					console.error("Error getting room", roomSettings, e);
-					return then({error: "Error getting room"}, room, user);
-				}
-				return then(null, room, user);
-			});
-		});
-	};
-
-
 	this.list = function(req, res, next) {
 		var rooms = Room.find({}, function(e, a) {
 			if (e) console.error(e);
@@ -147,31 +105,22 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	};
 
 	this.detail = function(req, res, next) {
-		Room.findOne({abbr: req.params.abbr}, function(e, room) {
+		Room.findOne({abbr: req.params.abbr})
+		.populate('djs listeners song')
+		.exec(function(e, room) {
 			if (e) console.error(e);
 			res.jsonp(room);
 		});
 	};
 
-	this.chat = function(req, res, next) {
-		var rs = {
-			abbr: req.params.abbr,
-			prep: function(q) {
-				console.info('preparing!');
-				return q.populate('chat.user');
-			}
-		};
-		getRoomAndUser(rs, req.session.username, function(e, room, user) {
-			if (e) console.error(e);
-			res.jsonp(room ? room.chat : []);
-		});
-	};
-
 	this.create = function(req, res, next) {
-		getRoomAndUser(req.params.abbr, req.session.username, function(e, room, user) {
+		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return res.jsonp(500, e);
-			room.join('owners', user);
-			room.save(function(e, room) {
+			if (!room) {
+				room = new Room(req.body);
+			}
+			room.join('owners', req.session.user);
+			room.save(function(e) {
 				if (e) return res.jsonp(500, {error: e});
 				Room.find({}, function(e, a) {
 					if (e) console.error(e);
@@ -182,13 +131,14 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	};
 
 	this.delete = function(req, res, next) {
-		getRoomAndUser(req.params.abbr, req.session.username, function(e, room, user) {
+		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return res.jsonp(500, e);
+			var user = req.session.user;
 			if (!user.admin && room.indexOf('owners', user) < 0) {
 				return res.jsonp(401, {error: "You must be an owner to delete a room"});
 			}
-			room.remove(function(e, room) {
-				if (e || !room) {
+			room.remove(function(e) {
+				if (e) {
 					console.error("Error removing room", e, room);
 					return res.jsonp(500, {error: "Could not delete room"});
 				}
@@ -201,16 +151,23 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 
 	// Called when a user joins a room
 	this.join = function(req, res, next) {
-		getRoomAndUser(req.params.abbr, req.session.username, function(e, room, user) {
+		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return res.jsonp(500, e);
-			if (e) return res.jsonp(500, e);
+			if (!room) {
+				return res.jsonp(404, {error: "Room doesn't exist"});
+			}
 
-			room.join('listeners', user);
+			room.join('listeners', req.session.user);
 			room.save();
 
-			ensureSong(room);
-			res.jsonp(room);
-			io.sockets.in(room.abbr).emit('member.joined', user);
+			// After joining, load the full room information and return it
+			Room.findById(room._id)
+			.populate('djs listeners song')
+			.exec(function(e, room) {
+				ensureSong(room);
+				res.jsonp(room);
+				io.sockets.in(room.abbr).emit('member.joined', req.session.user);
+			});
 		});
 	};
 
@@ -232,21 +189,19 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			console.info("No session information found. Skipping room departure");
 			return;
 		}
-		var rs = {
-			abbr: data.abbr,
-			prep: function(q) { return q; }
-		};
-		getRoomAndUser(rs, username, function(e, room, user) {
-			if (e) return;
-			room.removeUser(user);
-			room.save();
-			io.sockets.in(room.abbr).emit('member.departed', user);
+		User.findOne({username: username}, function(e, user) {
+			Room.findOne({abbr: data.abbr}, function(e, room) {
+				if (e) return;
+				room.removeUser(user);
+				room.save();
+				io.sockets.in(room.abbr).emit('member.departed', user);
+			});
 		});
 	};
 
 	// Called when a socket connection is dropped
 	this.exit = function(username) {
-		User.findOne({username: username}, function(e, user) {
+		User.find({username: username}, function(e, user) {
 			if (!user) return;
 			Room.find({}, function(e, a) {
 				a.forEach(function(r) {r.removeUser(user);});
@@ -255,8 +210,8 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	};
 
 	this.dj = function(req, res, next) {
-		User.findOne({username: req.session.username})
-		.populate('playlist')
+		User.findById(req.session.user._id)
+		.populate('playlist.songs')
 		.exec(function(e, user) {
 			if (e) {
 				console.error(e);
@@ -282,38 +237,16 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	};
 
 	this.undj = function(req, res, next) {
-		var rs = {
-			abbr: req.params.abbr,
-			prep: function(q) { return q; }
-		};
-		getRoomAndUser(rs, req.session.username, function(e, room, user) {
+		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return res.jsonp(500, e);
-			room.leave('djs', user);
+			room.leave('djs', req.session.user);
 			room.save();
-			io.sockets.in(room.abbr).emit('dj.departed', user);
-		});
-	};
-
-	this.say = function(req, res, next) {
-		var rs = {
-			abbr: req.params.abbr,
-			prep: function(q) { return q; }
-		};
-		getRoomAndUser(rs, req.session.username, function(e, room, user) {
-			if (e) return res.jsonp(500, e);
-			var item = room.say(user, req.body.message);
-			room.save();
-			res.jsonp(item);
-			io.sockets.in(room.abbr).emit('chat', item);
+			io.sockets.in(room.abbr).emit('dj.departed', req.session.user);
 		});
 	};
 
 	this.skip = function(req, res, next) {
-		var rs = {
-			abbr: req.params.abbr,
-			prep: function(q) { return q; }
-		};
-		getRoomAndUser(rs, req.session.username, function(e, room, user) {
+		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return;
 			nextSong(room);
 		});

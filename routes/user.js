@@ -16,15 +16,7 @@ exports.Controller = function(User, Auth) {
 	};
 
 	this.me = function(req, res, next) {
-		User.findOne({username: req.session.username})
-		.populate('playlist')
-		.exec(function(e, user) {
-			if (e) {
-				console.error(e);
-				return res.jsonp(500, {error: "Error getting detail"});
-			}
-			res.jsonp(user);
-		});
+		return res.jsonp(req.session.user);
 	};
 
 	this.create = function(req, res, next) {
@@ -42,7 +34,11 @@ exports.Controller = function(User, Auth) {
 		user.auth = auth._id;
 
 		user.save(function(e, user) {
-			req.session.username = user.username;
+			if (e) {
+				console.error(e);
+				return res.jsonp(500, {error: "Error saving new account"});
+			}
+			req.session.user = user;
 			res.jsonp(user);
 		});
 	};
@@ -52,25 +48,17 @@ exports.Controller = function(User, Auth) {
 	};
 
 	this.verify = function(req, res, next) {
-
-		console.info("Skipping authentication for now!");
-		// next.call(arguments);
-
-		if (!req.session.username) {
+		if (!req.session.user) {
 			return res.jsonp(401, {error: "Please log in"});
 		}
-
-		User.findOne({username: req.session.username}).lean().exec(function(e, user) {
-			if (!user) {
-				return res.jsonp(401, {error: "Invalid username"});
-			}
-			next.call(arguments);
-		});
+		next.call(arguments);
 	}
 
 	this.login = function(req, res, next) {
 		var password = req.body.password;
-		User.findOne({username: req.body.username}).populate('auth').exec(function(e, user) {
+		User.findOne({username: req.body.username})
+		.populate('auth playlist')
+		.exec(function(e, user) {
 
 			if (!user) {
 				console.info("Invalid username", req.body.username);
@@ -98,7 +86,7 @@ exports.Controller = function(User, Auth) {
 				auth.failures  = 0;
 				auth.save();
 
-				req.session.username = user.username;
+				req.session.user = user;
 				user.auth = auth._id;
 				res.jsonp(user);
 			}
@@ -112,13 +100,10 @@ exports.Controller = function(User, Auth) {
 	};
 
 	this.logout = function(req, res, next) {
-		User.findOne({username: req.session.username}, function(e, user) {
-			if (user) {
-				user.lastLogout = Date.now();
-				user.save();
-			}
-			req.session.username = null;
-			res.jsonp({});
-		});
+		if (!req.session.user) return res.jsonp({});
+		var user = req.session.user;
+		user.lastLogout = Date.now();
+		user.save();
+		return res.jsonp({});
 	};
 };

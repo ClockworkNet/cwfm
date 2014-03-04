@@ -91,12 +91,14 @@ db.on('open', function() {
 	var Song     = require('./models/song').build(mongoose);
 	var Playlist = require('./models/playlist').build(mongoose);
 	var Room     = require('./models/room').build(mongoose, config);
+	var Chat     = require('./models/chat').build(mongoose, config);
 
 	var routes = {
 		home: require('./routes'),
 		room: require('./routes/room'),
 		song: require('./routes/song'),
 		user: require('./routes/user'),
+		chat: require('./routes/chat'),
 		playlist: require('./routes/playlist')
 	};
 
@@ -105,6 +107,7 @@ db.on('open', function() {
 		room: new routes.room.Controller(Room, User, Playlist, Song, io),
 		song: new routes.song.Controller(config.songDir, Song, User, fs, path, mm),
 		user: new routes.user.Controller(User, Auth),
+		chat: new routes.chat.Controller(Room, User, Chat, io),
 		playlist: new routes.playlist.Controller(Playlist, Song, User)
 	};
 
@@ -134,14 +137,15 @@ db.on('open', function() {
 
 	app.get('/room/list', apply(controllers.room, 'list'));
 	app.get('/room/detail/:abbr', apply(controllers.room, 'detail'));
-	app.get('/room/chat/:abbr', secure, apply(controllers.room, 'chat'));
 	app.post('/room/create', secure, apply(controllers.room, 'create'));
 	app.post('/room/delete/:abbr', secure, apply(controllers.room, 'delete'));
 	app.post('/room/join/:abbr', secure, apply(controllers.room, 'join'));
 	app.post('/room/dj/:abbr', secure, apply(controllers.room, 'dj'));
 	app.post('/room/undj/:abbr', secure, apply(controllers.room, 'undj'));
-	app.post('/room/say/:abbr', secure, apply(controllers.room, 'say'));
 	app.post('/room/skip/:abbr', secure, apply(controllers.room, 'skip'));
+
+	app.get('/chat/list/:abbr', secure, apply(controllers.chat, 'list'));
+	app.post('/chat/say/:abbr', secure, apply(controllers.chat, 'say'));
 
 	// Wire up authentication to the socket connections
 	io.set('log level', 1);

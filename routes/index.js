@@ -2,7 +2,7 @@ exports.Controller = function(Room, User) {
 	this.home = function(req, res, next) {
 		var data = {
 			title: "Clockwork.FM",
-			username: req.session.username
+			user: req.session.user
 		};
 		res.render('home', data, function(e, html) {
 			if (e) console.error(e);

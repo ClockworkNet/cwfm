@@ -31,13 +31,7 @@ exports.build = function(mongoose, config) {
 
 		dj: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 		song: { type: mongoose.Schema.Types.ObjectId, ref: 'Song' },
-		songStarted: Date,
-
-		chat: [{
-			user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-			message: String,
-			posted: Date
-		}]
+		songStarted: Date
 	});
 
 	schema.methods.indexOf = function(collection, model) {
@@ -61,9 +55,10 @@ exports.build = function(mongoose, config) {
 
 	schema.methods.join = function(collection, user) {
 		var ix = this.indexOf(collection, user);
+		var uid = user._id ? user._id : user;
 		if (ix < 0) {
 			if (!this[collection]) this[collection] = [];
-			this[collection].push(user);
+			this[collection].push(uid);
 		}
 		return this;
 	};
@@ -85,22 +80,5 @@ exports.build = function(mongoose, config) {
 		return room;
 	};
 
-	schema.methods.say = function(user, msg) {
-		var item = {
-			user: user,
-			message: msg,
-			posted: Date.now()
-		};
-
-		if (!this.chat) this.chat = [];
-		this.chat.push(item);
-
-		while (this.chat.length > config.maxChat) {
-			this.chat.push.shift();
-		}
-
-		return item;
-	}
-
-	return mongoose.model('Room', schema);
+	return mongoose.model(name, schema);
 }

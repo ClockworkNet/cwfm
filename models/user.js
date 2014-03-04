@@ -18,7 +18,8 @@ exports.build = function(mongoose) {
 		playlist: {
 			type: mongoose.Schema.Types.ObjectId, 
 			ref: 'Playlist'
-		}
+		},
+		socketId: Number
 	});
 
 	return mongoose.model(name, schema);

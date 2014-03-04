@@ -20,7 +20,8 @@ exports.build = function(mongoose) {
 		upvotes: Number,
 		downvotes: Number,
 		added: Date,
-		modified: Date
+		modified: Date,
+		failures: Number
 	});
 
 	schema.virtual('score').get(function() {
