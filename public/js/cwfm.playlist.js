@@ -162,6 +162,6 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 	};
 
 	$scope.active = function(playlist) {
-		return playlist._id == $scope.me.playlist._id;
+		return $scope.me.playlist && playlist._id == $scope.me.playlist._id;
 	};
 }

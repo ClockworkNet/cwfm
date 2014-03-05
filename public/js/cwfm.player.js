@@ -51,15 +51,15 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $timeout) {
 		$scope.stopSong();
 	});
 
-	$socket.on('song.changed', function(song) {
-		$scope.room.song = song;
+	$socket.on('song.changed', function(room) {
+		$scope.room = room;
 		if (!$scope.muted) {
-			console.info("Playing song", song);
+			console.info("Playing song", room.song);
 			$scope.playSong();
 		}
 		else {
-			console.info("Muted on song", song);
-			$scope.player('clearMedia');
+			console.info("Muted on song", room.song);
+			$scope.stopSong();
 		}
 	});
 
@@ -74,6 +74,7 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $timeout) {
 
 	$scope.stopSong = function( ) {
 		$scope.player( 'stop' );
+		$scope.player('clearMedia');
 	};
 
 	$scope.playSong = function(song) {
@@ -90,9 +91,14 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $timeout) {
 
 	$scope.songPlayed  =  function() {
 		var song  =  $scope.room.song;
-		if ( ! song || ! song.duration ) return 0;
+		if ( ! song || ! song.duration ) {
+			return 0;
+		}
 		var now   =  Date.now() / 1000.0;
 		var start = $scope.songStartTime();
+		if (start == 0) {
+			return 0;
+		}
 		return now - start;
 	};
 

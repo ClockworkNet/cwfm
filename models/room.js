@@ -29,10 +29,22 @@ exports.build = function(mongoose, config) {
 			unique: true
 		}],
 
-		dj: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 		song: { type: mongoose.Schema.Types.ObjectId, ref: 'Song' },
 		songStarted: Date
 	});
+
+	schema.virtual('dj').get(function() {
+		return this.djs && this.djs.length > 0 ? this.djs[0] : null;
+	});
+
+	schema.methods.rotateDjs = function() {
+		if (!this.djs || this.djs.length < 2) {
+			return false;
+		}
+		var dj = this.djs.shift();
+		this.djs.push(dj);
+		return true;
+	};
 
 	schema.methods.indexOf = function(collection, model) {
 		if (!this[collection]) return -1;

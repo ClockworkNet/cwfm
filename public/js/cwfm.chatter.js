@@ -13,7 +13,7 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
 	});
 
 	var pullChat = function() {
-		if (!$scope.room) {
+		if (!$scope.room || !$scope.room.abbr) {
 			$scope.chat = [];
 			return;
 		}

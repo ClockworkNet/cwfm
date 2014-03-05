@@ -56,15 +56,16 @@ block main
 
 	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl")
 		div(ng-show="room.abbr")
-
 			div.progress(ng-show="room.song")
-				div.progress-bar(role="progressbar", style="width: {{percent}}%")
+				div.progress-bar(role="progressbar", style="width: {{percent}}%") 
+					span {{played | time}}
 
 			dl(ng-show="room.song")
-				strong.song-dj {{room.dj.username}} 
+				strong.song-dj(ng-show="room.djs.length") {{room.djs[0].username}} 
+				em.song-dj(ng-hide="room.djs.length") Someone 
 				span is spinning 
 				strong.song-title {{room.song.title}} 
-				span ({{remaining | time}}) 
+				span ({{played | time}} of {{room.song.duration | time}}) 
 				span by 
 				strong.song-artist(ng-repeat="artist in room.song.artist") {{artist}} 
 
@@ -92,13 +93,13 @@ block right
 		div(ng-show="message.info") {{message.info}}
 
 		ul.nav.nav-tabs(ng-show="me.auth")
-			li(ng-show="me.playlist.name")
+			li(ng-show="me.playlist.name", ng-class="{active: me.playlist.name}")
 				a(href="#queue", data-toggle="tab") Queue
-			li.active
+			li(ng-class="{active: ! me.playlist.name}")
 				a(href="#library", data-toggle="tab") Library
 
 		div.tab-content(ng-show="me.auth")
-			div.tab-pane.panel.panel-default#queue(ng-show="me.playlist.name")
+			div.tab-pane.panel.panel-default#queue(ng-show="me.playlist.name", ng-class="{active: me.playlist.name.length}")
 				div.panel-heading {{me.playlist.name}}
 				div.queue_wrap.panel-body
 					div.queue
@@ -123,7 +124,7 @@ block right
 									a.remove(ng-click="removesong(song)", href="#remove") 
 										span.glyphicon.glyphicon-trash
 
-			div.tab-pane.active.panel.panel-default#library
+			div.tab-pane.panel.panel-default#library(ng-class="{active: ! me.playlist.name.length}")
 				div.panel-heading Playlists
 				div.library_wrap.panel-body
 					ul.playlists.list-group

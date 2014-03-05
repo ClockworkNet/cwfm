@@ -8,8 +8,8 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	// Ensures that a song is playing if it should be.
 	var ensureSong = function(room) {
 		var remaining = room.song ? room.song.remaining(room.songStarted) : 0;
-		console.info("Current song time remaining:", remaining);
 		if (remaining <= 0) {
+			console.info("Song is expired, playing next song.", remaining);
 			nextSong(room);
 		}
 	};
@@ -23,19 +23,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			clearTimeout(songTimers[room.abbr]);
 		}
 
-		// First, advance the first track of the current playlist
-		if (room.dj) {
-			var djId = room.dj._id ? room.dj._id : room.dj;
-			User.findById(djId)
-			.populate('playlist')
-			.exec(function(e, dj) {
-				dj.playlist.rotate().save();
-			});
-		}
-
-		// If the DJ table is empty, abandon all hope
-		if (!room.djs || !room.djs.length) {
-			room.dj = null;
+		if (!room.dj) {
 			room.song = null;
 			room.songStarted = null;
 			room.save();
@@ -44,14 +32,18 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			return;
 		}
 
-		// Advance to the next DJ, if applicable
-		if (!room.dj || room.djs.length > 1) {
-			var djIndex = room.indexOf('djs', room.dj);
-			djIndex++;
-			if (djIndex >= room.djs.length) {
-				djIndex = 0;
-			}
-			room.dj = room.djs[djIndex];
+		// Advance the first track of the current playlist
+		var djId = room.dj._id ? room.dj._id : room.dj;
+		User.findById(djId)
+		.populate('playlist')
+		.exec(function(e, dj) {
+			dj.playlist.rotate().save();
+		});
+
+		// Rotate DJs if necessary
+		if (room.rotateDjs()) {
+			console.info("Rotated DJs");
+			room.save();
 		}
 
 		// Pick the new DJ's next song from her current playlist
@@ -93,9 +85,14 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 		room.songStarted = started;
 		room.save();
 
-		// Send a message to all clients in the room
-		song.started = started;
-		io.sockets.in(room.abbr).emit('song.changed', song);
+		Room.populate(room, 'djs song', function(e, room) {
+			if (e) {
+				console.trace("Error populating room for socket emitting", e);
+				return;
+			}
+			// Send a message to all clients in the room
+			io.sockets.in(room.abbr).emit('song.changed', room);
+		});
 
 		// Schedule the next song
 		console.info("Scheduling next song", song.duration * 1000);
@@ -164,15 +161,19 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			}
 
 			room.join('listeners', req.session.user);
-			room.save();
-
-			// After joining, load the full room information and return it
-			Room.findById(room._id)
-			.populate('djs dj listeners song')
-			.exec(function(e, room) {
-				ensureSong(room);
-				res.jsonp(room);
-				io.sockets.in(room.abbr).emit('member.joined', req.session.user);
+			room.save(function(e) {
+				if (e) {
+					console.trace("Error saving new listener", e);
+					return res.jsonp(room);
+				}
+				// After joining, load the full room information and return it
+				Room.findById(room._id)
+				.populate('djs dj listeners song')
+				.exec(function(e, room) {
+					ensureSong(room);
+					io.sockets.in(room.abbr).emit('member.joined', req.session.user);
+					return res.jsonp(room);
+				});
 			});
 		});
 	};
@@ -190,12 +191,13 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	this.leave = function(data, callback, socket) {
 		socket.leave(data.abbr);
 		console.info(socket.id, "is leaving", data.abbr);
-		var username = socket.handshake && socket.handshake.session ? socket.handshake.session.username : null;
-		if (!username) {
+		if (!socket.handshake || !socket.handshake.session || !socket.handshake.session.user) {
 			console.info("No session information found. Skipping room departure");
 			return;
 		}
-		User.findOne({username: username}, function(e, user) {
+		var uid = socket.handshake.session.user._id;
+		User.findById(uid, function(e, user) {
+			if (e || !user) return;
 			Room.findOne({abbr: data.abbr}, function(e, room) {
 				if (e) return;
 				room.removeUser(user);
@@ -222,6 +224,9 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			if (e) {
 				console.trace(e);
 				return res.jsonp(401, {error: "Not authorized"});
+			}
+			if (!user || !user.playlist) {
+				return res.jsonp(400, {error: "Please select a playlist"});
 			}
 			Room.findOne({abbr: req.params.abbr})
 			.populate('djs')

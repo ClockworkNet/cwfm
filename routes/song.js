@@ -1,6 +1,25 @@
 exports.Controller = function(dir, Song, User, fs, path, mm) {
 	var allowed = ['.mp3', '.m4a', '.ogg', '.flac', '.wma', '.wmv'];
-	var skipMeta = ['picture'];
+	var maxFails = 5;
+
+	var processSongMeta = function(song, meta) {
+		for (var key in meta) {
+			if (!meta.hasOwnProperty(key)) continue;
+			switch (key) {
+				case 'picture':
+					// @TODO: process pictures and save path
+					break;
+				default:
+					song[key] = meta[key];
+					break;
+			}
+		}
+	}
+
+	var generateWaveform = function(song, callback) {
+		// @TODO: add waveform processing
+		callback(null, song);
+	};
 
 	var updateSong = function(filename) {
 		if (!filename || filename.length == 0) return;
@@ -36,18 +55,15 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 					song = new Song();
 					song.added = Date.now();
 				}
-
-				for (var key in result) {
-					if (!result.hasOwnProperty(key)) continue;
-					if (skipMeta.indexOf(key) >= 0) continue;
-					song[key] = result[key];
-				}
-
 				song.modified = Date.now();
 				song.path     = filename;
 
-				console.info("Saving song", song);
-				song.save();
+				processSongMeta(song, result);
+
+				generateWaveform(song, function(e, song) {
+					console.info("Saving song", song);
+					song.save();
+				});
 			});
 		});
 	};
@@ -132,8 +148,14 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 			res.sendfile(song.path, function(e) {
 				if (e) {
 					console.trace("Error sending song", e, song);
+					if (!song.failures) song.failures = 0;
 					song.failures++;
-					song.save();
+					if (song.failures > maxFails) {
+						song.remove();
+					}
+					else {
+						song.save();
+					}
 				}
 			});
 		});

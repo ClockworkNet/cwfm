@@ -15,6 +15,7 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 		}
 		for (var i=0; i<them.length; i++) {
 			if (them[i].username == user.username) {
+				console.info(user.username, "is already the", collection);
 				return;
 			}
 		}
@@ -67,7 +68,6 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 		.success(function(room) {
 			$room.set(room);
 			$socket.emit('listen', room);
-			console.info('joined', room);
 		})
 		.error(function(e) {
 			console.error(e);

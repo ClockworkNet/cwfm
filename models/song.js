@@ -16,6 +16,11 @@ exports.build = function(mongoose) {
 		},
 		type: String, // ogg, wav, mp4, mp3, fla
 		path: String,
+		pictures: [{
+			type: String,
+			path: String
+		}],
+		waveform: String,
 		duration: Number,
 		upvotes: Number,
 		downvotes: Number,
@@ -29,9 +34,12 @@ exports.build = function(mongoose) {
 	});
 
 	schema.methods.remaining = function(start) {
+		if (!this.duration) return 0;
+
+		var end = Date.parse(start) + (this.duration * 1000);
 		var now = Date.now();
-		start = typeof(start) == 'Date' ? Date.parse(start) : start;
-		return now - start;
+
+		return end - now;
 	};
 
 	return mongoose.model(name, schema);
