@@ -16,6 +16,8 @@ block scripts
 	script(src="/public/js/cwfm.chatter.js")
 	script(src="/public/js/cwfm.room.app.js")
 
+	script(src="/public/js/cwfm.room.ui.js")
+
 block left 
 	div#jplayer.jp-jplayer
 
@@ -37,7 +39,7 @@ block main
 	div#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
 		include includes/user
 
-		button.btn.btn-default(onclick="javascript:introJs().start(); return false;") Give me the tour 
+		button.btn.btn-default(onclick="javascript:introJs().start(); return false;", ng-show="user.auth") Give me the tour 
 			span.glyphicon.glyphicon-road
 	
 	div#header
@@ -79,9 +81,9 @@ block main
 				span by 
 				strong.song-artist(ng-repeat="artist in room.song.artist") {{artist}} 
 
-				a.btn.btn-default(ng-click="toggleMuting()", ng-class="{active: !muted}")
-					span.glyphicon.glyphicon-volume-up(ng-show="muted")
-					span.glyphicon.glyphicon-volume-off(ng-hide="muted")
+				a.btn.btn-default(ng-click="toggleMuting()", ng-class="{active: muted}")
+					span.glyphicon.glyphicon-volume-off(ng-show="muted")
+					span.glyphicon.glyphicon-volume-up(ng-hide="muted")
 
 			h2 Actions
 			ul

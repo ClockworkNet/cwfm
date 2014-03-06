@@ -79,7 +79,7 @@ db.on('open', function() {
 				controller[method].apply(controller, params);
 			}
 			catch (e) {
-				console.error(e);
+				console.trace(e);
 			}
 		};
 	};

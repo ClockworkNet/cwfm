@@ -1,0 +1,3 @@
+CWjQuery(function($) {
+	
+});

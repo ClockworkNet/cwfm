@@ -24,15 +24,15 @@ html.no-js(ng-app="cwfmApp")
 		block scripts
 	body
 		div.row
-			div.col-md-3
+			div#left.col-md-3
 				block left
 
-			div.col-md-6
+			div#main.col-md-6
 				block main 
 
-			div.col-md-3
+			div#right.col-md-3
 				block right
 
 		div.row
-			div.col-md-12
+			div#footer.col-md-12
 				block footer

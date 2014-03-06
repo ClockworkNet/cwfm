@@ -10,7 +10,7 @@ exports.build = function(mongoose) {
 	// Pops the first song in the list and shifts it to the end of the list
 	schema.methods.rotate = function() {
 		if (!this.songs || this.songs.length < 2) {
-			return $this;
+			return this;
 		}
 		var song = this.songs.shift();
 		this.songs.push(song);
