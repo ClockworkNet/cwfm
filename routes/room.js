@@ -256,6 +256,14 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 		});
 	};
 
+	this.upvote = function(req, res, next) {
+
+	};
+
+	this.downvote = function(req, res, next) {
+
+	};
+
 	this.skip = function(req, res, next) {
 		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return;

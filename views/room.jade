@@ -1,6 +1,9 @@
 extends layout
 
 block scripts
+	link(rel="stylesheet", href="/public/bowery/intro.js/minified/introjs.min.css")
+	script(src="/public/bowery/intro.js/minified/intro.min.js")
+
 	script(src="/public/bowery/jplayer/jquery.jplayer/jquery.jplayer.js")
 	script(src="/public/js/cwfm.filters.js")
 	script(src="/public/js/cwfm.util.js")
@@ -17,10 +20,8 @@ block left
 	div#jplayer.jp-jplayer
 
 	div#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
-		div(ng-show="room.abbr")
+		div(ng-show="room.abbr", data-step="1", data-intro="Here's where we keep the DJs", data-position="right")
 			a#brandname.brand(data-toggle="modal", role="button", href="#aboutModal"): img(src="/public/img/cwfm.svg", alt="CWFM")
-			h1 Welcome to {{room.name}}
-			p {{room.description}}
 
 			h2(ng-show="room.djs.length") DJs
 			ul
@@ -36,25 +37,34 @@ block main
 	div#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
 		include includes/user
 
+		button.btn.btn-default(onclick="javascript:introJs().start(); return false;") Give me the tour 
+			span.glyphicon.glyphicon-road
+	
+	div#header
+		h1 #{name}
+		p #{description}
 
-	div#cwfmChatterCtrl(ng-controller="cwfmChatterCtrl")
+
+	div#cwfmChatterCtrl(ng-controller="cwfmChatterCtrl", data-step="2", data-intro="Here's what people are saying in the room")
 		div(ng-show="room.abbr")
-			ul.list-group
-				li.list-group-item(ng-repeat="m in chat | filter:content")
-					span.message {{m.content}}
-					br
-					strong.username {{m.author.username}}
-					br
-					em {{m.posted}}
-			form.form-inline
-				div.input-group
-					input.form-control(ng-model="message", placeholder="Say something...")
-					span.input-group-btn
-						a.btn.btn-default(href="#send", ng-click="send()") 
-							span.glyphicon.glyphicon-comment
+			div#chat-list
+				ul.list-group
+					li.list-group-item(ng-repeat="m in chat | filter:content")
+						span.message {{m.content}}
+						br
+						strong.username {{m.author.username}}
+						br
+						em {{m.posted}}
+			div#chat-form(data-step="3", data-intro="Say something here", data-position="top")
+				form.form-inline
+					div.input-group
+						input.form-control(ng-model="message", placeholder="Say something...")
+						span.input-group-btn
+							a.btn.btn-default(href="#send", ng-click="send()") 
+								span.glyphicon.glyphicon-comment
 
 
-	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl")
+	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl", data-step="4", data-intro="Here's where you'll find the current song", data-position="top")
 		div(ng-show="room.abbr")
 			div.progress(ng-show="room.song")
 				div.progress-bar(role="progressbar", style="width: {{percent}}%") 
@@ -88,7 +98,7 @@ block main
 
 
 block right
-	div#cwfmPlaylistCtrl.playlist_wrapp(ng-controller="cwfmPlaylistCtrl")
+	div#cwfmPlaylistCtrl.playlist_wrapp(ng-controller="cwfmPlaylistCtrl", data-step="6", data-intro="Here's where you manage your own playlists", data-position="left")
 		div(ng-show="message.error") {{message.error}}
 		div(ng-show="message.info") {{message.info}}
 

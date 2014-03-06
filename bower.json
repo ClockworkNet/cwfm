@@ -19,6 +19,7 @@
 		"jplayer": "*",
 		"json2": "*",
 		"angular": "*",
+		"intro.js": "*",
 		"bootstrap": "*"
 	}
 }

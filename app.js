@@ -143,6 +143,8 @@ db.on('open', function() {
 	app.post('/room/dj/:abbr', secure, apply(controllers.room, 'dj'));
 	app.post('/room/undj/:abbr', secure, apply(controllers.room, 'undj'));
 	app.post('/room/skip/:abbr', secure, apply(controllers.room, 'skip'));
+	app.post('/room/upvote/:abbr', secure, apply(controllers.room, 'upvote'));
+	app.post('/room/downvote/:abbr', secure, apply(controllers.room, 'downvote'));
 
 	app.get('/chat/list/:abbr', secure, apply(controllers.chat, 'list'));
 	app.post('/chat/say/:abbr', secure, apply(controllers.chat, 'say'));

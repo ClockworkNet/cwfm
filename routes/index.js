@@ -12,13 +12,14 @@ exports.Controller = function(Room, User) {
 
 	this.room = function(req, res, next) {
 		for (var abbr in req.query) {
-			Room.find({abbr: abbr})
+			Room.findOne({abbr: abbr})
 			.populate('djs listeners song')
 			.exec(function(e, room) {
 				if (e || ! room) {
 					console.trace(e);
 					return res.redirect('/');
 				}
+				console.info(room);
 				res.render('room', room, function(e, html) {
 					if (e) {
 						console.trace(e);

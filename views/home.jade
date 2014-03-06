@@ -7,14 +7,11 @@ block scripts
 	script(src="/public/js/cwfm.user.js")
 	script(src="/public/js/cwfm.home.app.js")
 
-block left
-
 block main 
 	div#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
 		h2(ng-show="user.auth") Welcome back {{user.username}}!
 		include includes/user
 
-block right
 	div#cwfmRoomlistCtrl(ng-controller="cwfmRoomlistCtrl")
 		div(ng-show="user.auth")
 			h2 Make a room
