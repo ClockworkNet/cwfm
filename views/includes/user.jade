@@ -1,9 +1,23 @@
 h3(ng-if="error.length") {{error}}
 
 div(ng-show="user.auth")
-	em Logged in as {{user.username}}
+	a(data-toggle="modal", data-target="#avatar-selection", ng-click="loadAvatars()", href="#select-avatar") {{user.username}} 
+		span.glyphicon.glyphicon-user
+
 	button.btn.btn-default(ng-click="logout()") Log out 
 		span.glyphicon.glyphicon-log-out
+
+	.modal#avatar-selection(aria-hidden="true", role="dialog")
+		.modal-dialog
+			.modal-content
+				.modal-header
+					button.close(data-dismiss="modal") &times;
+					h3 Select an Avatar
+				.modal-body
+					.row
+						.col-md-4(ng-repeat="url in avatarUrls")
+							a.thumbnail(ng-click="selectAvatar(url)", href="#select-avatar", data-dismiss="modal")
+								img(ng-src="/avatar/{{url}}")
 
 div(ng-hide="user.auth")
 	div.col-md-6

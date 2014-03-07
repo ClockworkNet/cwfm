@@ -4,8 +4,10 @@ block scripts
 	link(rel="stylesheet", href="/public/bowery/intro.js/minified/introjs.min.css")
 	script(src="/public/bowery/intro.js/minified/intro.min.js")
 
-	script(src="/public/bowery/jplayer/jquery.jplayer/jquery.jplayer.js")
+	script(src="/public/bowery/wavesurfer.js/build/wavesurfer.min.js")
+
 	script(src="/public/js/cwfm.filters.js")
+	script(src="/public/js/cwfm.song.js")
 	script(src="/public/js/cwfm.util.js")
 	script(src="/public/js/cwfm.data.js")
 	script(src="/public/js/cwfm.socket.js")
@@ -19,8 +21,6 @@ block scripts
 	script(src="/public/js/cwfm.room.ui.js")
 
 block left 
-	div#jplayer.jp-jplayer
-
 	div#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
 		div(ng-show="room.abbr", data-step="1", data-intro="Here's where we keep the DJs", data-position="right")
 			a#brandname.brand(data-toggle="modal", role="button", href="#aboutModal"): img(src="/public/img/cwfm.svg", alt="CWFM")
@@ -68,9 +68,11 @@ block main
 
 	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl", data-step="4", data-intro="Here's where you'll find the current song", data-position="top")
 		div(ng-show="room.abbr")
-			div.progress(ng-show="room.song")
-				div.progress-bar(role="progressbar", style="width: {{percent}}%") 
-					span {{played | time}}
+			a.btn.btn-default(ng-click="toggleMuting()", ng-class="{active: muted}")
+				span.glyphicon.glyphicon-volume-off(ng-show="muted")
+				span.glyphicon.glyphicon-volume-up(ng-hide="muted")
+
+			#player.player
 
 			dl(ng-show="room.song")
 				strong.song-dj(ng-show="room.djs.length") {{room.djs[0].username}} 
@@ -80,10 +82,6 @@ block main
 				span ({{played | time}} of {{room.song.duration | time}}) 
 				span by 
 				strong.song-artist(ng-repeat="artist in room.song.artist") {{artist}} 
-
-				a.btn.btn-default(ng-click="toggleMuting()", ng-class="{active: muted}")
-					span.glyphicon.glyphicon-volume-off(ng-show="muted")
-					span.glyphicon.glyphicon-volume-up(ng-hide="muted")
 
 			h2 Actions
 			ul

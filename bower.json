@@ -16,7 +16,7 @@
 	],
 	"dependencies": {
 		"jquery": "*",
-		"jplayer": "*",
+		"wavesurfer.js": "*",
 		"json2": "*",
 		"angular": "*",
 		"intro.js": "*",

@@ -4,6 +4,8 @@ cwfm.user = {};
 
 cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 
+	$scope.avatarUrls = [];
+
 	$user.change(function(user) {
 		$scope.user = user;
 	});
@@ -52,6 +54,19 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 		})
 		.error(oops);
 	}
+
+	$scope.loadAvatars = function() {
+		if ($scope.avatarUrls.length > 0) return;
+
+		$http.get('/avatar/list')
+		.success(function(urls) {
+			$scope.avatarUrls = urls;
+		});
+	};
+
+	$scope.selectAvatar = function(url) {
+
+	};
 
 	init( );
 };

@@ -33,6 +33,12 @@ exports.build = function(mongoose, config) {
 		songStarted: Date
 	});
 
+	schema.methods.toJSON = function() {
+		var obj = this.toObject();
+		obj.currentTime = Date.now();
+		return obj;
+	};
+
 	schema.virtual('dj').get(function() {
 		return this.djs && this.djs.length > 0 ? this.djs[0] : null;
 	});
