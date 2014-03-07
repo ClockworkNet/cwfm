@@ -15,5 +15,11 @@ exports.settings = {
 	maxChat: 40,
 
 	// The directory where music will be added
-	songDir: '/Users/barrett/Music',
+	songDir: __dirname + '/data/music',
+
+	// The pattern used to search for local avatar paths
+	avatar: {
+		pattern: /^.+\.png$/,
+		dir: __dirname + '/public/img/avatars'
+	}
 };
