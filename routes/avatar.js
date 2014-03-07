@@ -11,6 +11,7 @@ exports.Controller = function(config, fs, path) {
 	};
 
 	this.show = function(req, res, next) {
-		res.sendfile(req.params.name, {root: config.dir});
+		var img = req.params.name || config.default;
+		res.sendfile(img, {root: config.dir});
 	}
 }

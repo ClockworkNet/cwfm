@@ -5,7 +5,8 @@ cwfm.room  =  { ping: 1000 };
 // Connects to the server via a socket and monitors all of the changes to the room
 cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 
-	$scope.room = {};
+	$scope.room = $room.get();
+	$scope.me   = $user.get();
 	$scope.abbr = window.location.search.substr(1);
 
 	var addUser = function(collection, user) {
@@ -34,6 +35,10 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 			}
 		}
 	};
+
+	$user.change(function(user) {
+		$scope.me = user;
+	});
 
 	$room.change(function(room) {
 		$scope.room = room;
@@ -76,5 +81,38 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 	window.onbeforeunload = function() {
 		$socket.emit('leave', $scope.room);
 		console.info('leaving room', $scope.room);
+	};
+
+	var addMe = function() {
+		$scope.room.djs.push($scope.me);
+	};
+
+	var removeMe = function() {
+		$scope.room.djs.some(function(dj, ix) {
+			if (dj.username == $scope.me.username) {
+				$scope.room.djs = $scope.room.djs.splice(ix, 1);
+				return true;
+			}
+			return false;
+		});
+	};
+
+	$scope.djing = function(who) {
+		if (!$scope.room || !$scope.room.djs) return false;
+		if (!who) who = $scope.me;
+		var un = who && who.username ? who.username : who;
+		return $scope.room.djs.some(function(dj) {
+			return dj.username == un;
+		});
+	};
+
+	$scope.dj = function() {
+		$http.post('/room/dj/' + $scope.room.abbr, {})
+		.success(addMe);
+	};
+
+	$scope.undj = function() {
+		$http.post('/room/undj/' + $scope.room.abbr, {})
+		.success(removeMe);
 	};
 };

@@ -220,6 +220,10 @@ html, body {
     height: 5em;
 }
 */
+#avatar-list {
+	height: 300px;
+	overflow: auto;
+}
 h1 {
 	font-family: "BrandonGrotesqueBlack",sans-serif;
 	text-transform: uppercase;

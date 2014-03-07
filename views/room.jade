@@ -21,35 +21,34 @@ block scripts
 	script(src="/public/js/cwfm.room.ui.js")
 
 block left 
-	div#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
+	#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
 		div(ng-show="room.abbr", data-step="1", data-intro="Here's where we keep the DJs", data-position="right")
 			a#brandname.brand(data-toggle="modal", role="button", href="#aboutModal"): img(src="/public/img/cwfm.svg", alt="CWFM")
 
 			h2(ng-show="room.djs.length") DJs
-			ul
-				li(ng-repeat="dj in room.djs").
-					{{dj.username}}
 
-			h2(ng-show="room.listeners.length") Listeners
-			ul
-				li(ng-repeat="listener in room.listeners").
-					{{listener.username}}
+			div(ng-hide="djing()")
+				a(ng-click="dj()", href="#dj") Start DJing
+			div(ng-show="djing()")
+				a(ng-click="undj()", href="#undj") Stop DJing
+
+			ul.list-group
+				li.list-item(ng-repeat="dj in room.djs")
+					img(ng-src="/avatar/{{dj.avatar}}")
+					div.text-center {{dj.username}}
 
 block main 
-	div#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
+	#cwfmUserCtrl.row.pull-right(ng-controller="cwfmUserCtrl")
 		include includes/user
-
-		button.btn.btn-default(onclick="javascript:introJs().start(); return false;", ng-show="user.auth") Give me the tour 
-			span.glyphicon.glyphicon-road
 	
-	div#header
+	#header.row
 		h1 #{name}
 		p #{description}
 
 
-	div#cwfmChatterCtrl(ng-controller="cwfmChatterCtrl", data-step="2", data-intro="Here's what people are saying in the room")
-		div(ng-show="room.abbr")
-			div#chat-list
+	#cwfmChatterCtrl.row(ng-controller="cwfmChatterCtrl", data-step="2", data-intro="Here's what people are saying in the room")
+		.row(ng-show="room.abbr")
+			#chat-list.col-md-10
 				ul.list-group
 					li.list-group-item(ng-repeat="m in chat | filter:content")
 						span.message {{m.content}}
@@ -57,7 +56,13 @@ block main
 						strong.username {{m.author.username}}
 						br
 						em {{m.posted}}
-			div#chat-form(data-step="3", data-intro="Say something here", data-position="top")
+
+			#listeners.col-md-2
+				.well
+					div(ng-repeat="listener in room.listeners") {{listener.username}}
+
+		.row(ng-show="room.abbr")
+			#chat-form.col-md-12(data-step="3", data-intro="Say something here", data-position="top")
 				form.form-inline
 					div.input-group
 						input.form-control(ng-model="message", placeholder="Say something...")
@@ -66,13 +71,15 @@ block main
 								span.glyphicon.glyphicon-comment
 
 
-	div#cwfmPlayerCtrl(ng-controller="cwfmPlayerCtrl", data-step="4", data-intro="Here's where you'll find the current song", data-position="top")
+	#cwfmPlayerCtrl.row(ng-controller="cwfmPlayerCtrl", data-step="4", data-intro="Here's where you'll find the current song", data-position="top")
 		div(ng-show="room.abbr")
-			a.btn.btn-default(ng-click="toggleMuting()", ng-class="{active: muted}")
-				span.glyphicon.glyphicon-volume-off(ng-show="muted")
-				span.glyphicon.glyphicon-volume-up(ng-hide="muted")
-
-			#player.player
+			.row
+				.col-md-2.text-center
+					a.btn.btn-lg.btn-default(ng-click="toggleMuting()", ng-class="{active: muted}")
+						span.glyphicon.glyphicon-volume-off(ng-show="muted")
+						span.glyphicon.glyphicon-volume-up(ng-hide="muted")
+				.col-md-10
+					#player.player(data-height="45", data-pixelRatio="1", data-cursorWidth="5", data-markerWidth="5")
 
 			dl(ng-show="room.song")
 				strong.song-dj(ng-show="room.djs.length") {{room.djs[0].username}} 
@@ -89,16 +96,12 @@ block main
 					a(ng-click="upvote()", href="#upvote") Upvote
 				li(ng-show="room.song")
 					a(ng-click="downvote()", href="#downvote") Downvote
-				li(ng-hide="djing()")
-					a(ng-click="dj()", href="#dj") Start DJing
-				li(ng-show="djing()")
-					a(ng-click="undj()", href="#undj") Stop DJing
 				li
 					a(ng-click="skipSong()", href="#skip") Skip Song
 
 
 block right
-	div#cwfmPlaylistCtrl.playlist_wrapp(ng-controller="cwfmPlaylistCtrl", data-step="6", data-intro="Here's where you manage your own playlists", data-position="left")
+	#cwfmPlaylistCtrl.playlist_wrap(ng-controller="cwfmPlaylistCtrl", data-step="6", data-intro="Here's where you manage your own playlists", data-position="left")
 		div(ng-show="message.error") {{message.error}}
 		div(ng-show="message.info") {{message.info}}
 
@@ -127,7 +130,7 @@ block right
 								li.list-group-item.songs_item(ng-repeat="song in result.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
 									a(ng-click="addSong(song)", href="#add") {{songName(song)}}
 
-						div#myqueue_wrap
+						#myqueue_wrap
 							ul#my_queue.songs_list.list-group
 								li.songs_item.list-group-item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}") 
 									span {{songName(song)}}

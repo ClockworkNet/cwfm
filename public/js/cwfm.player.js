@@ -12,7 +12,8 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 	$scope.remaining = 0;
 	$scope.percent   = 0;
 
-	$song.init('#player');
+	$scope.player    = jQuery('#player');
+	$song.init('#player', $scope.player.data());
 
 	var setRoom = function(room) {
 		$scope.room = room;
@@ -32,20 +33,6 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 		console.error(e);
 	};
 
-	var addMe = function() {
-		$scope.room.djs.push($scope.me);
-	};
-
-	var removeMe = function() {
-		$scope.room.djs.some(function(dj, ix) {
-			if (dj.username == $scope.me.username) {
-				$scope.room.djs = $scope.room.djs.splice(ix, 1);
-				return true;
-			}
-			return false;
-		});
-	};
-
 	$socket.on('song.stopped', function(room) {
 		$scope.room.song = null;
 		$scope.room.songStarted = null;
@@ -57,15 +44,6 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 		console.info("Playing song", room.song);
 		$scope.playSong();
 	});
-
-	$scope.djing = function(who) {
-		if (!$scope.room || !$scope.room.djs) return false;
-		if (!who) who = $scope.me;
-		var un = who && who.username ? who.username : who;
-		return $scope.room.djs.some(function(dj) {
-			return dj.username == un;
-		});
-	};
 
 	$scope.stopSong = function( ) {
 		$song.clear();
@@ -153,16 +131,6 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 		return function( item ) {
 			return ! func( item );
 		};
-	};
-
-	$scope.dj = function() {
-		$http.post('/room/dj/' + $scope.room.abbr, {})
-			.success(addMe);
-	};
-
-	$scope.undj = function() {
-		$http.post('/room/undj/' + $scope.room.abbr, {})
-			.success(removeMe);
 	};
 
 	$scope.skipSong = function() {

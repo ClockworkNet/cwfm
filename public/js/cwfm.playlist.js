@@ -56,7 +56,7 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 	};
 
 	$scope.select = function(playlist) {
-		if (!playlist) return;
+		if (!playlist || !playlist._id) return;
 		$http.post('/playlist/select/' + playlist._id)
 		.success(function(playlist) {
 			$scope.me.playlist = playlist;

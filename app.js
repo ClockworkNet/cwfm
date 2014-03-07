@@ -126,6 +126,7 @@ db.on('open', function() {
 
 	app.get('/avatar/list', apply(controllers.avatar, 'list'));
 	app.get('/avatar/:name', apply(controllers.avatar, 'show'));
+	app.get('/avatar/', apply(controllers.avatar, 'show'));
 
 	app.get('/song/search', secure, apply(controllers.song, 'search'));
 	app.get('/song/detail/:id', secure, apply(controllers.song, 'detail'));

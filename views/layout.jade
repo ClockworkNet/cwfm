@@ -23,16 +23,17 @@ html.no-js(ng-app="cwfmApp")
 
 		block scripts
 	body
-		div.row
-			div#left.col-md-3
-				block left
+		.container-fluid
+			.row
+				#left.col-md-2
+					block left
 
-			div#main.col-md-6
-				block main 
+				#main.col-md-7
+					block main 
 
-			div#right.col-md-3
-				block right
+				#right.col-md-3
+					block right
 
-		div.row
-			div#footer.col-md-12
-				block footer
+			.row
+				#footer.col-md-12
+					block footer

@@ -1,32 +1,60 @@
 h3(ng-if="error.length") {{error}}
 
-div(ng-show="user.auth")
-	a(data-toggle="modal", data-target="#avatar-selection", ng-click="loadAvatars()", href="#select-avatar") {{user.username}} 
-		span.glyphicon.glyphicon-user
+div(ng-show="me.auth")
+	.dropdown
+		img(ng-src="/avatar/{{me.avatar}}", height="30px")
+		a.dropdown-toggle.btn.btn-link.btn-lg(data-toggle="dropdown", href="#user") {{me.username}} 
 
-	button.btn.btn-default(ng-click="logout()") Log out 
-		span.glyphicon.glyphicon-log-out
+		ul.dropdown-menu
+			li
+				a(data-toggle="modal", data-target="#user-edit", href="#edit-user") 
+					span.glyphicon.glyphicon-edit &nbsp;
+					span Edit profile
+			li
+				a(onclick="javascript:introJs().start(); return false;", href="#tour") 
+					span.glyphicon.glyphicon-road &nbsp;
+					span Tour Guide
+			li
+				a(ng-click="logout()", href="#logout")
+					span.glyphicon.glyphicon-log-out &nbsp;
+					span Log Out
 
-	.modal#avatar-selection(aria-hidden="true", role="dialog")
-		.modal-dialog
+	.modal#user-edit
+		.modal-dialog.modal-lg
 			.modal-content
 				.modal-header
 					button.close(data-dismiss="modal") &times;
-					h3 Select an Avatar
+					h3 Update your Profile 
 				.modal-body
-					.row
-						.col-md-4(ng-repeat="url in avatarUrls")
-							a.thumbnail(ng-click="selectAvatar(url)", href="#select-avatar", data-dismiss="modal")
-								img(ng-src="/avatar/{{url}}")
+					form
+						.form-group
+							label(for="realname") Real name
+							input#realname(ng-model="me.realname", placeholder="Your real name")
 
-div(ng-hide="user.auth")
+						.form-group.center-block
+							.col-md-4
+								a(ng-click="loadAvatars()", href="#select-avatar")
+									img(src="/avatar/{{me.avatar}}")
+
+							.col-md-8
+								h3(ng-show="avatarUrls") Select a New Avatar
+								.row#avatar-list(ng-show="avatarUrls")
+									.col-md-3(ng-repeat="url in avatarUrls")
+										a.thumbnail(ng-click="selectAvatar(url)", href="#select-avatar")
+											img(ng-src="/avatar/{{url}}")
+					.clearfix
+				.modal-footer
+					button.btn.btn-default(data-dismiss="modal") Cancel
+					button.btn.btn-primary(data-dismiss="modal", ng-click="save()") Save Changes
+
+div(ng-hide="me.auth")
 	div.col-md-6
 		h3 Log in
 		form(role="form")
 			div.form-group
-				input.form-control(ng-model="user.username", placeholder="Username")
+				input.form-control(ng-model="me.username", placeholder="Username")
 			div.form-group
-				input.form-control(ng-model="user.password", type="password", placeholder="Password")
+				input.form-control(ng-model="me.password", type="password", placeholder="Password")
 			button.btn.btn-default(ng-click="login()") Log in 
 				span.glyphicon.glyphicon-log-in 
 
@@ -35,12 +63,12 @@ div(ng-hide="user.auth")
 		form(role="form")
 			div.form-group
 				label.sr-only(for="new-username") Create a username
-				input#new-username.form-control(ng-model="new_user.username", placeholder="Username")
+				input#new-username.form-control(ng-model="newUser.username", placeholder="Username")
 			div.form-group
 				label.sr-only(for="new-password1") Create a password
-				input#new-password1.form-control(ng-model="new_user.password1", type="password", placeholder="Create a password")
+				input#new-password1.form-control(ng-model="newUser.password1", type="password", placeholder="Create a password")
 			div.form-group
 				label.sr-only(for="new-password2") Enter your password again
-				input#new-password2.form-control(ng-model="new_user.password2", type="password", placeholder="Enter your password again")
-			button.btn.btn-default(ng-click="create_user()") Create an Account 
+				input#new-password2.form-control(ng-model="newUser.password2", type="password", placeholder="Enter your password again")
+			button.btn.btn-default(ng-click="createUser()") Create an Account 
 				span.glyphicon.glyphicon-plus-sign

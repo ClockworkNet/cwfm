@@ -28,30 +28,49 @@ exports.Controller = function(User, Auth) {
 
 		var auth = new Auth();
 		auth.password = data.password1;
-		auth.save();
+		auth.save(function(e) {
+			if (e) {
+				console.trace("Error saving auth", e);
+				return res.jsonp(500, {error: "Error saving credentials"});
+			}
+		});
 
 		var user = new User(data);
 		user.auth = auth._id;
 
-		user.save(function(e, user) {
+		user.save(function(e) {
 			if (e) {
 				console.trace(e);
 				return res.jsonp(500, {error: "Error saving new account"});
 			}
 			req.session.user = user;
-			res.jsonp(user);
+			return res.jsonp(user);
 		});
 	};
 
 	this.update = function(req, res, next) {
-		// @todo: implement this
+		User.findById(req.session.user._id, function(e, user) {
+				if (e) {
+					console.trace("Error finding user", user, e);
+					return res.jsonp(404, {error: e});
+				}
+			user.merge(req.body);
+			user.save(function(e) {
+				if (e) {
+					console.trace("Error saving user", user, e);
+					return res.jsonp(400, {error: e});
+				}
+				req.session.user = user;
+				return res.jsonp(user);
+			});
+		});
 	};
 
 	this.verify = function(req, res, next) {
-		if (!req.session.user) {
+		if (!req.session || !req.session.user || !req.session.user.auth) {
 			return res.jsonp(401, {error: "Please log in"});
 		}
-		next.call(arguments);
+		next();
 	}
 
 	this.login = function(req, res, next) {
@@ -59,9 +78,14 @@ exports.Controller = function(User, Auth) {
 		User.findOne({username: req.body.username})
 		.populate('auth playlist')
 		.exec(function(e, user) {
+			if (e) {
+				console.trace("Error on login", e, req.body.username);
+				return res.jsonp(500, {error: "Error logging in"});
+			}
 
 			if (!user) {
 				console.info("Invalid username", req.body.username);
+				delete req.session.user;
 				return res.jsonp(401, {error: "Bad credentials"});
 			}
 
