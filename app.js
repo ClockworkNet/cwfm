@@ -98,6 +98,7 @@ db.on('open', function() {
 		room: require('./routes/room'),
 		song: require('./routes/song'),
 		user: require('./routes/user'),
+		avatar: require('./routes/avatar'),
 		chat: require('./routes/chat'),
 		playlist: require('./routes/playlist')
 	};
@@ -107,6 +108,7 @@ db.on('open', function() {
 		room: new routes.room.Controller(Room, User, Playlist, Song, io),
 		song: new routes.song.Controller(config.songDir, Song, User, fs, path, mm),
 		user: new routes.user.Controller(User, Auth),
+		avatar: new routes.avatar.Controller(config.avatar, fs, path),
 		chat: new routes.chat.Controller(Room, User, Chat, io),
 		playlist: new routes.playlist.Controller(Playlist, Song, User)
 	};
@@ -121,6 +123,9 @@ db.on('open', function() {
 	app.post('/user/login', apply(controllers.user, 'login'));
 	app.post('/user/logout', apply(controllers.user, 'logout'));
 	app.post('/user/update', secure, apply(controllers.user, 'update'));
+
+	app.get('/avatar/list', apply(controllers.avatar, 'list'));
+	app.get('/avatar/:name', apply(controllers.avatar, 'show'));
 
 	app.get('/song/search', secure, apply(controllers.song, 'search'));
 	app.get('/song/detail/:id', secure, apply(controllers.song, 'detail'));
