@@ -1,3 +1,3 @@
-CWjQuery(function($) {
+jQuery(function($) {
 	
 });

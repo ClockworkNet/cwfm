@@ -9,11 +9,11 @@ exports.build = function(mongoose) {
 
 	// Pops the first song in the list and shifts it to the end of the list
 	schema.methods.rotate = function() {
-		if (!this.songs || this.songs.length < 2) {
+		if (!this.songs || this.songs.length < 1) {
 			return this;
 		}
 		var song = this.songs.shift();
-		this.songs.push(song);
+		this.songs.splice(-1, 0, song);
 		return this;
 	};
 
@@ -48,6 +48,11 @@ exports.build = function(mongoose) {
 	};
 
 	schema.methods.insertSong = function(song, ix) {
+		if (this.indexOf(song) >= 0) {
+			console.info("Song already exists, skipping add", this, song);
+			return this;
+		}
+
 		if (!ix) ix = 0;
 		this.songs.splice(ix, 0, song);
 		return this;

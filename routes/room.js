@@ -9,7 +9,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	var ensureSong = function(room) {
 		var remaining = room.song ? room.song.remaining(room.songStarted) : 0;
 		if (remaining <= 0) {
-			console.info("Song is expired, playing next song.", remaining);
+			console.info("Song is expired, playing next song.", room.song, remaining);
 			nextSong(room);
 		}
 	};
@@ -42,7 +42,6 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 
 		// Rotate DJs if necessary
 		if (room.rotateDjs()) {
-			console.info("Rotated DJs");
 			room.save();
 		}
 
@@ -55,10 +54,17 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 				console.trace("Error finding DJ", e, dj);
 				return;
 			}
-			var songId = dj.playlist.songAt(0);
+			var songId = dj.playlist.songs[0];
 			Song.findById(songId, function(e, song) {
-				if (e || !song) {
-					console.trace("Error finding song to play", e, song);
+				if (e) {
+					console.trace("Error finding song to play", e, songId, dj.playlist);
+					return;
+				}
+				if (!song) {
+					console.trace("Song not found for id. Removing from playlist.", songId);
+					dj.playlist.songs.shift();
+					dj.playlist.save();
+					nextSong(room);
 					return;
 				}
 				playSong(room, song);
@@ -95,7 +101,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 		});
 
 		// Schedule the next song
-		console.info("Scheduling next song", song.duration * 1000);
+		console.info("Scheduling next song", song, song.duration * 1000);
 		songTimers[room.abbr] = setTimeout(nextSong, song.duration * 1000, room);
 	};
 

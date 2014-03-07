@@ -98,7 +98,7 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 		$scope.result = [];
 	};
 
-	$scope.add = function(song) {
+	$scope.addSong = function(song) {
 		if (!$scope.me.playlist) {
 			$scope.message = {error: "Select a playlist first"};
 			return;
@@ -107,6 +107,20 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 			$scope.me.playlist.songs = [];
 		}
 		$scope.me.playlist.songs.unshift(song);
+		$scope.save();
+	};
+
+	$scope.removeSong = function(song) {
+		if (!$scope.me.playlist) {
+			$scope.message = {error: "Select a playlist first"};
+			return;
+		}
+		$scope.me.playlist.songs.some(function(psong, ix) {
+			if (psong._id  == song._id) {
+				$scope.me.playlist.songs.splice(ix, 1);
+				return true;
+			}
+		});
 		$scope.save();
 	};
 

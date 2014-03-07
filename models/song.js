@@ -16,11 +16,14 @@ exports.build = function(mongoose) {
 		},
 		type: String, // ogg, wav, mp4, mp3, fla
 		path: String,
-		pictures: [{
-			type: String,
-			path: String
+		picture: [{
+			format: String,
+			data: Buffer
 		}],
-		waveform: String,
+		waveform: {
+			format: String,
+			data: Buffer
+		},
 		duration: Number,
 		upvotes: Number,
 		downvotes: Number,
@@ -28,6 +31,15 @@ exports.build = function(mongoose) {
 		modified: Date,
 		failures: Number
 	});
+
+	// Overridden to remove binary data from output
+	schema.methods.toJSON = function() {
+		var obj = this.toObject();
+		delete obj.path;
+		delete obj.picture;
+		delete obj.waveform;
+		return obj;
+	};
 
 	schema.virtual('score').get(function() {
 		return this.upvotes - this.downvotes;

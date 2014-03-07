@@ -127,13 +127,13 @@ block right
 
 							ul#song_results_list.songs_list.list-group(ng-show="query.length")
 								li.list-group-item.songs_item(ng-repeat="song in result.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
-									a(ng-click="add(song)", href="#add") {{songName(song)}}
+									a(ng-click="addSong(song)", href="#add") {{songName(song)}}
 
 						div#myqueue_wrap
 							ul#my_queue.songs_list.list-group
 								li.songs_item.list-group-item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}") 
 									span {{songName(song)}}
-									a.remove(ng-click="removesong(song)", href="#remove") 
+									a.remove(ng-click="removeSong(song)", href="#remove") 
 										span.glyphicon.glyphicon-trash
 
 			div.tab-pane.panel.panel-default#library(ng-class="{active: ! me.playlist.name.length}")

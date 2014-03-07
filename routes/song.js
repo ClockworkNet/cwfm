@@ -5,14 +5,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 	var processSongMeta = function(song, meta) {
 		for (var key in meta) {
 			if (!meta.hasOwnProperty(key)) continue;
-			switch (key) {
-				case 'picture':
-					// @TODO: process pictures and save path
-					break;
-				default:
-					song[key] = meta[key];
-					break;
-			}
+			song[key] = meta[key];
 		}
 	}
 
@@ -37,7 +30,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 
 		var parser = mm(stream, {duration: true});
 		parser.on('metadata', function(result) {
-			console.info(result);
+			console.info("Found song metadata", result);
 
 			if (!result || !result.duration) {
 				console.error("Could not read duration metadata for file", filename, result);
@@ -59,7 +52,6 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 				song.path     = filename;
 
 				processSongMeta(song, result);
-
 				generateWaveform(song, function(e, song) {
 					console.info("Saving song", song);
 					song.save();
