@@ -9,11 +9,6 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 		}
 	}
 
-	var generateWaveform = function(song, callback) {
-		// @TODO: add waveform processing
-		callback(null, song);
-	};
-
 	var updateSong = function(filename) {
 		if (!filename || filename.length == 0) return;
 
@@ -21,14 +16,14 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 			return;
 		}
 
-		var stream = fs.createReadStream(filename);
+		var songStream = fs.createReadStream(filename);
 
-		stream.on('error', function(e) {
+		songStream.on('error', function(e) {
 			console.trace("Error opening stream", e);
 			return false;
 		});
 
-		var parser = mm(stream, {duration: true});
+		var parser = mm(songStream, {duration: true});
 		parser.on('metadata', function(result) {
 			console.info("Found song metadata", result);
 
@@ -52,9 +47,10 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 				song.path     = filename;
 
 				processSongMeta(song, result);
-				generateWaveform(song, function(e, song) {
-					console.info("Saving song", song);
-					song.save();
+				song.save(function(e) {
+					if (e) {
+						console.error("Error saving song", song, e);
+					}
 				});
 			});
 		});
@@ -63,9 +59,10 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 	// Recursively scans directories for media files
 	var scan = function(dir, filename) {
 		var fullpath = path.join(dir, filename);
-		fs.stat(filename, function(e, stats) {
+		console.info("Scanning", dir, filename);
+		fs.stat(fullpath, function(e, stats) {
 			if (e) {
-				console.trace("Error getting stats for", path, e);
+				console.trace("Error getting stats for", fullpath, e);
 				return;
 			}
 			if (stats.isFile()) {
@@ -95,11 +92,36 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 			console.trace("Received weird search", req.query, e);
 			return res.jsonp([]);
 		}
-		var query = Song.find({path: terms})
-		.or({title: terms})
-		.or({album: terms})
-		.or({artist: terms}) 
-		.or({albumartist: terms});
+
+		var fields = [];
+		switch (req.query.f) {
+			case ('song'): 
+				fields = ['path', 'title'];
+				break;
+			case ('album'):
+				fields = ['album'];
+				break;
+			case ('artist'):
+				fields = ['artist', 'albumartist'];
+				break;
+			default:
+				fields = ['path', 'title', 'album', 'artist', 'albumartist'];
+				break;
+		}
+
+		var like = [];
+		fields.forEach(function(field) {
+			var c = {};
+			c[field] = terms;
+			like.push(c);
+		});
+
+		var query = Song.where({$or: like})
+
+		if (req.session.user.playlist) {
+			query.and({_id: {$nin: req.session.user.playlist.songs}});
+		}
+
 		query.exec(function(e, a) {
 			if (e) {
 				console.trace(e);
@@ -126,6 +148,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 
 		console.info('Starting scan', dir);
 		scan(dir, '');
+		return res.jsonp({success: true});
 	};
 
 	this.stream = function(req, res, next) {

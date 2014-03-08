@@ -5,14 +5,16 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 
 	var minQueryLength  = 3;
 	var searchRequest   = null;
+	var searchTimer     = null;
 	var searchThrottle  = 200;
 
 	$scope.me           = $user.get();
 	$scope.playlists    = [];
 	$scope.room         = $room.get();
 	$scope.result       = {};
-	$scope.new_playlist = {};
+	$scope.newPlaylist  = {};
 	$scope.message      = '';
+	$scope.searchFilter = '';
 
 	$http.get('/playlist/list')
 	.success(function(playlists) {
@@ -66,18 +68,29 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 		});
 	};
 
+	$scope.setFilter = function(value) {
+		$scope.searchFilter = value;
+		$scope.search();
+	};
+
 	$scope.search = function() {
-		if ($scope.query.length < minQueryLength) {
+		if (!$scope.query || $scope.query.length < minQueryLength) {
 			return;
 		}
 
-		if (this.searchRequest) {
+		if (searchRequest) {
 			// If a search is already running, delay the next call
-			setTimeout($scope.search, this.searchThrottle);
-			console.info('throttling search');
+			clearTimeout(searchTimer);
+			searchTimer = setTimeout($scope.search, searchThrottle);
+			console.info('throttling search', searchThrottle);
+			return;
 		}
 
-		var data = $util.querystring.encode({q: $scope.query});
+		var query = {
+			q: $scope.query,
+			f: $scope.searchFilter
+		};
+		var data = $util.querystring.encode(query);
 		var url  = '/song/search/?' + data;
 		searchRequest = $http.get(url);
 
@@ -95,6 +108,7 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 
 	$scope.clearSearch = function() {
 		$scope.query = '';
+		$scope.searchFilter = '';
 		$scope.result = [];
 	};
 
@@ -140,7 +154,7 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 	};
 
 	$scope.create = function() {
-		$http.post('/playlist/create', $scope.new_playlist)
+		$http.post('/playlist/create', $scope.newPlaylist)
 		.success(function(playlist) {
 			$scope.playlists.unshift(playlist);
 			$scope.me.playlist = playlist;

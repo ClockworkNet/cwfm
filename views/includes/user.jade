@@ -1,6 +1,6 @@
-h3(ng-if="error.length") {{error}}
+.pull-right(ng-show="me.auth")
+	h3(ng-if="error") {{error}}
 
-div(ng-show="me.auth")
 	.dropdown
 		img(ng-src="/avatar/{{me.avatar}}", height="30px")
 		a.dropdown-toggle.btn.btn-link.btn-lg(data-toggle="dropdown", href="#user") {{me.username}} 
@@ -10,6 +10,10 @@ div(ng-show="me.auth")
 				a(data-toggle="modal", data-target="#user-edit", href="#edit-user") 
 					span.glyphicon.glyphicon-edit &nbsp;
 					span Edit profile
+			li(ng-show="me.admin")
+				a(data-toggle="modal", data-target="#admin-panel", href="#admin")
+					span.glyphicon.glyphicon-cog &nbsp;
+					span Administration
 			li
 				a(onclick="javascript:introJs().start(); return false;", href="#tour") 
 					span.glyphicon.glyphicon-road &nbsp;
@@ -27,17 +31,18 @@ div(ng-show="me.auth")
 					h3 Update your Profile 
 				.modal-body
 					form
-						.form-group
-							label(for="realname") Real name
-							input#realname(ng-model="me.realname", placeholder="Your real name")
-
-						.form-group.center-block
+						.row
 							.col-md-4
-								a(ng-click="loadAvatars()", href="#select-avatar")
-									img(src="/avatar/{{me.avatar}}")
+								.form-group
+									label(for="realname") Real name
+									input#realname(ng-model="me.realname", placeholder="Your real name")
+
+								.form-group.center-block
+									a(ng-click="loadAvatars()", href="#select-avatar")
+										img(ng-src="/avatar/{{me.avatar}}")
 
 							.col-md-8
-								h3(ng-show="avatarUrls") Select a New Avatar
+								strong(ng-show="avatarUrls") Select a New Avatar
 								.row#avatar-list(ng-show="avatarUrls")
 									.col-md-3(ng-repeat="url in avatarUrls")
 										a.thumbnail(ng-click="selectAvatar(url)", href="#select-avatar")
@@ -46,6 +51,39 @@ div(ng-show="me.auth")
 				.modal-footer
 					button.btn.btn-default(data-dismiss="modal") Cancel
 					button.btn.btn-primary(data-dismiss="modal", ng-click="save()") Save Changes
+
+	.modal#admin-panel
+		.modal-dialog
+			.modal-content
+				.modal-header
+					button.close(data-dismiss="modal") &times;
+					h3 Administration
+					.alert.alert-info.alert-dismissable(ng-show="adminMessage", ng-class="{{adminMessage.type}}") 
+						button.close(data-dismiss="alert") &times;
+						{{adminMessage.content}}
+				.modal-body
+					.row
+						.col-md-6
+							.input-group
+								input.form-control(ng-model="user.username", placeholder="Find a user")
+								.dropdown.input-group-btn
+									a.btn.btn-default.dropdown-toggle(data-toggle="dropdown", href="#Change") Modify 
+										span.caret 
+									ul.dropdown-menu.pull-right
+										li
+											a(ng-click="adminify()", href="#make-admin")
+												span.glyphicon.glyphicon-thumbs-up &nbsp;
+												span Adminify
+										li
+											a(ng-click="boot()", href="#boot")
+												span.glyphicon.glyphicon-fire &nbsp;
+												span Boot
+						.col-md-6
+							ul.list-group
+								li.list-group-item
+									a(ng-click="scan()", href="#scan")
+										span.glyphicon.glyphicon-refresh &nbsp;
+										span Scan for Music
 
 div(ng-hide="me.auth")
 	div.col-md-6

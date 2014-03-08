@@ -7,6 +7,8 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 	$scope.me         = $user.get();
 	$scope.avatarUrls = [];
 
+	$scope.adminMessage = '';
+
 	$user.change(function(user) {
 		$scope.me = user;
 	});
@@ -42,7 +44,7 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 	}
 
 	$scope.login  =  function( ) {
-		$http.post('/user/login', $scope.user)
+		$http.post('/user/login', $scope.me)
 		.success(function(user) {
 			setUser(user);
 			$user.trigger('login');
@@ -76,6 +78,33 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 		$http.post('/user/update', $scope.me)
 		.success(setUser)
 		.error(handleError);
+	};
+
+	// Admin functions
+	$scope.adminify = function() {
+
+	};
+
+	$scope.boot = function() {
+
+	};
+
+	$scope.scan = function() {
+		$http.post('/song/scan')
+		.success(function(r) {
+			console.info("Starting scan", arguments);
+			$scope.adminMessage = {
+				type: 'info',
+				content: "Scan started"
+			};
+		})
+		.error(function(e) {
+			console.error("Error tarting scan", arguments);
+			$scope.adminMessage = {
+				type: 'error',
+				content: "Error starting scan"
+			};
+		});
 	};
 
 	init( );

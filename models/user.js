@@ -25,7 +25,7 @@ exports.build = function(mongoose) {
 		socketId: String 
 	});
 
-	var blacklist = ['username', 'admin', 'authType', 'auth', 'score', 'socketId'];
+	var blacklist = ['username', 'admin', 'authType', 'auth', 'score', 'playlist', 'socketId'];
 
 	// Helper method to prevent tampering with important bits
 	schema.methods.merge = function(data) {

@@ -38,13 +38,16 @@ exports.Controller = function(User, Auth) {
 		var user = new User(data);
 		user.auth = auth._id;
 
-		user.save(function(e) {
-			if (e) {
-				console.trace(e);
-				return res.jsonp(500, {error: "Error saving new account"});
-			}
-			req.session.user = user;
-			return res.jsonp(user);
+		User.count({admin: true}, function(e, c) {
+			if (c == 0) user.admin = true;
+			user.save(function(e) {
+				if (e) {
+					console.trace(e);
+					return res.jsonp(500, {error: "Error saving new account"});
+				}
+				req.session.user = user;
+				return res.jsonp(user);
+			});
 		});
 	};
 
