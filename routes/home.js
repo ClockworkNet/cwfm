@@ -1,4 +1,4 @@
-exports.Controller = function(Room, User) {
+module.exports = function(Room, User) {
 	this.home = function(req, res, next) {
 		var data = {
 			title: "Clockwork.FM",

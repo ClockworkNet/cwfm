@@ -20,10 +20,6 @@ exports.build = function(mongoose) {
 			format: String,
 			data: Buffer
 		}],
-		waveform: {
-			format: String,
-			data: Buffer
-		},
 		duration: Number,
 		upvotes: Number,
 		downvotes: Number,

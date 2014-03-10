@@ -1,12 +1,31 @@
-exports.Controller = function(dir, Song, User, fs, path, mm) {
+module.exports = function(dir, Song, User, fs, path, mm) {
 	var allowed = ['.mp3', '.m4a', '.ogg', '.flac', '.wma', '.wmv'];
 	var maxFails = 5;
 
-	var processSongMeta = function(song, meta) {
-		for (var key in meta) {
-			if (!meta.hasOwnProperty(key)) continue;
-			song[key] = meta[key];
-		}
+	var processSongTags = function(song, stats, done) {
+
+			var songStream = fs.createReadStream(song.path);
+
+			songStream.on('error', function(e) {
+				return done(e, song);
+			});
+
+			var parser = mm(songStream, {duration: true});
+			parser.on('metadata', function(tags) {
+				console.info("Found song metadata", tags);
+
+				if (!tags || !tags.duration) {
+					return done(new Error("Could not read duration metadata for file"), song);
+				}
+
+				var keys = ['title', 'artist', 'album', 'albumartist', 'year', 'track', 'disk', 'picture', 'duration'];
+
+				keys.forEach(function(key) {
+					song[key] = tags[key];
+				});
+
+				done(null, song);
+			});
 	}
 
 	var updateSong = function(filename, stats) {
@@ -36,23 +55,11 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 			song.modified = Date.now();
 			song.path     = filename;
 
-			var songStream = fs.createReadStream(filename);
-
-			songStream.on('error', function(e) {
-				console.trace("Error opening stream", e);
-				return false;
-			});
-
-			var parser = mm(songStream, {duration: true});
-			parser.on('metadata', function(result) {
-				console.info("Found song metadata", result);
-
-				if (!result || !result.duration) {
-					console.error("Could not read duration metadata for file", filename, result);
+			processSongTags(song, stats, function(e, song) {
+				if (e) {
+					console.error("Error processing song metadata", song, e);
 					return false;
 				}
-
-				processSongMeta(song, result);
 				song.save(function(e) {
 					if (e) {
 						console.error("Error saving song", song, e);
@@ -102,7 +109,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 
 		var fields = [];
 		switch (req.query.f) {
-			case ('song'): 
+			case ('song'):
 				fields = ['title'];
 				break;
 			case ('album'):

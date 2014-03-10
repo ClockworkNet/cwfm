@@ -1,4 +1,4 @@
-exports.Controller = function(User, Auth) {
+module.exports = function(User, Auth) {
 	this.list = function(req, res, next){
 		User.find({}, function(e, arr) {
 			res.jsonp({users: arr});

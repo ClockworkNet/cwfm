@@ -1,4 +1,4 @@
-exports.Controller = function(config, fs, path) {
+module.exports = function(config, fs, path) {
 	var filterFiles = function(v, i, a) {
 		return config.pattern.test(v);
 	};

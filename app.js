@@ -24,7 +24,7 @@ app.use(express.urlencoded());
 app.use(express.methodOverride());
 app.use(express.cookieParser(config.cookieSecret));
 app.use(express.session({
-	secret: config.sessionSecret, 
+	secret: config.sessionSecret,
 	key: config.sessionKey,
 	store: sessionStore
 }));
@@ -94,7 +94,7 @@ db.on('open', function() {
 	var Chat     = require('./models/chat').build(mongoose, config);
 
 	var routes = {
-		home: require('./routes'),
+		home: require('./routes/home'),
 		room: require('./routes/room'),
 		song: require('./routes/song'),
 		user: require('./routes/user'),
@@ -104,13 +104,13 @@ db.on('open', function() {
 	};
 
 	var controllers = {
-		home: new routes.home.Controller(Room, User),
-		room: new routes.room.Controller(Room, User, Playlist, Song, io),
-		song: new routes.song.Controller(config.songDir, Song, User, fs, path, mm),
-		user: new routes.user.Controller(User, Auth),
-		avatar: new routes.avatar.Controller(config.avatar, fs, path),
-		chat: new routes.chat.Controller(Room, User, Chat, io),
-		playlist: new routes.playlist.Controller(Playlist, Song, User)
+		home: new routes.home(Room, User),
+		room: new routes.room(Room, User, Playlist, Song, io),
+		song: new routes.song(config.songDir, Song, User, fs, path, mm),
+		user: new routes.user(User, Auth),
+		avatar: new routes.avatar(config.avatar, fs, path),
+		chat: new routes.chat(Room, User, Chat, io),
+		playlist: new routes.playlist(Playlist, Song, User)
 	};
 
 	var secure = apply(controllers.user, 'verify');

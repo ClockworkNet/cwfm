@@ -1,4 +1,4 @@
-exports.Controller = function(Playlist, Song, User) {
+module.exports = function(Playlist, Song, User) {
 	this.list = function(req, res, next) {
 		Playlist.find({owners: req.session.user._id}, function(e, a) {
 			if (e) {

@@ -1,4 +1,4 @@
-exports.Controller = function(Room, User, Chat, io) {
+module.exports = function(Room, User, Chat, io) {
 	var defaultLimit = 10;
 
 	this.list = function(req, res, next) {

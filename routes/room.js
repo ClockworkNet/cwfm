@@ -1,4 +1,4 @@
-exports.Controller = function(Room, User, Playlist, Song, io) {
+module.exports = function(Room, User, Playlist, Song, io) {
 
 	// Stores the timeout used to trigger the next song.
 	// This is keyed on the room abbr.
