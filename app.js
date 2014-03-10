@@ -132,7 +132,6 @@ db.on('open', function() {
 	app.get('/song/detail/:id', secure, apply(controllers.song, 'detail'));
 	app.get('/song/:id', secure, apply(controllers.song, 'stream'));
 	app.post('/song/scan', secure, apply(controllers.song, 'scan'));
-	controllers.song.startWatch();
 
 	app.get('/playlist/list', secure, apply(controllers.playlist, 'list'));
 	app.get('/playlist/detail/:id', secure, apply(controllers.playlist, 'detail'));

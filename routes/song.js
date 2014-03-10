@@ -9,48 +9,55 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 		}
 	}
 
-	var updateSong = function(filename) {
-		if (!filename || filename.length == 0) return;
-
-		if (allowed.indexOf(path.extname(filename)) < 0) {
-			return;
+	var updateSong = function(filename, stats) {
+		if (!filename || filename.length == 0) {
+			return false;
 		}
 
-		var songStream = fs.createReadStream(filename);
-
-		songStream.on('error', function(e) {
-			console.trace("Error opening stream", e);
+		if (allowed.indexOf(path.extname(filename)) < 0) {
 			return false;
-		});
+		}
 
-		var parser = mm(songStream, {duration: true});
-		parser.on('metadata', function(result) {
-			console.info("Found song metadata", result);
-
-			if (!result || !result.duration) {
-				console.error("Could not read duration metadata for file", filename, result);
-				return;
+		Song.findOne({path: filename}, function(e, song) {
+			if (e) {
+				console.trace("Error seeking song", e);
+				return false;
 			}
 
-			Song.findOne({path: filename}, function(e, song) {
+			if (!song) {
+				song = new Song();
+				song.added = Date.now();
+			}
+			else if (song.modified && song.modified.getTime() >= stats.ctime.getTime()) {
+				console.info("Skipping song - already up to date", filename);
+				return false;
+			}
 
-				if (e) {
-					console.trace("Error seeking song", e);
-					return;
-				}
+			song.modified = Date.now();
+			song.path     = filename;
 
-				if (!song) {
-					song = new Song();
-					song.added = Date.now();
+			var songStream = fs.createReadStream(filename);
+
+			songStream.on('error', function(e) {
+				console.trace("Error opening stream", e);
+				return false;
+			});
+
+			var parser = mm(songStream, {duration: true});
+			parser.on('metadata', function(result) {
+				console.info("Found song metadata", result);
+
+				if (!result || !result.duration) {
+					console.error("Could not read duration metadata for file", filename, result);
+					return false;
 				}
-				song.modified = Date.now();
-				song.path     = filename;
 
 				processSongMeta(song, result);
 				song.save(function(e) {
 					if (e) {
 						console.error("Error saving song", song, e);
 					}
+					return true;
 				});
 			});
 		});
@@ -66,7 +73,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 				return;
 			}
 			if (stats.isFile()) {
-				return updateSong(fullpath);
+				return updateSong(fullpath, stats);
 			}
 			if (stats.isDirectory()) {
 				fs.readdir(fullpath, function(e, paths) {
@@ -96,7 +103,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 		var fields = [];
 		switch (req.query.f) {
 			case ('song'): 
-				fields = ['path', 'title'];
+				fields = ['title'];
 				break;
 			case ('album'):
 				fields = ['album'];
@@ -172,20 +179,6 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 						song.save();
 					}
 				}
-			});
-		});
-	};
-
-	this.startWatch = function() {
-		fs.exists(dir, function(exists) {
-			if (!exists) {
-				console.error("Song directory does not exist", dir);
-				return;
-			}
-			console.info("Watching song directory", dir);
-			fs.watch(dir, function(event, filename) {
-				if (!filename) return;
-				updateSong(path.join(dir, filename));
 			});
 		});
 	};

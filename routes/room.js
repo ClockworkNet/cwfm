@@ -14,6 +14,25 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 		}
 	};
 
+	var rotateTable = function(room, then) {
+		var djId = room.dj._id ? room.dj._id : room.dj;
+
+		User.findById(djId)
+		.populate('playlist')
+		.exec(function(e, dj) {
+			dj.playlist.rotate().save(function(e) {
+				// Rotate DJs if necessary
+				if (room.rotateDjs()) {
+					room.save(then);
+				}
+				else {
+					then();
+				}
+			});
+		});
+
+	};
+
 	var nextSong = function(room) {
 		if (!room) {
 			console.error("No room");
@@ -32,42 +51,31 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			return;
 		}
 
-		// Advance the first track of the current playlist
-		var djId = room.dj._id ? room.dj._id : room.dj;
-		User.findById(djId)
-		.populate('playlist')
-		.exec(function(e, dj) {
-			dj.playlist.rotate().save();
-		});
+		rotateTable(room, function() {
+			// Pick the new DJ's next song from her current playlist
+			// and set it on the room.
+			var djId = room.dj._id ? room.dj._id : room.dj;
 
-		// Rotate DJs if necessary
-		if (room.rotateDjs()) {
-			room.save();
-		}
-
-		// Pick the new DJ's next song from her current playlist
-		// and set it on the room.
-		var djId = room.dj._id ? room.dj._id : room.dj;
-
-		User.findById(djId).populate('playlist').exec(function(e, dj) {
-			if (e || !dj) {
-				console.trace("Error finding DJ", e, dj);
-				return;
-			}
-			var songId = dj.playlist.songs[0];
-			Song.findById(songId, function(e, song) {
-				if (e) {
-					console.trace("Error finding song to play", e, songId, dj.playlist);
+			User.findById(djId).populate('playlist').exec(function(e, dj) {
+				if (e || !dj) {
+					console.trace("Error finding DJ", e, dj);
 					return;
 				}
-				if (!song) {
-					console.trace("Song not found for id. Removing from playlist.", songId);
-					dj.playlist.songs.shift();
-					dj.playlist.save();
-					nextSong(room);
-					return;
-				}
-				playSong(room, song);
+				var songId = dj.playlist.songs[0];
+				Song.findById(songId, function(e, song) {
+					if (e) {
+						console.trace("Error finding song to play", e, songId, dj.playlist);
+						return;
+					}
+					if (!song) {
+						console.trace("Song not found for id. Removing from playlist.", songId);
+						dj.playlist.songs.shift();
+						dj.playlist.save();
+						nextSong(room);
+						return;
+					}
+					playSong(room, song);
+				});
 			});
 		});
 	};
