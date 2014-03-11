@@ -34,7 +34,7 @@ block left
 
 			ul.list-group
 				li.list-item(ng-repeat="dj in room.djs")
-					img(ng-src="/avatar/{{dj.avatar}}")
+					img(ng-src="/avatar/user/{{dj.username}}")
 					div.text-center {{dj.username}}
 
 block main 
@@ -72,16 +72,16 @@ block main
 
 
 	#cwfmPlayerCtrl.row(ng-controller="cwfmPlayerCtrl", data-step="4", data-intro="Here's where you'll find the current song", data-position="top")
-		div(ng-show="room.abbr")
+		div(ng-show="room.song")
 			.row
-				.col-md-2.text-center
-					a.btn.btn-lg.btn-default(ng-click="toggleMuting()", ng-class="{active: muted}")
+				.col-md-11
+					#player.player(data-height="45", data-pixelRatio="1", data-cursorWidth="5", data-markerWidth="5", data-dragSelection="false")
+				.col-md-1
+					a.btn.btn-lg.btn-default.pull-right(ng-click="toggleMuting()", ng-class="{active: muted}")
 						span.glyphicon.glyphicon-volume-off(ng-show="muted")
 						span.glyphicon.glyphicon-volume-up(ng-hide="muted")
-				.col-md-10
-					#player.player(data-height="45", data-pixelRatio="1", data-cursorWidth="5", data-markerWidth="5", data-dragSelection="false")
 
-			dl(ng-show="room.song")
+			.row
 				strong.song-dj(ng-show="room.djs.length") {{room.djs[0].username}} 
 				em.song-dj(ng-hide="room.djs.length") Someone 
 				span is spinning 

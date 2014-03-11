@@ -34,7 +34,6 @@ exports.build = function(mongoose) {
 		var obj = this.toObject();
 		delete obj.path;
 		delete obj.picture;
-		delete obj.waveform;
 		return obj;
 	};
 

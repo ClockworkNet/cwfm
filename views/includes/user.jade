@@ -2,7 +2,7 @@
 	h3(ng-if="error") {{error}}
 
 	.dropdown
-		img(ng-src="/avatar/{{me.avatar}}", height="30px")
+		img(ng-src="/avatar/user/{{me.username}}", height="30px")
 		a.dropdown-toggle.btn.btn-link.btn-lg(data-toggle="dropdown", href="#user") {{me.username}} 
 
 		ul.dropdown-menu

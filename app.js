@@ -34,19 +34,19 @@ app.use(app.router);
 //app.use(require('stylus').middleware(path.join(__dirname, 'public')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
-app.configure('development', function() {
-	app.locals.pretty = true;
-});
-
-// development only
-if ('development' == app.get('env')) {
-  app.use(express.errorHandler());
-}
-
 var server         = http.createServer(app);
 var io             = io.listen(server);
 var sessionSockets = new SessionSockets(io, sessionStore, cookieParser, config.sessionKey);
 
+switch (app.get('env')) {
+	case 'development':
+		app.use(express.errorHandler());
+		io.set('log level', 2);
+		break;
+	default:
+		io.set('log level', 1);
+		break;
+}
 
 // Set up the database connection. Once the connection is established,
 // we can generate the routes for all of the API calls.
@@ -108,7 +108,7 @@ db.on('open', function() {
 		room: new routes.room(Room, User, Playlist, Song, io),
 		song: new routes.song(config.songDir, Song, User, fs, path, mm),
 		user: new routes.user(User, Auth),
-		avatar: new routes.avatar(config.avatar, fs, path),
+		avatar: new routes.avatar(config.avatar, fs, path, User),
 		chat: new routes.chat(Room, User, Chat, io),
 		playlist: new routes.playlist(Playlist, Song, User)
 	};
@@ -125,6 +125,7 @@ db.on('open', function() {
 	app.post('/user/update', secure, apply(controllers.user, 'update'));
 
 	app.get('/avatar/list', apply(controllers.avatar, 'list'));
+	app.get('/avatar/user/:username', apply(controllers.avatar, 'user'));
 	app.get('/avatar/:name', apply(controllers.avatar, 'show'));
 	app.get('/avatar/', apply(controllers.avatar, 'show'));
 
@@ -153,8 +154,6 @@ db.on('open', function() {
 
 	app.get('/chat/list/:abbr', secure, apply(controllers.chat, 'list'));
 	app.post('/chat/say/:abbr', secure, apply(controllers.chat, 'say'));
-
-	//io.set('log level', 1);
 
 	sessionSockets.on('connection', function(e, socket, session) {
 		if (e) {
