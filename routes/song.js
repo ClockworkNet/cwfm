@@ -141,7 +141,7 @@ module.exports = function(dir, Song, User, fs, path, mm) {
 
 		query.exec(function(e, a) {
 			if (e) {
-				console.trace(e);
+				console.trace("Error searching songs", e, query);
 				return res.jsonp(500, {error: "Error searching songs"});
 			}
 			res.jsonp({songs: a});
