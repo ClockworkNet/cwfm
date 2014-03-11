@@ -46,6 +46,7 @@ module.exports = function(User, Auth) {
 					return res.jsonp(500, {error: "Error saving new account"});
 				}
 				req.session.user = user;
+				req.session.save();
 				return res.jsonp(user);
 			});
 		});
@@ -64,6 +65,7 @@ module.exports = function(User, Auth) {
 					return res.jsonp(400, {error: e});
 				}
 				req.session.user = user;
+				req.session.save();
 				return res.jsonp(user);
 			});
 		});
@@ -89,6 +91,7 @@ module.exports = function(User, Auth) {
 			if (!user) {
 				console.info("Invalid username", req.body.username);
 				delete req.session.user;
+				req.session.save();
 				return res.jsonp(401, {error: "Bad credentials"});
 			}
 
@@ -114,7 +117,8 @@ module.exports = function(User, Auth) {
 				auth.save();
 
 				req.session.user = user;
-				user.auth = auth._id;
+				req.session.save();
+				console.info(req.session);
 				res.jsonp(user);
 			}
 			else {
@@ -130,6 +134,7 @@ module.exports = function(User, Auth) {
 		if (!req.session.user) return res.jsonp({});
 		User.update({lastLogout: Date.now()}, {_id: req.session.user._id}, function(e, n) {
 			req.session.user = null;
+			req.session.save();
 			return res.jsonp({});
 		});
 	};

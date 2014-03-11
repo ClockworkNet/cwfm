@@ -3,32 +3,37 @@ module.exports = function(dir, Song, User, fs, path, mm) {
 	var maxFails = 5;
 
 	var processSongTags = function(song, stats, done) {
+		var songStream = fs.createReadStream(song.path);
 
-			var songStream = fs.createReadStream(song.path);
+		songStream.on('error', function(e) {
+			return done(e, song);
+		});
 
-			songStream.on('error', function(e) {
-				return done(e, song);
+		var parser = mm(songStream, {duration: true});
+
+		parser.on('done', function(e) {
+			if (e) return done(e, song);
+			songStream.destroy();
+		});
+
+		parser.on('metadata', function(tags) {
+			console.info("Found song metadata. Song:", song, " Tags:", tags);
+
+			if (!tags || !tags.duration) {
+				return done(new Error("Could not read duration metadata for file"), song);
+			}
+
+			var keys = ['title', 'artist', 'album', 'genre', 'albumartist', 'year', 'track', 'disk', 'picture', 'duration'];
+
+			keys.forEach(function(key) {
+				song[key] = tags[key];
 			});
 
-			var parser = mm(songStream, {duration: true});
-			parser.on('metadata', function(tags) {
-				console.info("Found song metadata", tags);
-
-				if (!tags || !tags.duration) {
-					return done(new Error("Could not read duration metadata for file"), song);
-				}
-
-				var keys = ['title', 'artist', 'album', 'albumartist', 'year', 'track', 'disk', 'picture', 'duration'];
-
-				keys.forEach(function(key) {
-					song[key] = tags[key];
-				});
-
-				done(null, song);
-			});
+			done(null, song);
+		});
 	}
 
-	var updateSong = function(filename, stats) {
+	var updateSong = function(filename, stats, force) {
 		if (!filename || filename.length == 0) {
 			return false;
 		}
@@ -47,8 +52,7 @@ module.exports = function(dir, Song, User, fs, path, mm) {
 				song = new Song();
 				song.added = Date.now();
 			}
-			else if (song.modified && song.modified.getTime() >= stats.ctime.getTime()) {
-				console.info("Skipping song - already up to date", filename);
+			else if (!force && song.modified && song.modified.getTime() >= stats.ctime.getTime()) {
 				return false;
 			}
 
@@ -71,16 +75,15 @@ module.exports = function(dir, Song, User, fs, path, mm) {
 	};
 
 	// Recursively scans directories for media files
-	var scan = function(dir, filename) {
+	var scan = function(dir, filename, force) {
 		var fullpath = path.join(dir, filename);
-		console.info("Scanning", dir, filename);
 		fs.stat(fullpath, function(e, stats) {
 			if (e) {
 				console.trace("Error getting stats for", fullpath, e);
 				return;
 			}
 			if (stats.isFile()) {
-				return updateSong(fullpath, stats);
+				return updateSong(fullpath, stats, force);
 			}
 			if (stats.isDirectory()) {
 				fs.readdir(fullpath, function(e, paths) {
@@ -90,7 +93,7 @@ module.exports = function(dir, Song, User, fs, path, mm) {
 					}
 					if (!paths) return;
 					paths.forEach(function(p) {
-						scan(fullpath, p);
+						scan(fullpath, p, force);
 					});
 				});
 			}
@@ -161,7 +164,7 @@ module.exports = function(dir, Song, User, fs, path, mm) {
 		}
 
 		console.info('Starting scan', dir);
-		scan(dir, '');
+		scan(dir, '', req.body.force);
 		return res.jsonp({success: true});
 	};
 

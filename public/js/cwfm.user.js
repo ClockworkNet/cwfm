@@ -27,20 +27,20 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 	};
 
 	var oops  =  function(e) {
-		console.info(e);
+		console.trace("Error occurred", e);
 		$scope.error = e.error;
 	};
 
 	$scope.loadMe  =  function() {
 		$http.get('/user/me')
-			.success(setUser)
-			.error(oops);
+		.success(setUser)
+		.error(oops);
 	};
 
 	$scope.createUser  =  function( ) {
 		$http.post('/user/create', $scope.newUser)
-			.success(setUser)
-			.error(oops);
+		.success(setUser)
+		.error(oops);
 	}
 
 	$scope.login  =  function( ) {
@@ -89,8 +89,8 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 
 	};
 
-	$scope.scan = function() {
-		$http.post('/song/scan')
+	$scope.scan = function(force) {
+		$http.post('/song/scan', {force: force})
 		.success(function(r) {
 			console.info("Starting scan", arguments);
 			$scope.adminMessage = {

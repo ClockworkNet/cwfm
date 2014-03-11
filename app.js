@@ -1,16 +1,19 @@
-var config   = require('./config').settings;
-var express  = require('express');
-var http     = require('http');
-var path     = require('path');
-var cookie   = require('cookie');
-var connect  = require('connect');
-var io       = require('socket.io');
-var fs       = require('fs');
-var mm       = require('musicmetadata');
+var config         = require('./config').settings;
+var express        = require('express');
+var http           = require('http');
+var path           = require('path');
+var cookie         = require('cookie');
+var connect        = require('connect');
+var io             = require('socket.io');
+var fs             = require('fs');
+var mm             = require('musicmetadata');
 
-var sessionStore = new express.session.MemoryStore();
+var SessionSockets = require('session.socket.io');
 
-var app = express();
+var sessionStore   = new express.session.MemoryStore();
+var cookieParser   = express.cookieParser(config.cookieSecret);
+
+var app    = express();
 
 // all environments
 app.set('port', process.env.PORT || 3000);
@@ -22,9 +25,8 @@ app.use(express.logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(express.methodOverride());
-app.use(express.cookieParser(config.cookieSecret));
+app.use(cookieParser);
 app.use(express.session({
-	secret: config.sessionSecret,
 	key: config.sessionKey,
 	store: sessionStore
 }));
@@ -41,13 +43,9 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-
-// Fire up the server and the socket listener
-var server = http.createServer(app);
-server.listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
-});
-var io = io.listen(server);
+var server         = http.createServer(app);
+var io             = io.listen(server);
+var sessionSockets = new SessionSockets(io, sessionStore, cookieParser, config.sessionKey);
 
 
 // Set up the database connection. Once the connection is established,
@@ -62,7 +60,7 @@ db.on('open', function() {
 
 	// Returns a new method that binds the controller context to the
 	// method and appends any specified arguments to the parameter list
-	var apply = function(controller, method, args) {
+	var apply = function(controller, method) {
 
 		if (!controller) {
 			throw new Error("Invalid controller");
@@ -71,6 +69,8 @@ db.on('open', function() {
 		if (typeof(controller[method]) != 'function') {
 			throw new Error("Invalid method on controller: " + method);
 		}
+
+		var args = Array.prototype.slice.call(arguments, 2);
 
 		return function() {
 			var params = Array.prototype.slice.call(arguments, 0);
@@ -154,32 +154,23 @@ db.on('open', function() {
 	app.get('/chat/list/:abbr', secure, apply(controllers.chat, 'list'));
 	app.post('/chat/say/:abbr', secure, apply(controllers.chat, 'say'));
 
-	// Wire up authentication to the socket connections
-	io.set('log level', 1);
-	io.set('authorization', function(data, accept) {
-		if (!data.headers.cookie) {
-			return accept('Unauthorized', false);
-		}
-		data.cookie = cookie.parse(data.headers.cookie);
-		data.sessionId = connect.utils.parseSignedCookie(data.cookie[config.sessionKey], config.sessionSecret);
-		sessionStore.get(data.sessionId, function(e, session) {
-			if (e || !session) {
-				console.error(e, data);
-				return accept("No session found", false);
-			}
-			data.session = session;
-			accept(null, true);
-		});
-	});
+	//io.set('log level', 1);
 
-	io.sockets.on('connection', function(socket) {
-		//@todo: get user on disconnect
-		socket.on('listen', apply(controllers.room, 'listen', socket));
-		socket.on('leave', apply(controllers.room, 'leave', socket));
-		socket.on('disconnect', apply(controllers.room, 'exit'));
+	sessionSockets.on('connection', function(e, socket, session) {
+		if (e) {
+			console.trace("Error connecting socket", e);
+			return;
+		}
+		socket.on('listen', apply(controllers.room, 'listen', socket, session));
+		socket.on('leave', apply(controllers.room, 'leave', socket, session));
+		socket.on('disconnect', apply(controllers.room, 'exit', socket, session));
 	});
 
 	// UI
 	app.get('/', apply(controllers.home, 'home'));
 	app.get('/room', apply(controllers.home, 'room'));
+});
+
+server.listen(app.get('port'), function(){
+  console.log('Express server listening on port ' + app.get('port'));
 });

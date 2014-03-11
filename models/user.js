@@ -27,6 +27,12 @@ exports.build = function(mongoose) {
 
 	var blacklist = ['username', 'admin', 'authType', 'auth', 'score', 'playlist', 'socketId'];
 
+	schema.methods.toJSON = function() {
+		var obj  = this.toObject();
+		obj.auth = obj.auth && obj.auth._id ? obj.auth._id : obj.auth;
+		return obj;
+	};
+
 	// Helper method to prevent tampering with important bits
 	schema.methods.merge = function(data) {
 		for (var key in data) {

@@ -6,6 +6,7 @@ exports.build = function(mongoose) {
 		albumartist: [String],
 		album: String,
 		year: Number,
+		genre: [String],
 		track: {
 			no: Number,
 			of: Number

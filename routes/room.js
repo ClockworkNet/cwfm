@@ -193,40 +193,47 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	};
 
 	// Called when a user connects to a room to listen in on the socket
-	this.listen = function(data, callback, socket) {
+	this.listen = function(data, callback, socket, session) {
 		Room.findOne({abbr: data.abbr}, function(e, room) {
 			if (e) throw e;
 			socket.join(room.abbr);
-			console.info(socket.id, "is listening to", room.abbr);
+			session.user.socketId = socket.id;
+			session.save();
+			console.info(session.user.username, "is listening to", room.abbr);
 		});
 	};
 
 	// Called when user leaves a room
-	this.leave = function(data, callback, socket) {
-		socket.leave(data.abbr);
+	this.leave = function(data, callback, socket, session) {
 		console.info(socket.id, "is leaving", data.abbr);
-		if (!socket.handshake || !socket.handshake.session || !socket.handshake.session.user) {
+		socket.leave(data.abbr);
+		if (!session || !session.user) {
 			console.info("No session information found. Skipping room departure");
 			return;
 		}
-		var uid = socket.handshake.session.user._id;
-		User.findById(uid, function(e, user) {
-			if (e || !user) return;
-			Room.findOne({abbr: data.abbr}, function(e, room) {
-				if (e) return;
-				room.removeUser(user);
+		Room.findOne({abbr: data.abbr}, function(e, room) {
+			if (e) return;
+			if (room.removeUser(session.user._id)) {
 				room.save();
-				io.sockets.in(room.abbr).emit('member.departed', user);
-			});
+				console.info(session.user.username, "left room", room.name);
+				io.sockets.in(room.abbr).emit('member.departed', session.user);
+			}
 		});
 	};
 
 	// Called when a socket connection is dropped
-	this.exit = function(username) {
-		User.find({username: username}, function(e, user) {
-			if (!user) return;
-			Room.find({}, function(e, a) {
-				a.forEach(function(r) {r.removeUser(user);});
+	this.exit = function(event, socket, session) {
+		if (!session.user) {
+			console.error("No user to speak of during exit");
+			return;
+		}
+		Room.find({}, function(e, a) {
+			a.forEach(function(r) {
+				if (r.removeUser(session.user._id)) {
+					console.info(session.user.username, "exited room", r.name);
+					r.save();
+					io.sockets.in(r.abbr).emit('member.departed', session.user);
+				}
 			});
 		});
 	};

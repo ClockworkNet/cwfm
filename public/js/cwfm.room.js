@@ -73,6 +73,7 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 		.success(function(room) {
 			$room.set(room);
 			$socket.emit('listen', room);
+			console.info("listening to room socket", room);
 		})
 		.error(function(e) {
 			console.error(e);
@@ -80,7 +81,7 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 
 	window.onbeforeunload = function() {
 		$socket.emit('leave', $scope.room);
-		console.info('leaving room', $scope.room);
+		console.info('leaving room socket', $scope.room);
 	};
 
 	var addMe = function() {
