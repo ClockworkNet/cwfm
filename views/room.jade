@@ -5,6 +5,8 @@ block scripts
 	script(src="/public/bowery/intro.js/minified/intro.min.js")
 
 	script(src="/public/bowery/wavesurfer.js/build/wavesurfer.min.js")
+	script(src="/public/bowery/lvlDragDrop/script/lvl-uuid.js")
+	script(src="/public/bowery/lvlDragDrop/script/lvl-drag-drop.js")
 
 	script(src="/public/js/cwfm.filters.js")
 	script(src="/public/js/cwfm.song.js")
@@ -17,7 +19,6 @@ block scripts
 	script(src="/public/js/cwfm.playlist.js")
 	script(src="/public/js/cwfm.chatter.js")
 	script(src="/public/js/cwfm.room.app.js")
-
 	script(src="/public/js/cwfm.room.ui.js")
 
 block left 
@@ -34,7 +35,7 @@ block left
 
 			ul.list-group
 				li.list-item(ng-repeat="dj in room.djs")
-					img(ng-src="/avatar/user/{{dj.username}}")
+					img(ng-src="/avatar/{{dj.avatar}}")
 					div.text-center {{dj.username}}
 
 block main 
@@ -147,10 +148,11 @@ block right
 
 						#myqueue_wrap
 							ul#my_queue.songs_list.list-group
-								li.songs_item.list-group-item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}") 
-									span {{songName(song)}}
-									a.remove(ng-click="removeSong(song)", href="#remove") 
-										span.glyphicon.glyphicon-trash
+								li.songs_item.list-group-item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", x-lvl-drop-target="true", x-on-drop="songDropped(dragEl, dropEl)", data-index="{{$index}}") 
+									div.song_wrapper(x-lvl-draggable="true", data-song="{{song}}")
+										span {{songName(song)}}
+										a.remove(ng-click="removeSong(song)", href="#remove") 
+											span.glyphicon.glyphicon-trash
 
 			div.tab-pane.panel.panel-default#library(ng-class="{active: ! me.playlist.name.length}")
 				div.panel-heading Playlists

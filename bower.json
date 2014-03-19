@@ -19,6 +19,7 @@
 		"wavesurfer.js": "*",
 		"json2": "*",
 		"angular": "*",
+		"lvlDragDrop": "*",
 		"intro.js": "*",
 		"bootstrap": "*"
 	}

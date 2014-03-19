@@ -1,4 +1,4 @@
-var cwfmApp = angular.module( 'cwfmApp', [ 'cwfmFilters' ] );
+var cwfmApp = angular.module( 'cwfmApp', [ 'cwfmFilters', 'lvl.directives.dragdrop' ] );
 
 cwfmApp
 	.factory( '$socket', cwfm.socket.factory )

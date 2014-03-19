@@ -29,7 +29,7 @@ exports.build = function(mongoose) {
 
 	schema.methods.toJSON = function() {
 		var obj  = this.toObject();
-		obj.auth = obj.auth && obj.auth._id ? obj.auth._id : obj.auth;
+		obj.auth = true;
 		return obj;
 	};
 

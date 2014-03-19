@@ -6,14 +6,22 @@
 	"scripts": {
 		"start": "node app.js"
 	},
+
 	"dependencies": {
-		"express": "3.4.8",
+		"express": "*",
+		"jade": "*",
+
+		"static-favicon": "*",
+		"body-parser": "*",
+		"cookie-parser": "*",
+		"express-session": "*",
+		"method-override": "*",
+		"morgan": "*",
+
 		"socket.io": "*",
 		"session.socket.io": "*",
-		"connect": "*",
-		"cookie": "*",
+
 		"musicmetadata": "*",
-		"jade": "*",
 		"mongoose": "*",
 		"sha1": "*"
 	}

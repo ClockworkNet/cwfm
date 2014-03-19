@@ -192,4 +192,21 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 	$scope.active = function(playlist) {
 		return $scope.me.playlist && playlist._id == $scope.me.playlist._id;
 	};
+
+	$scope.songDropped = function(dragged, drop) {
+		var song = angular.element(dragged).attr('data-song');
+		var nix = angular.element(drop).attr('data-index');
+
+		console.info($scope.me.playlist.songs);
+		$scope.me.playlist.songs.every(function(s, ix) {
+			if (s._id == song._id) {
+				$scope.me.playlist.songs.splice(ix, 1);
+				return false;
+			}
+			return true;
+		});
+
+		$scope.me.playlist.songs.splice(nix, 0, song);
+//		$scope.save();
+	};
 }

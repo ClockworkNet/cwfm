@@ -198,7 +198,6 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			if (e) throw e;
 			socket.join(room.abbr);
 			session.user.socketId = socket.id;
-			session.save();
 			console.info(session.user.username, "is listening to", room.abbr);
 		});
 	};
