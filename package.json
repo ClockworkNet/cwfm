@@ -13,13 +13,11 @@
 
 		"static-favicon": "*",
 		"body-parser": "*",
-		"cookie-parser": "*",
-		"express-session": "*",
+		"cookies": "*",
 		"method-override": "*",
 		"morgan": "*",
 
 		"socket.io": "*",
-		"session.socket.io": "*",
 
 		"musicmetadata": "*",
 		"mongoose": "*",

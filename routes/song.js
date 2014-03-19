@@ -135,8 +135,8 @@ module.exports = function(dir, Song, User, fs, path, mm) {
 
 		var query = Song.where({$or: like})
 
-		if (req.session.user.playlist) {
-			query.and({_id: {$nin: req.session.user.playlist.songs}});
+		if (req.user.playlist) {
+			query.and({_id: {$nin: req.user.playlist.songs}});
 		}
 
 		query.exec(function(e, a) {
@@ -159,7 +159,7 @@ module.exports = function(dir, Song, User, fs, path, mm) {
 	};
 
 	this.scan = function(req, res, next) {
-		if (!req.session.user.admin) {
+		if (!req.user.admin) {
 			return res.jsonp(401, {error: "Not authorized"});
 		}
 

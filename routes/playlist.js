@@ -1,6 +1,6 @@
 module.exports = function(Playlist, Song, User) {
 	this.list = function(req, res, next) {
-		Playlist.find({owners: req.session.user._id}, function(e, a) {
+		Playlist.find({owners: req.user._id}, function(e, a) {
 			if (e) {
 				console.trace(e);
 				return res.jsonp(500, {error: "Error getting playlists"});
@@ -23,7 +23,7 @@ module.exports = function(Playlist, Song, User) {
 
 	this.create = function(req, res, next) {
 		var playlist = new Playlist(req.body);
-		playlist.owners = [req.session.user._id];
+		playlist.owners = [req.user._id];
 		playlist.save(function(e) {
 			if (e) {
 				console.trace(e, req.body);
@@ -38,7 +38,7 @@ module.exports = function(Playlist, Song, User) {
 			if (e || !playlist) {
 				return res.jsonp(500, {error: "Error getting playlist"});
 			}
-			if (!playlist.isOwner(req.session.user)) {
+			if (!playlist.isOwner(req.user)) {
 				return res.jsonp(401, {error: "That's not your playlist, silly!"});
 			}
 			Playlist.remove({_id: playlist._id}, function(e) {
@@ -58,10 +58,10 @@ module.exports = function(Playlist, Song, User) {
 			if (e || !playlist) {
 				return res.jsonp(500, {error: "Error getting playlist"});
 			}
-			if (!playlist.isOwner(req.session.user)) {
+			if (!playlist.isOwner(req.user)) {
 				return res.jsonp(401, {error: "That's not your playlist, silly!"});
 			}
-			User.update({_id: req.session.user._id}, {playlist: playlist._id}, function(e, n) {
+			User.update({_id: req.user._id}, {playlist: playlist._id}, function(e, n) {
 				if (e) {
 					console.trace(e, user);
 					return res.jsonp(500, {error: "Can't select your playlist"});
@@ -76,7 +76,7 @@ module.exports = function(Playlist, Song, User) {
 			if (e || !playlist) {
 				return res.jsonp(500, {error: "Error getting playlist"});
 			}
-			if (!playlist.isOwner(req.session.user)) {
+			if (!playlist.isOwner(req.user)) {
 				return res.jsonp(401, {error: "That's not your playlist, silly!"});
 			}
 

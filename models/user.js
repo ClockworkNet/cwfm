@@ -17,6 +17,7 @@ exports.build = function(mongoose) {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Auth'
 		},
+		authToken: mongoose.Schema.Types.ObjectId,
 		score: Number,
 		playlist: {
 			type: mongoose.Schema.Types.ObjectId, 
@@ -31,6 +32,11 @@ exports.build = function(mongoose) {
 		var obj  = this.toObject();
 		obj.auth = true;
 		return obj;
+	};
+
+	schema.methods.createAuthToken = function() {
+		this.authToken = mongoose.Types.ObjectId();
+		return this;
 	};
 
 	// Helper method to prevent tampering with important bits

@@ -136,7 +136,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			if (!room) {
 				room = new Room(req.body);
 			}
-			room.join('owners', req.session.user);
+			room.join('owners', req.user);
 			room.save(function(e) {
 				if (e) return res.jsonp(500, {error: e});
 				Room.find({}, function(e, a) {
@@ -150,7 +150,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	this.delete = function(req, res, next) {
 		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return res.jsonp(500, e);
-			var user = req.session.user;
+			var user = req.user;
 			if (!user.admin && room.indexOf('owners', user) < 0) {
 				return res.jsonp(401, {error: "You must be an owner to delete a room"});
 			}
@@ -174,7 +174,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 				return res.jsonp(404, {error: "Room doesn't exist"});
 			}
 
-			room.join('listeners', req.session.user);
+			room.join('listeners', req.user);
 			room.save(function(e) {
 				if (e) {
 					console.trace("Error saving new listener", e);
@@ -185,7 +185,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 				.populate('djs dj listeners song')
 				.exec(function(e, room) {
 					ensureSong(room);
-					io.sockets.in(room.abbr).emit('member.joined', req.session.user);
+					io.sockets.in(room.abbr).emit('member.joined', req.user);
 					return res.jsonp(room);
 				});
 			});
@@ -193,52 +193,51 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	};
 
 	// Called when a user connects to a room to listen in on the socket
-	this.listen = function(data, callback, socket, session) {
+	this.listen = function(data, callback, socket) {
 		Room.findOne({abbr: data.abbr}, function(e, room) {
 			if (e) throw e;
 			socket.join(room.abbr);
-			session.user.socketId = socket.id;
-			console.info(session.user.username, "is listening to", room.abbr);
+			console.info(socket.id, "is listening to", room.abbr);
 		});
 	};
 
 	// Called when user leaves a room
-	this.leave = function(data, callback, socket, session) {
+	this.leave = function(data, callback, socket, user) {
 		console.info(socket.id, "is leaving", data.abbr);
 		socket.leave(data.abbr);
-		if (!session || !session.user) {
+		if (user) {
 			console.info("No session information found. Skipping room departure");
 			return;
 		}
 		Room.findOne({abbr: data.abbr}, function(e, room) {
 			if (e) return;
-			if (room.removeUser(session.user._id)) {
+			if (room.removeUser(user._id)) {
 				room.save();
-				console.info(session.user.username, "left room", room.name);
-				io.sockets.in(room.abbr).emit('member.departed', session.user);
+				console.info(user.username, "left room", room.name);
+				io.sockets.in(room.abbr).emit('member.departed', user);
 			}
 		});
 	};
 
 	// Called when a socket connection is dropped
-	this.exit = function(event, socket, session) {
-		if (!session.user) {
+	this.exit = function(event, socket, user) {
+		if (!user) {
 			console.error("No user to speak of during exit");
 			return;
 		}
 		Room.find({}, function(e, a) {
 			a.forEach(function(r) {
-				if (r.removeUser(session.user._id)) {
-					console.info(session.user.username, "exited room", r.name);
+				if (r.removeUser(user._id)) {
+					console.info(user.username, "exited room", r.name);
 					r.save();
-					io.sockets.in(r.abbr).emit('member.departed', session.user);
+					io.sockets.in(r.abbr).emit('member.departed', user);
 				}
 			});
 		});
 	};
 
 	this.dj = function(req, res, next) {
-		User.findById(req.session.user._id)
+		User.findById(req.user._id)
 		.populate('playlist')
 		.exec(function(e, user) {
 			if (e) {
@@ -270,9 +269,9 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	this.undj = function(req, res, next) {
 		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return res.jsonp(500, e);
-			room.leave('djs', req.session.user);
+			room.leave('djs', req.user);
 			room.save();
-			io.sockets.in(room.abbr).emit('dj.departed', req.session.user);
+			io.sockets.in(room.abbr).emit('dj.departed', req.user);
 		});
 	};
 

@@ -7,8 +7,9 @@ exports.settings = {
 
 	// Super secret keys
 	secret: "I've never changed my oil.",
-	cookieSecret: "C is for cookie and that is good enough for me",
-	sessionKey: 'cwfm.sid',
+	cookieKeys: ["SEKRIT2", "SEKRIT1"],
+	userIdKey: 'uid',
+	userAuthTokenKey: 'ut',
 
 	// The maximum number of chat records to keep for a room
 	maxChat: 40,
