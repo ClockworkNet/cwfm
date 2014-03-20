@@ -47,7 +47,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			room.songStarted = null;
 			room.save();
 			console.info("No DJs in the room. Stopping music.", room.abbr, room.djs);
-			io.sockets.in(room.abbr).emit("song.stopped", room);
+			io.sockets.in(room.abbr).emit("song.stopped");
 			return;
 		}
 
@@ -105,7 +105,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 				return;
 			}
 			// Send a message to all clients in the room
-			io.sockets.in(room.abbr).emit('song.changed', room);
+			io.sockets.in(room.abbr).emit('song.changed', room.toJSON());
 		});
 
 		// Schedule the next song
@@ -186,7 +186,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 				.exec(function(e, room) {
 					ensureSong(room);
 					console.info("We have a new user in the room", room.name, req.user);
-//					io.sockets.in(room.abbr).emit('member.joined', {});
+					io.sockets.in(room.abbr).emit('member.joined', req.user.toJSON());
 					return res.jsonp(room);
 				});
 			});
@@ -221,7 +221,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			if (room.removeUser(socket.user._id)) {
 				room.save();
 				console.info(socket.user.username, "left room", room.name);
-				io.sockets.in(room.abbr).emit('member.departed', socket.user);
+				io.sockets.in(room.abbr).emit('member.departed', socket.user.toJSON());
 			}
 		});
 	};
@@ -237,7 +237,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 				if (r.removeUser(socket.user._id)) {
 					console.info(socket.user.username, "exited room", r.name);
 					r.save();
-					io.sockets.in(r.abbr).emit('member.departed', socket.user);
+					io.sockets.in(r.abbr).emit('member.departed', socket.user.toJSON());
 				}
 			});
 		});
@@ -268,7 +268,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 					console.info("starting songs", song);
 					setImmediate(playSong, room, song);
 				}
-				io.sockets.in(room.abbr).emit('dj.joined', user);
+				io.sockets.in(room.abbr).emit('dj.joined', user.toJSON());
 			});
 		});
 	};
@@ -278,7 +278,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			if (e) return res.jsonp(500, e);
 			room.leave('djs', req.user);
 			room.save();
-			io.sockets.in(room.abbr).emit('dj.departed', req.user);
+			io.sockets.in(room.abbr).emit('dj.departed', req.user.toJSON());
 		});
 	};
 

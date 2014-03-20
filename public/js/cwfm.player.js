@@ -33,7 +33,7 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 		console.error(e);
 	};
 
-	$socket.on('song.stopped', function(room) {
+	$socket.on('song.stopped', function() {
 		$scope.room.song = null;
 		$scope.room.songStarted = null;
 		$scope.stopSong();
