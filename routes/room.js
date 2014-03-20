@@ -8,9 +8,9 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	// Ensures that a song is playing if it should be.
 	var ensureSong = function(room) {
 		var remaining = room.song ? room.song.remaining(room.songStarted) : 0;
-		if (remaining <= 0) {
+		if (remaining <= 0 && room.dj) {
 			console.info("Song is expired, playing next song.", room.song, remaining);
-			nextSong(room);
+			setImmediate(nextSong, room);
 		}
 	};
 
@@ -71,10 +71,10 @@ module.exports = function(Room, User, Playlist, Song, io) {
 						console.trace("Song not found for id. Removing from playlist.", songId);
 						dj.playlist.songs.shift();
 						dj.playlist.save();
-						nextSong(room);
+						setImmediate(nextSong, room);
 						return;
 					}
-					playSong(room, song);
+					setImmediate(playSong, room, song);
 				});
 			});
 		});
@@ -90,7 +90,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 
 		if (!song._id) {
 			return Song.findById(song, function(e, song) {
-				playSong(room, song);
+				setImmediate(playSong, room, song);
 			});
 		}
 
@@ -185,7 +185,8 @@ module.exports = function(Room, User, Playlist, Song, io) {
 				.populate('djs dj listeners song')
 				.exec(function(e, room) {
 					ensureSong(room);
-					io.sockets.in(room.abbr).emit('member.joined', req.user);
+					console.info("We have a new user in the room", room.name, req.user);
+//					io.sockets.in(room.abbr).emit('member.joined', {});
 					return res.jsonp(room);
 				});
 			});
@@ -194,43 +195,49 @@ module.exports = function(Room, User, Playlist, Song, io) {
 
 	// Called when a user connects to a room to listen in on the socket
 	this.listen = function(data, callback, socket) {
+		if (!socket.user) {
+			console.error("No user on socket", socket.id);
+			callback(false);;
+		}
+		console.info('listening', socket.user);
 		Room.findOne({abbr: data.abbr}, function(e, room) {
 			if (e) throw e;
 			socket.join(room.abbr);
 			console.info(socket.id, "is listening to", room.abbr);
+			callback(true);
 		});
 	};
 
 	// Called when user leaves a room
-	this.leave = function(data, callback, socket, user) {
+	this.leave = function(data, callback, socket) {
 		console.info(socket.id, "is leaving", data.abbr);
 		socket.leave(data.abbr);
-		if (user) {
+		if (!socket.user) {
 			console.info("No session information found. Skipping room departure");
 			return;
 		}
 		Room.findOne({abbr: data.abbr}, function(e, room) {
 			if (e) return;
-			if (room.removeUser(user._id)) {
+			if (room.removeUser(socket.user._id)) {
 				room.save();
-				console.info(user.username, "left room", room.name);
-				io.sockets.in(room.abbr).emit('member.departed', user);
+				console.info(socket.user.username, "left room", room.name);
+				io.sockets.in(room.abbr).emit('member.departed', socket.user);
 			}
 		});
 	};
 
 	// Called when a socket connection is dropped
-	this.exit = function(event, socket, user) {
-		if (!user) {
+	this.exit = function(event, socket) {
+		if (!socket.user) {
 			console.error("No user to speak of during exit");
 			return;
 		}
 		Room.find({}, function(e, a) {
 			a.forEach(function(r) {
-				if (r.removeUser(user._id)) {
-					console.info(user.username, "exited room", r.name);
+				if (r.removeUser(socket.user._id)) {
+					console.info(socket.user.username, "exited room", r.name);
 					r.save();
-					io.sockets.in(r.abbr).emit('member.departed', user);
+					io.sockets.in(r.abbr).emit('member.departed', socket.user);
 				}
 			});
 		});
@@ -259,7 +266,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 				if (!room.song && user.playlist) {
 					var song = user.playlist.songAt(0);
 					console.info("starting songs", song);
-					playSong(room, song, io);
+					setImmediate(playSong, room, song);
 				}
 				io.sockets.in(room.abbr).emit('dj.joined', user);
 			});
@@ -286,7 +293,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	this.skip = function(req, res, next) {
 		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return;
-			nextSong(room);
+			setImmediate(nextSong, room);
 		});
 	};
 };

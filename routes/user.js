@@ -16,7 +16,8 @@ module.exports = function(User, Auth) {
 	};
 
 	this.me = function(req, res, next) {
-		return res.jsonp(req.user);
+		var user = req.user || {};
+		return res.jsonp(user);
 	};
 
 	this.create = function(req, res, next) {
@@ -45,7 +46,6 @@ module.exports = function(User, Auth) {
 					console.trace(e);
 					return res.jsonp(500, {error: "Error saving new account"});
 				}
-				req.user = user;
 				return res.jsonp(user);
 			});
 		});

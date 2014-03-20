@@ -7,10 +7,11 @@ var io             = require('socket.io');
 var fs             = require('fs');
 var mm             = require('musicmetadata');
 var encrypt        = require('sha1');
-var cookies        = require('cookies').express(config.cookieKeys);
+var Cookies        = require('cookies');
 
 var app    = express();
-var router = express.Router();
+var server = http.createServer(app);
+var io     = require('socket.io').listen(server);
 
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
@@ -18,12 +19,11 @@ app.set('view engine', 'jade');
 
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(logger('dev'));
-app.use(cookies);
+app.use(Cookies.express(config.cookieKeys));
 app.use(require('static-favicon')());
 app.use(require('body-parser')());
 app.use(require('method-override')());
 
-var server = http.createServer(app);
 
 var registerRoutes = function() {
 
@@ -61,85 +61,83 @@ var registerRoutes = function() {
 		playlist: new routes.playlist(Playlist, Song, User)
 	};
 
-	// Make sure the user is loaded on these requests
-	router.use(controllers.auth.loadUser);
-
-	// Public views 
-	router.get('/', controllers.home.home);
-	router.get('/room', controllers.home.room);
-
-	// Public Room API
-	router.get('/room/list', controllers.room.list);
-	router.get('/room/detail/:abbr', controllers.room.detail);
-
-	// Public User API
-	router.post('/user/create', controllers.user.create);
-	router.post('/user/login', controllers.auth.login);
-
-	// Public Avatars API
-	router.get('/avatar/list', controllers.avatar.list);
-	router.get('/avatar/user/:username', controllers.avatar.user);
-	router.get('/avatar/:name', controllers.avatar.show);
-	router.get('/avatar/', controllers.avatar.show);
-
-
-	// Restrict some routes
+	var loadUser = controllers.auth.loadUser;
 	var restrict = controllers.auth.restrict;
 
+	// Public Avatars API
+	app.get('/avatar/list'             , controllers.avatar.list);
+	app.get('/avatar/user/:username'   , controllers.avatar.user);
+	app.get('/avatar/:name'            , controllers.avatar.show);
+	app.get('/avatar/'                 , controllers.avatar.show);
+
+	// Public views 
+	app.get('/'                        , loadUser, controllers.home.home);
+	app.get('/room'                    , loadUser, controllers.home.room);
+
+	// Public Room API
+	app.get('/room/list'               , controllers.room.list);
+	app.get('/room/detail/:abbr'       , controllers.room.detail);
+
+	// Public User API
+	app.post('/user/create'            , controllers.user.create);
+	app.post('/user/login'             , controllers.auth.login);
+
+	// Restricted Routes
+
 	// Restricted User API
-	router.use('/user', restrict);
-	router.get('/user', controllers.user.list);
-	router.get('/user/list', controllers.user.list);
-	router.get('/user/detail/:username', controllers.user.detail);
-	router.get('/user/me', controllers.user.me);
-	router.post('/user/update', controllers.user.update);
-	router.post('/user/logout', controllers.auth.logout);
+	app.get('/user'                    , restrict, controllers.user.list);
+	app.get('/user/list'               , restrict, controllers.user.list);
+	app.get('/user/detail/:username'   , restrict, controllers.user.detail);
+	app.get('/user/me'                 , restrict, controllers.user.me);
+	app.post('/user/update'            , restrict, controllers.user.update);
+	app.post('/user/logout'            , restrict, controllers.auth.logout);
 
 	// Restricted Song API
-	router.use('/song', restrict);
-	router.get('/song/search', controllers.song.search);
-	router.get('/song/detail/:id', controllers.song.detail);
-	router.get('/song/:id', controllers.song.stream);
-	router.post('/song/scan', controllers.song.scan);
+	app.get('/song/search'             , restrict, controllers.song.search);
+	app.get('/song/detail/:id'         , restrict, controllers.song.detail);
+	app.get('/song/:id'                , restrict, controllers.song.stream);
+	app.post('/song/scan'              , restrict, controllers.song.scan);
 
 	// Restricted Playlist API
-	router.use('/playlist', restrict);
-	router.get('/playlist/list', controllers.playlist.list);
-	router.get('/playlist/detail/:id', controllers.playlist.detail);
-	router.post('/playlist/create', controllers.playlist.create);
-	router.delete('/playlist/delete/:id', controllers.playlist.delete);
-	router.post('/playlist/select/:id', controllers.playlist.select);
-	router.post('/playlist/update/:id', controllers.playlist.update);
+	app.get('/playlist/list'           , restrict, controllers.playlist.list);
+	app.get('/playlist/detail/:id'     , restrict, controllers.playlist.detail);
+	app.post('/playlist/create'        , restrict, controllers.playlist.create);
+	app.delete('/playlist/delete/:id'  , restrict, controllers.playlist.delete);
+	app.post('/playlist/select/:id'    , restrict, controllers.playlist.select);
+	app.post('/playlist/update/:id'    , restrict, controllers.playlist.update);
 
 	// Restricted Room API
-	router.use('/room', restrict);
-	router.post('/room/create', controllers.room.create);
-	router.post('/room/delete/:abbr', controllers.room.delete);
-	router.post('/room/join/:abbr', controllers.room.join);
-	router.post('/room/dj/:abbr', controllers.room.dj);
-	router.post('/room/undj/:abbr', controllers.room.undj);
-	router.post('/room/skip/:abbr', controllers.room.skip);
-	router.post('/room/upvote/:abbr', controllers.room.upvote);
-	router.post('/room/downvote/:abbr', controllers.room.downvote);
+	app.post('/room/create'            , restrict, controllers.room.create);
+	app.post('/room/delete/:abbr'      , restrict, controllers.room.delete);
+	app.post('/room/join/:abbr'        , restrict, controllers.room.join);
+	app.post('/room/dj/:abbr'          , restrict, controllers.room.dj);
+	app.post('/room/undj/:abbr'        , restrict, controllers.room.undj);
+	app.post('/room/skip/:abbr'        , restrict, controllers.room.skip);
+	app.post('/room/upvote/:abbr'      , restrict, controllers.room.upvote);
+	app.post('/room/downvote/:abbr'    , restrict, controllers.room.downvote);
 
 	// Restricted Chat API
-	router.use('/chat', restrict);
-	router.get('/chat/list/:abbr', controllers.chat.list);
-	router.post('/chat/say/:abbr', controllers.chat.say);
+	app.get('/chat/list/:abbr'         , restrict, controllers.chat.list);
+	app.post('/chat/say/:abbr'         , restrict, controllers.chat.say);
 
 	console.log("Routes registered");
 
 	// Sockets
 	console.log("Setting up session sockets");
 
-	var SocketCookies = require('./lib/cookies.socket.io'),
-		socketCookies = new SocketCookies(io, cookies);
-
 	io.sockets.on('connection', function(socket) {
-		socketCookies.attach(socket, controllers.auth.loadUserOnSocket);
-		socket.on('listen', inject(controllers.room.listen, socket));
-		socket.on('leave', inject(controllers.room.leave, socket));
-		socket.on('disconnect', inject(controllers.room.exit, socket));
+		socket.cookies = new Cookies(socket.request, {}, config.cookieKeys);
+		console.info('socket connected', socket.id);
+
+		controllers.auth.loadUserOnSocket(socket, function(e, socket) {
+			if (e) {
+				console.error("Error loading user on socket", e);
+				return;
+			}
+			socket.on('listen', inject(controllers.room.listen, socket));
+			socket.on('leave', inject(controllers.room.leave, socket));
+			socket.on('disconnect', inject(controllers.room.exit, socket));
+		});
 	});
 
 	console.log("Socket routing registered");
@@ -158,11 +156,8 @@ db.on('open', function() {
 
 	console.log("Connected to mongodb");
 
-	io = io.listen(server);
-
 	server.listen(app.get('port'), function(){
 		console.log('Express server listening on port', app.get('port'));
 		registerRoutes();
-		app.use(router);
 	});
 });

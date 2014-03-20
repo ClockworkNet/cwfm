@@ -52,16 +52,20 @@ module.exports = function(Playlist, Song, User) {
 	};
 
 	this.select = function(req, res, next) {
+		var user = req.user;
+		if (!user) {
+			return res.jsonp(401, {error: "Log in please."});
+		}
 		Playlist.findById(req.params.id)
 		.populate('owners songs')
 		.exec(function(e, playlist) {
 			if (e || !playlist) {
 				return res.jsonp(500, {error: "Error getting playlist"});
 			}
-			if (!playlist.isOwner(req.user)) {
+			if (!playlist.isOwner(user)) {
 				return res.jsonp(401, {error: "That's not your playlist, silly!"});
 			}
-			User.update({_id: req.user._id}, {playlist: playlist._id}, function(e, n) {
+			User.update({_id: user._id}, {playlist: playlist._id}, function(e, n) {
 				if (e) {
 					console.trace(e, user);
 					return res.jsonp(500, {error: "Can't select your playlist"});

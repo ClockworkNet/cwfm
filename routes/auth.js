@@ -16,17 +16,20 @@ module.exports = function(config, User, Auth) {
 		user.save();
 	};
 
-	this.loadUserOnSocket = function(e, socket, next) {
+	this.loadUserOnSocket = function(socket, next) {
 		next = next || function() {};
+		socket.user = null;
 
-		if (e || !socket.cookies) {
-			return next(e, socket);
+		if (!socket.cookies) {
+			console.info("Could not load user on socket", e, socket.cookies);
+			return next(new Error("Cookies not found on socket"), socket);
 		}
 
 		var uid = socket.cookies.get(userIdKey);
 		var ut = socket.cookies.get(userTokenKey);
 
 		if (!uid || !ut) {
+			console.info("No cookie information available");
 			return next(null, socket);
 		}
 
@@ -34,6 +37,7 @@ module.exports = function(config, User, Auth) {
 		.populate('playlist')
 		.exec(function(e, user) {
 			if (e || ! user) {
+				console.trace("Error finding user", uid, e);
 				return next(new Error("Could not find user " + uid), socket);
 			}
 			if (!user.authToken || user.authToken != ut) {
@@ -45,7 +49,13 @@ module.exports = function(config, User, Auth) {
 		});
 	};
 
-	this.loadUser = function(req, res, next) {
+	var loadUser = this.loadUser = function(req, res, next) {
+		next = next || function() {};
+
+		if (req.user) {
+			return next();
+		}
+
 		var uid = req.cookies.get(userIdKey);
 		var ut = req.cookies.get(userTokenKey);
 
@@ -69,17 +79,19 @@ module.exports = function(config, User, Auth) {
 				return next();
 			}
 			req.user = user;
-			console.info("loaded user", user);
+			console.info("loaded user", user._id, user.username, req.url);
 			return next();
 		});
 	};
 
 	this.restrict = function(req, res, next) {
-		if (!req.user) {
-			console.info("No user found for secure request", req.route.path);
-			return res.jsonp(401, {error: "Please log in"});
-		}
-		return next();
+		loadUser(req, res, function() {
+			if (!req.user) {
+				console.info("No user found for secure request");
+				return res.jsonp(401, {error: "Please log in"});
+			}
+			return next();
+		});
 	};
 
 	this.login = function(req, res, next) {
