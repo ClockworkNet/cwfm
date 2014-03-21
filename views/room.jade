@@ -26,13 +26,13 @@ block right-col
 		include includes/room/queue.jade
 
 block main-col
+	#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
+		include includes/user
+
 	section.col.col-right.main-container
 		.col.stage
 			#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
 				include includes/room/control.jade
-
-			#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
-				include includes/user
 
 		#header(ng-show="me.auth")
 			h1 #{name}
