@@ -1,22 +1,19 @@
 #cwfmChatterCtrl.row(ng-controller="cwfmChatterCtrl", data-step="2", data-intro="Here's what people are saying in the room")
 		div(ng-show="room.abbr")
 			#chat-list.upper-chin.chatroom.overflow
-				ul.list-group
-					li.list-group-item(ng-repeat="m in chat | filter:content")
-						span.message {{m.content}}
-						br
-						strong.username {{m.author.username}}
-						br
-						em {{m.posted}}
+				ul
+					li.chat-item(ng-repeat="m in chat | filter:content")
+						div.username {{m.author.username}}:
+						div.message {{m.content}}
+							em.timestamp {{m.posted}}
 
 			#listeners.col-md-2
-				.panel
-					div(ng-repeat="listener in room.listeners") {{listener.username}}
+				.participants
+					ul
+						li(ng-repeat="listener in room.listeners") {{listener.username}}
 
 
 		.chatroom-interface(ng-show="room.abbr")
 			#chat-form.col-md-12(data-step="3", data-intro="Say something here", data-position="top")
-				form
+				form(ng-submit="send()")
 					input.chat-input(ng-model="message", placeholder="Say something...")
-					a.chat-submit(href="#send", ng-click="send()")
-						!='submit'

@@ -42,6 +42,15 @@ ul {
 a {
 	color: #ffcd05;
 }
+#cwfmUserCtrl {
+	display: none;
+	overflow-y: scroll;
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	z-index: 999;
+	background: rgba(43, 43, 43, 0.90);
+}
 .right-col {
 	right:0;
 	position: fixed;
@@ -88,7 +97,7 @@ a {
 	top:calc(100% - 150px);
 	width:100%;
 }
-.message {
+#cwfmPlaylistCtrl > .message {
 	position: absolute;
 }
 
@@ -108,6 +117,10 @@ a {
 	background:rgba(10,10,10,1);
 	padding-top:17px;
 }
+.dj-item > .avatar {
+	max-width: 100%;
+	padding: 20px;
+}
 #cwfm_logo {
 	z-index: 10;
 	width:150px;
@@ -119,13 +132,11 @@ a {
 	text-align: center;
 	background: linear-gradient(to bottom, rgba(35,40,48,1) 70%,rgba(35,40,48,.7) 85%,rgba(35,40,48,0) 100%);
 }
-#user-control {
-	display:none;
-}
 #brandname {
 	width: 100%;
 }
 #brandname > img {
+	padding: 10px;
 	max-width: 100%;
 }
 #cwfm_logo img {
@@ -244,32 +255,43 @@ a {
 	outline:none;
 	background:rgb(28,31,38);
 }
-.chatroom ul li {
+.chatroom .chat-item {
 	display: block;
 	margin-bottom:10px;
-	padding-left:100px;
 }
 .chatroom p {
 	line-height:1.2em;
 	margin: 0;
 	padding: 0;
 }
-.chatroom ul li strong {
-	text-indent: -100px;
+.chatroom .chat-item > .username {
+	font-weight: bold;
 	display: inline-block;
 	font-size:16px;
 	color:rgb(192,197,206);
+	width: 120px;
+	padding-right: 15px;
 
-	transition:color .1s ease-in;
+	/*transition:color .1s ease-in;*/
 }
-.chatroom ul li strong:hover {
+.chatroom .chat-item > .username:hover {
 	cursor: pointer;
 	color:#ffcc00;
 }
-.chatroom span {
-	font-family: Helvetica, Arial, sans-serif;
-	font-size:13px;
+.chatroom .chat-item > div {
+	display: inline-block;
+	font-size:15px;
+	vertical-align: top;
 	color:rgb(101,115,126);
+}
+.chatroom .chat-item > .message {
+	color: #93979E;
+	width: calc(100% - 120px);
+}
+.chatroom .chat-item > .message > .timestamp {
+	display: none;
+	color: #54463e;
+	float: right;
 }
 .participants {
 	font-family: 'Brandon', Helvetica, Arial, sans-serif;
@@ -399,11 +421,11 @@ button.lame {
 	background:rgb(101,115,126);
 	color:rgb(43,48,59);
 }
-.queue-tabs > .current, .queue-tabs > .current:hover {
+.queue-tabs > .active, .queue-tabs > .active:hover {
 	background:rgb(192,197,206);
 	color:rgb(35,40,48);
 }
-.queue-tabs > .current:hover {
+.queue-tabs > .active:hover {
 	cursor: default;
 }
 .playlist_wrap {
@@ -435,13 +457,51 @@ button.lame {
 	padding:0 5px;
 	height:40px;
 }
+.add_song_wrap {
+	position: relative;
+	/*margin-top:-1px;*/
+	background:transparent;
+}
+.add_song_wrap button {
+	width:25%;
+	background:rgb(192,197,206);
+	border:none;
+	border-bottom:1px solid rgb(178,182,190);
+	margin:0;
+	font-family: 'Brandon';
+	font-weight:400;
+	text-transform: uppercase;
+	color:rgb(51,61,70);
+}
+.add_song_wrap button:hover, .add_song_wrap button.active {
+	background:rgb(101,115,126);
+	color:rgb(43,48,59);
+	border-bottom:1px solid rgb(51,61,70);
+}
 #song_results_list {
 	position:absolute;
 	width:100%;
+	height:100%;
 	z-index:1;
-	outline:1px solid red;
-	background:white;
+	background:rgba(0,0,0,.2);
+}
+#song_results_list .song-list {
+	background: white;
+	padding:20px 5px;
+	min-height:0;
 	box-shadow:0 2px 3px rgba(0,0,0,.2);
+}
+#song_results_list .song-list li {
+	background:white;
+}
+#song_results_list .song-item a {
+	display: block;
+	width: 100%;
+	padding: 15px 5px;
+}
+#song_results_list .song-item {
+	padding:0;
+	border-bottom:1px solid rgb(230,230,230);
 }
 .song-list-pane {
 	/*position: relative;*/
@@ -451,6 +511,7 @@ button.lame {
 .song-search form input[type="search"] {
 	width:100%;
 	margin: 10px 0;
+	font-size:large;
 	/*position: absolute;*/
 	top:0;
 	left:0;
@@ -458,12 +519,22 @@ button.lame {
 .song-list {
 	width:100%;
 	background:white;
-	min-height:calc(100% - 40px);
-	max-height:calc(100% - 40px);
 	display: block;
-	overflow-y:scroll;
+	/*overflow-y:scroll;*/
 	/*outline:1px solid red;*/
 	color:rgb(120,120,120);
+}
+.queue-list {
+	overflow-y: scroll;
+	display: block;
+	position: absolute;
+	width:100%;
+}
+#queue .queue-list {
+	height: calc(100% - 125px);
+}
+#playlists .queue-list {
+	height: calc(100% - 82px);
 }
 .song-list a {
 	color:rgb(51,61,70);
@@ -490,7 +561,7 @@ button.lame {
 	border-bottom-color:rgb(200,200,200);
 	cursor: pointer;
 }
-.song-list li > span {
+.song-list li {
 	display: block;
 	font-family: 'Brandon', Helvetica, Arial, sans-serif;
 }
@@ -515,4 +586,7 @@ button.lame {
 .song-item {
 	display: block;
 	padding: 10px 5px;
+}
+.song-item .remove {
+	float:right;
 }
