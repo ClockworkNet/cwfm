@@ -4,6 +4,7 @@ cwfm.player = {};
 
 cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeout) {
 	$scope.room       = {};
+	$scope.song       = {};
 	$scope.timeOffset = 0;
 	$scope.me         = {};
 
@@ -15,14 +16,30 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 	$scope.player    = jQuery('#player');
 	$song.init('#player', $scope.player.data());
 
-	var setRoom = function(room) {
-		$scope.room = room;
+	var setRoom = function(room, then) {
 		$scope.timeOffset = Date.now() - room.currentTime;
+
+		var now = +new Date();
+		var startTime = $scope.songStartTime(room.songStarted);
+
+		var songSetDelay = 0;
+		if (startTime > now) {
+			// Queue the data change into the future
+			songSetDelay = startTime - now;
+		}
+
+		var setSong = function() {
+			console.info("Async new song set", room.song);
+			$scope.song = room.song;
+		};
+		setTimeout(setSong, songSetDelay);
+
+		$scope.room = room;
+		then.call(this, room.song);
 	};
 
 	$room.change(function(room) {
-		setRoom(room);
-		$scope.playSong();
+		setRoom(room, $scope.playSong);
 	});
 
 	$user.change(function(user) {
@@ -34,15 +51,11 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 	};
 
 	$socket.on('song.stopped', function() {
-		$scope.room.song = null;
-		$scope.room.songStarted = null;
-		$scope.stopSong();
+		setRoom(room, $scope.stopSong);
 	});
 
 	$socket.on('song.changed', function(room) {
-		setRoom(room);
-		console.info("Playing song", room.song);
-		$scope.playSong();
+		setRoom(room, $scope.playSong);
 	});
 
 	$scope.stopSong = function( ) {
@@ -50,21 +63,22 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 	};
 
 	$scope.playSong = function(song) {
-		song = song || $scope.room.song;
-
-		if (!song) return;
+		if (!song) {
+			console.error("No song specified");
+			return;
+		}
 
 		var url = '/song/' + song._id;
 		var start = $scope.songStartTime();
 		var skip  = Date.now() - start;
 
-		console.info("Requesting: ", url, " Skipping to:", skip);
+		console.info("Requesting: ", url, " Song started: ", start, " Skipping to:", skip);
 
 		$song.play(url, skip);
 	};
 
 	$scope.songPlayed  =  function() {
-		var song  =  $scope.room.song;
+		var song  =  $scope.song;
 		if ( ! song || ! song.duration ) {
 			return 0;
 		}
@@ -77,14 +91,15 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 	};
 
 	// Gets the time that the song started relative to the client's time
-	$scope.songStartTime = function() {
-		if (!$scope.room.songStarted) return 0;
-		var serverTime = Date.parse($scope.room.songStarted);
+	$scope.songStartTime = function(songStarted) {
+		songStarted = songStarted || $scope.room.songStarted;
+		if (!songStarted) return 0;
+		var serverTime = Date.parse(songStarted);
 		return serverTime - $scope.timeOffset;
 	};
 
 	$scope.calcSong  =  function() {
-		var song  =  $scope.room.song;
+		var song  =  $scope.song;
 		if ( ! song || ! song.duration ) {
 			$scope.remaining = 0;
 			$scope.played = 0;

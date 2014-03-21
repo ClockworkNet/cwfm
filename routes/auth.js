@@ -79,7 +79,6 @@ module.exports = function(config, User, Auth) {
 				return next();
 			}
 			req.user = user;
-			console.info("loaded user", user._id, user.username, req.url);
 			return next();
 		});
 	};

@@ -9,7 +9,7 @@ div.tab-pane.playlist#queue(ng-show="me.auth")
 	div.panel-heading {{me.playlist.name}}
 	div.song-search
 		form
-			input#add_song.form-control.song-search-input(type="search", name="q", placeholder="Looking for something?", ng-model="query", ng-keyup="search()", autocomplete="off")
+			input#add_song.form-control.song-search-input(type="search", name="q", placeholder="Want to add something?", ng-model="query", ng-keyup="search()", autocomplete="off")
 			//- button.btn.btn-default(ng-click="search()", ng-hide="query.length")
 			button.btn.btn-default(ng-click="clearSearch()", ng-show="query.length")
 
@@ -20,24 +20,24 @@ div.tab-pane.playlist#queue(ng-show="me.auth")
 				button.btn.btn-default.btn-sm(ng-class="{active: searchFilter=='album'}", ng-click="setFilter('album')") Album
 				button.btn.btn-default.btn-sm(ng-class="{active: searchFilter=='song'}", ng-click="setFilter('song')") Song
 
-			ul.list-group
+			ul.song-list
 				li.list-group-item(ng-show="!result.songs.length && query.length")
 					em No results found
-				li.song-list.list-group-item(ng-repeat="song in result.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
+				li.song-item(ng-repeat="song in result.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
 					a.song-name(ng-click="addSong(song)", href="#add") {{songName(song)}}
 					br
 					strong {{song.album}}
 					br
 					em.song-artist {{song.artist}}
 
-	ul.queue-list.song-list#my_queue
-		li.songs_item.list-group-item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", x-lvl-drop-target="true", x-on-drop="songDropped(dragEl, dropEl)", data-index="{{$index}}") 
+	ul.song-list#my_queue
+		li.song_item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", x-lvl-drop-target="true", x-on-drop="songDropped(dragEl, dropEl)", data-index="{{$index}}") 
 			div.song_wrapper(x-lvl-draggable="true", data-song="{{song}}")
 				span {{songName(song)}}
 				a.remove(ng-click="removeSong(song)", href="#remove") 
 					span.glyphicon.glyphicon-trash
 
-div.tab-pane.library#playlists(ng-class="{active: ! me.playlist.name.length}")
+div.tab-pane.library#playlists(ng-class="{active: ! me.playlist.name.length}", style="display:none;")
 	div.panel-heading Your Playlists
 	div.queue-list#my_playlists
 		ul.playlists.song-list

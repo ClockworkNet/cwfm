@@ -4,11 +4,15 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	// This is keyed on the room abbr.
 	var songTimers = {};
 
+	// The time in ms to start preloading the next song.
+	var preloadTime = 2500;
+
 
 	// Ensures that a song is playing if it should be.
 	var ensureSong = function(room) {
 		var remaining = room.song ? room.song.remaining(room.songStarted) : 0;
-		if (remaining <= 0 && room.dj) {
+		console.info("Time remaining on song", remaining);
+		if (remaining <= 0) {
 			console.info("Song is expired, playing next song.", room.song, remaining);
 			setImmediate(nextSong, room);
 		}
@@ -33,6 +37,16 @@ module.exports = function(Room, User, Playlist, Song, io) {
 
 	};
 
+	var stopSong = function(room) {
+		if (songTimers[room.abbr]) {
+			clearTimeout(songTimers[room.abbr]);
+		}
+		room.song = null;
+		room.songStarted = null;
+		room.save();
+		io.sockets.in(room.abbr).emit("song.stopped", room.toJSON());
+	}
+
 	var nextSong = function(room) {
 		if (!room) {
 			console.error("No room");
@@ -43,11 +57,8 @@ module.exports = function(Room, User, Playlist, Song, io) {
 		}
 
 		if (!room.dj) {
-			room.song = null;
-			room.songStarted = null;
-			room.save();
 			console.info("No DJs in the room. Stopping music.", room.abbr, room.djs);
-			io.sockets.in(room.abbr).emit("song.stopped");
+			stopSong(room);
 			return;
 		}
 
@@ -94,22 +105,24 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			});
 		}
 
-		var started = Date.now();
-		room.song = song;
-		room.songStarted = started;
-		room.save();
-
-		Room.populate(room, 'djs song', function(e, room) {
-			if (e) {
-				console.trace("Error populating room for socket emitting", e);
-				return;
-			}
-			// Send a message to all clients in the room
-			io.sockets.in(room.abbr).emit('song.changed', room.toJSON());
+		room.song = song._id;
+		room.songStarted = Date.now() + preloadTime;
+		room.save(function(e) {
+			Room.populate(room, 'djs', function(e, r) {
+				if (e) {
+					console.trace("Error populating room for socket emitting", e);
+					return;
+				}
+				// Send a message to all clients in the room
+				var roomData = room.toJSON();
+				roomData.song = song.toJSON();
+				io.sockets.in(room.abbr).emit('song.changed', roomData);
+			});
 		});
 
 		// Schedule the next song
-		console.info("Scheduling next song", song, song.duration * 1000);
+		console.info("Scheduling next song", song.filename, song.duration * 1000);
+		var delay = (song.duration * 1000) - preloadTime;
 		songTimers[room.abbr] = setTimeout(nextSong, song.duration * 1000, room);
 	};
 
@@ -185,7 +198,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 				.populate('djs dj listeners song')
 				.exec(function(e, room) {
 					ensureSong(room);
-					console.info("We have a new user in the room", room.name, req.user);
+					console.info("We have a new user in the room", room.name, req.user.username);
 					io.sockets.in(room.abbr).emit('member.joined', req.user.toJSON());
 					return res.jsonp(room);
 				});
@@ -199,7 +212,6 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			console.error("No user on socket", socket.id);
 			callback(false);;
 		}
-		console.info('listening', socket.user);
 		Room.findOne({abbr: data.abbr}, function(e, room) {
 			if (e) throw e;
 			socket.join(room.abbr);
@@ -217,7 +229,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			return;
 		}
 		Room.findOne({abbr: data.abbr}, function(e, room) {
-			if (e) return;
+			if (e || !room) return;
 			if (room.removeUser(socket.user._id)) {
 				room.save();
 				console.info(socket.user.username, "left room", room.name);

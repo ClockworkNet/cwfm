@@ -35,7 +35,8 @@ exports.build = function(mongoose, config) {
 
 	schema.methods.toJSON = function() {
 		var obj = this.toObject();
-		obj.currentTime = Date.now();
+		obj.currentTime = +new Date;
+		obj.songStarted += 0;
 		return obj;
 	};
 
