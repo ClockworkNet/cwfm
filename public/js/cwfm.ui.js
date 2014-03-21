@@ -26,5 +26,8 @@ $( document ).ready(function() {
 
 	$('#admin_btn').on( 'click', function() {
 		$('#cwfmUserCtrl').show();
-	})
+	});
+	$('button.close').on('click', function() {
+		$('#cwfmUserCtrl').hide();
+	});
 });
