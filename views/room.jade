@@ -24,11 +24,10 @@ block scripts
 block right-col
 	include includes/room/queue.jade
 
-block left 
+block main-col 
 	#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
 		include includes/room/control.jade
 
-block main 
 	#cwfmUserCtrl.row(ng-controller="cwfmUserCtrl")
 		include includes/user
 	
