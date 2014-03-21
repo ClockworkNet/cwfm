@@ -21,7 +21,6 @@
 		"angular": "*",
 		"lvlDragDrop": "*",
 		"intro.js": "*",
-		"bootstrap": "*",
 		"wavesurfer.js": "*"
 	}
 }

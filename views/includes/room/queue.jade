@@ -1,7 +1,7 @@
 div.messages(ng-show="message.error") {{message.error}}
 div.messages(ng-show="message.info") {{message.info}}
 div.queue-tabs(ng-show="me.auth")
-	button.queue-button#queue-button(ng-show="me.playlist.name", ng-class="{active: me.playlist.name}", href="#queue") Queue
+	button.queue-button.active#queue-button(ng-show="me.playlist.name", ng-class="{active: me.playlist.name}", href="#queue") Queue
 	button.playlists-button#playlists-button(ng-class="{active: ! me.playlist.name}", href="#library") Playlists
 
 div.tab-pane.playlist#queue(ng-show="me.auth")
@@ -10,7 +10,7 @@ div.tab-pane.playlist#queue(ng-show="me.auth")
 	div.song-search
 		form
 			input#add_song.form-control.song-search-input(type="search", name="q", placeholder="Want to add something?", ng-model="query", ng-keyup="search()", autocomplete="off")
-			//- button.btn.btn-default(ng-click="search()", ng-hide="query.length")
+			button.btn.btn-default(ng-click="clearSearch()", ng-show="query.length")
 			button.btn.btn-default(ng-click="clearSearch()", ng-show="query.length")
 
 		div#song_results_list(ng-show="query.length")
