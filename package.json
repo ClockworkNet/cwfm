@@ -19,8 +19,8 @@
 
 		"socket.io": "*",
 
-		"musicmetadata": "*",
 		"mongoose": "*",
+		"node-ffprobe": "*",
 		"sha1": "*"
 	}
 }

@@ -7,20 +7,8 @@ exports.build = function(mongoose) {
 		album: String,
 		year: Number,
 		genre: [String],
-		track: {
-			no: Number,
-			of: Number
-		},
-		disk: {
-			no: Number,
-			of: Number
-		},
 		type: String, // ogg, wav, mp4, mp3, fla
 		path: String,
-		picture: [{
-			format: String,
-			data: Buffer
-		}],
 		duration: Number,
 		upvotes: Number,
 		downvotes: Number,
@@ -33,7 +21,6 @@ exports.build = function(mongoose) {
 	schema.methods.toJSON = function() {
 		var obj = this.toObject();
 		delete obj.path;
-		delete obj.picture;
 		return obj;
 	};
 

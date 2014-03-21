@@ -1,33 +1,25 @@
-module.exports = function(dir, Song, User, fs, path, mm) {
+module.exports = function(dir, Song, User, fs, path, probe) {
 	var allowed = ['.mp3', '.m4a', '.ogg', '.flac', '.wma', '.wmv'];
 	var maxFails = 5;
 
 	var processSongTags = function(song, stats, done) {
-		var songStream = fs.createReadStream(song.path);
 
-		songStream.on('error', function(e) {
-			return done(e, song);
-		});
+		probe(song.path, function(err, probeData) {
 
-		var parser = mm(songStream, {duration: true});
-
-		parser.on('done', function(e) {
-			if (e) return done(e, song);
-			songStream.destroy();
-		});
-
-		parser.on('metadata', function(tags) {
-			console.info("Found song metadata. Song:", song, " Tags:", tags);
-
-			if (!tags || !tags.duration) {
-				return done(new Error("Could not read duration metadata for file"), song);
+			if (err) {
+				return done(err, song);
 			}
 
-			var keys = ['title', 'artist', 'album', 'genre', 'albumartist', 'year', 'track', 'disk', 'picture', 'duration'];
+			song['title'] = probeData.metadata.title;
+			song['artist'] = probeData.metadata.artist;
+			song['album'] = probeData.metadata.album;
+			song['genre'] = probeData.metadata.genre;
+			song['albumartist'] = probeData.metadata.album_artist;
+			song['year'] = probeData.metadata.date;
+			song['track'] = probeData.metadata.track;
+			song['duration'] = probeData.format.duration;
 
-			keys.forEach(function(key) {
-				song[key] = tags[key];
-			});
+			console.info("Found song metadata. Song:", song);
 
 			done(null, song);
 		});

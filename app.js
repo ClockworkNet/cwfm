@@ -5,7 +5,7 @@ var path           = require('path');
 var logger         = require('morgan');
 var io             = require('socket.io');
 var fs             = require('fs');
-var mm             = require('musicmetadata');
+var probe          = require('node-ffprobe');
 var encrypt        = require('sha1');
 var Cookies        = require('cookies');
 
@@ -53,7 +53,7 @@ var registerRoutes = function() {
 	var controllers = {
 		home: new routes.home(Room, User),
 		room: new routes.room(Room, User, Playlist, Song, io),
-		song: new routes.song(config.songDir, Song, User, fs, path, mm),
+		song: new routes.song(config.songDir, Song, User, fs, path, probe),
 		user: new routes.user(User, Auth),
 		auth: new routes.auth(config, User, Auth),
 		avatar: new routes.avatar(config.avatar, fs, path, User),
