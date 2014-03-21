@@ -1,7 +1,7 @@
 div.message(ng-show="message.error") {{message.error}}
 div.message(ng-show="message.info") {{message.info}}
-div.queue-tabs.group(ng-show="me.auth")
-	button.queue-button#queue-button(ng-show="me.playlist.name", ng-class="{active: me.playlist.name}", href="#queue") Queue
+div.queue-tabs(ng-show="me.auth")
+	button.queue-button.active#queue-button(ng-show="me.playlist.name", ng-class="{active: me.playlist.name}", href="#queue") Queue
 	button.playlists-button#playlists-button(ng-class="{active: ! me.playlist.name}", href="#library") Playlists
 
 div.tab-pane.playlist#queue(ng-show="me.auth")
@@ -10,18 +10,18 @@ div.tab-pane.playlist#queue(ng-show="me.auth")
 	div.song-search
 		form
 			input#add_song.form-control.song-search-input(type="search", name="q", placeholder="Want to add something?", ng-model="query", ng-keyup="search()", autocomplete="off")
-			//- button.btn.btn-default(ng-click="search()", ng-hide="query.length")
+			button.btn.btn-default(ng-click="clearSearch()", ng-show="query.length")
 			button.btn.btn-default(ng-click="clearSearch()", ng-show="query.length")
 
 		div#song_results_list(ng-show="query.length")
-			div.add_song_wrap.btn-group
-				button.btn.btn-default.btn-sm(ng-class="{active: searchFilter==''}", ng-click="setFilter('')") All
-				button.btn.btn-default.btn-sm(ng-class="{active: searchFilter=='artist'}", ng-click="setFilter('artist')") Artist
-				button.btn.btn-default.btn-sm(ng-class="{active: searchFilter=='album'}", ng-click="setFilter('album')") Album
-				button.btn.btn-default.btn-sm(ng-class="{active: searchFilter=='song'}", ng-click="setFilter('song')") Song
+			div.add_song_wrap
+				button(ng-class="{active: searchFilter==''}", ng-click="setFilter('')") All
+				button(ng-class="{active: searchFilter=='artist'}", ng-click="setFilter('artist')") Artist
+				button(ng-class="{active: searchFilter=='album'}", ng-click="setFilter('album')") Album
+				button(ng-class="{active: searchFilter=='song'}", ng-click="setFilter('song')") Song
 
 			ul.song-list
-				li.list-group-item(ng-show="!result.songs.length && query.length")
+				li(ng-show="!result.songs.length && query.length")
 					em No results found
 				li.song-item(ng-repeat="song in result.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
 					a.song-name(ng-click="addSong(song)", href="#add") {{songName(song)}}
@@ -29,15 +29,17 @@ div.tab-pane.playlist#queue(ng-show="me.auth")
 					strong {{song.album}}
 					br
 					em.song-artist {{song.artist}}
+	div.queue-list
+		ul.song-list#my_queue
+			li.song-item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", x-lvl-drop-target="true", x-on-drop="songDropped(dragEl, dropEl)", data-index="{{$index}}") 
+				div.song_wrapper(x-lvl-draggable="true", data-song="{{song}}")
+					span {{songName(song)}}
+					span.song-name
+					span.song-artist
+					a.remove(ng-click="removeSong(song)", href="#remove")
+						span.glyphicon.glyphicon-trash
 
-	ul.song-list#my_queue
-		li.song_item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", x-lvl-drop-target="true", x-on-drop="songDropped(dragEl, dropEl)", data-index="{{$index}}") 
-			div.song_wrapper(x-lvl-draggable="true", data-song="{{song}}")
-				span {{songName(song)}}
-				a.remove(ng-click="removeSong(song)", href="#remove") 
-					span.glyphicon.glyphicon-trash
-
-div.tab-pane.library#playlists(ng-class="{active: ! me.playlist.name.length}", style="display:none;")
+div.library#playlists(ng-class="{active: ! me.playlist.name.length}", style="display:none;")
 	div.panel-heading Your Playlists
 	div.queue-list#my_playlists
 		ul.playlists.song-list
@@ -45,11 +47,11 @@ div.tab-pane.library#playlists(ng-class="{active: ! me.playlist.name.length}", s
 				form
 					div
 						label.sr-only(for="playlist-name") New playlist: 
-						input#playlist-name.form-control(ng-model="newPlaylist.name", placeholder="What should we call it?")
-						span.input-group-btn
-							button.btn.btn-default(ng-click="create()", href="#create") 
+						input#playlist-name(ng-model="newPlaylist.name", placeholder="What should we call it?")
+						span
+							button(ng-click="create()", href="#create") 
 								span.glyphicon.glyphicon-plus-sign
-			li.list-group-item(ng-repeat="playlist in playlists", ng-class="{active: active(playlist)}")
+			li(ng-repeat="playlist in playlists", ng-class="{active: active(playlist)}")
 				span.badge.pull-right {{playlist.songs.length}}
 				a.playlists_item(ng-click="select(playlist)", href="#load", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{last:$last}").
 					{{playlist.name}}
