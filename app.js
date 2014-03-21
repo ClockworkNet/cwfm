@@ -1,53 +1,147 @@
-var config   = require('./config').settings;
-var express  = require('express');
-var http     = require('http');
-var path     = require('path');
-var cookie   = require('cookie');
-var connect  = require('connect');
-var io       = require('socket.io');
-var fs       = require('fs');
-var mm       = require('musicmetadata');
+var config         = require('./config').settings;
+var express        = require('express');
+var http           = require('http');
+var path           = require('path');
+var logger         = require('morgan');
+var io             = require('socket.io');
+var fs             = require('fs');
+var mm             = require('musicmetadata');
+var encrypt        = require('sha1');
+var Cookies        = require('cookies');
 
-var sessionStore = new express.session.MemoryStore();
+var app    = express();
+var server = http.createServer(app);
+var io     = require('socket.io').listen(server);
 
-var app = express();
-
-// all environments
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
-app.use(express.favicon());
-app.use(express.logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded());
-app.use(express.methodOverride());
-app.use(express.cookieParser(config.cookieSecret));
-app.use(express.session({
-	secret: config.sessionSecret, 
-	key: config.sessionKey,
-	store: sessionStore
-}));
-app.use(app.router);
-//app.use(require('stylus').middleware(path.join(__dirname, 'public')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
-
-app.configure('development', function() {
-	app.locals.pretty = true;
-});
-
-// development only
-if ('development' == app.get('env')) {
-  app.use(express.errorHandler());
-}
+app.use(logger('dev'));
+app.use(Cookies.express(config.cookieKeys));
+app.use(require('static-favicon')());
+app.use(require('body-parser')());
+app.use(require('method-override')());
 
 
-// Fire up the server and the socket listener
-var server = http.createServer(app);
-server.listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
-});
-var io = io.listen(server);
+var registerRoutes = function() {
+
+	var inject = require('./lib/util').inject;
+
+	console.log("Building models");
+	var Auth     = require('./models/auth').build(mongoose, encrypt, config);
+	var User     = require('./models/user').build(mongoose);
+	var Song     = require('./models/song').build(mongoose);
+	var Playlist = require('./models/playlist').build(mongoose);
+	var Room     = require('./models/room').build(mongoose, config);
+	var Chat     = require('./models/chat').build(mongoose, config);
+
+	console.log("Loading routes");
+	var routes = {
+		home: require('./routes/home'),
+		room: require('./routes/room'),
+		song: require('./routes/song'),
+		user: require('./routes/user'),
+		auth: require('./routes/auth'),
+		avatar: require('./routes/avatar'),
+		chat: require('./routes/chat'),
+		playlist: require('./routes/playlist')
+	};
+
+	console.log("Loading controllers");
+	var controllers = {
+		home: new routes.home(Room, User),
+		room: new routes.room(Room, User, Playlist, Song, io),
+		song: new routes.song(config.songDir, Song, User, fs, path, mm),
+		user: new routes.user(User, Auth),
+		auth: new routes.auth(config, User, Auth),
+		avatar: new routes.avatar(config.avatar, fs, path, User),
+		chat: new routes.chat(Room, User, Chat, io),
+		playlist: new routes.playlist(Playlist, Song, User)
+	};
+
+	var loadUser = controllers.auth.loadUser;
+	var restrict = controllers.auth.restrict;
+
+	// Public Avatars API
+	app.get('/avatar/list'             , controllers.avatar.list);
+	app.get('/avatar/user/:username'   , controllers.avatar.user);
+	app.get('/avatar/:name'            , controllers.avatar.show);
+	app.get('/avatar/'                 , controllers.avatar.show);
+
+	// Public views 
+	app.get('/'                        , loadUser, controllers.home.home);
+	app.get('/room'                    , loadUser, controllers.home.room);
+
+	// Public Room API
+	app.get('/room/list'               , controllers.room.list);
+	app.get('/room/detail/:abbr'       , controllers.room.detail);
+
+	// Public User API
+	app.post('/user/create'            , controllers.user.create);
+	app.post('/user/login'             , controllers.auth.login);
+
+	// Restricted Routes
+
+	// Restricted User API
+	app.get('/user'                    , restrict, controllers.user.list);
+	app.get('/user/list'               , restrict, controllers.user.list);
+	app.get('/user/detail/:username'   , restrict, controllers.user.detail);
+	app.get('/user/me'                 , restrict, controllers.user.me);
+	app.post('/user/update'            , restrict, controllers.user.update);
+	app.post('/user/logout'            , restrict, controllers.auth.logout);
+
+	// Restricted Song API
+	app.get('/song/search'             , restrict, controllers.song.search);
+	app.get('/song/detail/:id'         , restrict, controllers.song.detail);
+	app.get('/song/:id'                , restrict, controllers.song.stream);
+	app.post('/song/scan'              , restrict, controllers.song.scan);
+
+	// Restricted Playlist API
+	app.get('/playlist/list'           , restrict, controllers.playlist.list);
+	app.get('/playlist/detail/:id'     , restrict, controllers.playlist.detail);
+	app.post('/playlist/create'        , restrict, controllers.playlist.create);
+	app.delete('/playlist/delete/:id'  , restrict, controllers.playlist.delete);
+	app.post('/playlist/select/:id'    , restrict, controllers.playlist.select);
+	app.post('/playlist/update/:id'    , restrict, controllers.playlist.update);
+
+	// Restricted Room API
+	app.post('/room/create'            , restrict, controllers.room.create);
+	app.post('/room/delete/:abbr'      , restrict, controllers.room.delete);
+	app.post('/room/join/:abbr'        , restrict, controllers.room.join);
+	app.post('/room/dj/:abbr'          , restrict, controllers.room.dj);
+	app.post('/room/undj/:abbr'        , restrict, controllers.room.undj);
+	app.post('/room/skip/:abbr'        , restrict, controllers.room.skip);
+	app.post('/room/upvote/:abbr'      , restrict, controllers.room.upvote);
+	app.post('/room/downvote/:abbr'    , restrict, controllers.room.downvote);
+
+	// Restricted Chat API
+	app.get('/chat/list/:abbr'         , restrict, controllers.chat.list);
+	app.post('/chat/say/:abbr'         , restrict, controllers.chat.say);
+
+	console.log("Routes registered");
+
+	// Sockets
+	console.log("Setting up session sockets");
+
+	io.sockets.on('connection', function(socket) {
+		socket.cookies = new Cookies(socket.request, {}, config.cookieKeys);
+		console.info('socket connected', socket.id);
+
+		controllers.auth.loadUserOnSocket(socket, function(e, socket) {
+			if (e) {
+				console.error("Error loading user on socket", e);
+				return;
+			}
+			socket.on('listen', inject(controllers.room.listen, socket));
+			socket.on('leave', inject(controllers.room.leave, socket));
+			socket.on('disconnect', inject(controllers.room.exit, socket));
+		});
+	});
+
+	console.log("Socket routing registered");
+};
 
 
 // Set up the database connection. Once the connection is established,
@@ -60,121 +154,10 @@ db.on('error', console.error.bind(console, 'connection error:'));
 
 db.on('open', function() {
 
-	// Returns a new method that binds the controller context to the
-	// method and appends any specified arguments to the parameter list
-	var apply = function(controller, method, args) {
+	console.log("Connected to mongodb");
 
-		if (!controller) {
-			throw new Error("Invalid controller");
-		}
-
-		if (typeof(controller[method]) != 'function') {
-			throw new Error("Invalid method on controller: " + method);
-		}
-
-		return function() {
-			var params = Array.prototype.slice.call(arguments, 0);
-			if (args) params = params.concat(args);
-			try {
-				controller[method].apply(controller, params);
-			}
-			catch (e) {
-				console.error(e);
-			}
-		};
-	};
-
-	var encrypt  = require('sha1');
-
-	var Auth     = require('./models/auth').build(mongoose, encrypt, config);
-	var User     = require('./models/user').build(mongoose);
-	var Song     = require('./models/song').build(mongoose);
-	var Playlist = require('./models/playlist').build(mongoose);
-	var Room     = require('./models/room').build(mongoose, config);
-	var Chat     = require('./models/chat').build(mongoose, config);
-
-	var routes = {
-		home: require('./routes'),
-		room: require('./routes/room'),
-		song: require('./routes/song'),
-		user: require('./routes/user'),
-		chat: require('./routes/chat'),
-		playlist: require('./routes/playlist')
-	};
-
-	var controllers = {
-		home: new routes.home.Controller(Room, User),
-		room: new routes.room.Controller(Room, User, Playlist, Song, io),
-		song: new routes.song.Controller(config.songDir, Song, User, fs, path, mm),
-		user: new routes.user.Controller(User, Auth),
-		chat: new routes.chat.Controller(Room, User, Chat, io),
-		playlist: new routes.playlist.Controller(Playlist, Song, User)
-	};
-
-	var secure = apply(controllers.user, 'verify');
-
-	app.get('/user', secure, apply(controllers.user, 'list'));
-	app.get('/user/list', secure, apply(controllers.user, 'list'));
-	app.get('/user/detail/:username', secure, apply(controllers.user, 'detail'));
-	app.get('/user/me', apply(controllers.user, 'me'));
-	app.post('/user/create', apply(controllers.user, 'create'));
-	app.post('/user/login', apply(controllers.user, 'login'));
-	app.post('/user/logout', apply(controllers.user, 'logout'));
-	app.post('/user/update', secure, apply(controllers.user, 'update'));
-
-	app.get('/song/search', secure, apply(controllers.song, 'search'));
-	app.get('/song/detail/:id', secure, apply(controllers.song, 'detail'));
-	app.get('/song/:id', secure, apply(controllers.song, 'stream'));
-	app.post('/song/scan', secure, apply(controllers.song, 'scan'));
-	controllers.song.startWatch();
-
-	app.get('/playlist/list', secure, apply(controllers.playlist, 'list'));
-	app.get('/playlist/detail/:id', secure, apply(controllers.playlist, 'detail'));
-	app.post('/playlist/create', secure, apply(controllers.playlist, 'create'));
-	app.delete('/playlist/delete/:id', secure, apply(controllers.playlist, 'delete'));
-	app.post('/playlist/select/:id', secure, apply(controllers.playlist, 'select'));
-	app.post('/playlist/update/:id', secure, apply(controllers.playlist, 'update'));
-
-	app.get('/room/list', apply(controllers.room, 'list'));
-	app.get('/room/detail/:abbr', apply(controllers.room, 'detail'));
-	app.post('/room/create', secure, apply(controllers.room, 'create'));
-	app.post('/room/delete/:abbr', secure, apply(controllers.room, 'delete'));
-	app.post('/room/join/:abbr', secure, apply(controllers.room, 'join'));
-	app.post('/room/dj/:abbr', secure, apply(controllers.room, 'dj'));
-	app.post('/room/undj/:abbr', secure, apply(controllers.room, 'undj'));
-	app.post('/room/skip/:abbr', secure, apply(controllers.room, 'skip'));
-	app.post('/room/upvote/:abbr', secure, apply(controllers.room, 'upvote'));
-	app.post('/room/downvote/:abbr', secure, apply(controllers.room, 'downvote'));
-
-	app.get('/chat/list/:abbr', secure, apply(controllers.chat, 'list'));
-	app.post('/chat/say/:abbr', secure, apply(controllers.chat, 'say'));
-
-	// Wire up authentication to the socket connections
-	io.set('log level', 1);
-	io.set('authorization', function(data, accept) {
-		if (!data.headers.cookie) {
-			return accept('Unauthorized', false);
-		}
-		data.cookie = cookie.parse(data.headers.cookie);
-		data.sessionId = connect.utils.parseSignedCookie(data.cookie[config.sessionKey], config.sessionSecret);
-		sessionStore.get(data.sessionId, function(e, session) {
-			if (e || !session) {
-				console.error(e, data);
-				return accept("No session found", false);
-			}
-			data.session = session;
-			accept(null, true);
-		});
+	server.listen(app.get('port'), function(){
+		console.log('Express server listening on port', app.get('port'));
+		registerRoutes();
 	});
-
-	io.sockets.on('connection', function(socket) {
-		//@todo: get user on disconnect
-		socket.on('listen', apply(controllers.room, 'listen', socket));
-		socket.on('leave', apply(controllers.room, 'leave', socket));
-		socket.on('disconnect', apply(controllers.room, 'exit'));
-	});
-
-	// UI
-	app.get('/', apply(controllers.home, 'home'));
-	app.get('/room', apply(controllers.home, 'room'));
 });

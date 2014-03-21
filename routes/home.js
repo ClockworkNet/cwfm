@@ -1,8 +1,8 @@
-exports.Controller = function(Room, User) {
+module.exports = function(Room, User) {
 	this.home = function(req, res, next) {
 		var data = {
 			title: "Clockwork.FM",
-			user: req.session.user
+			user: req.user
 		};
 		res.render('home', data, function(e, html) {
 			if (e) console.trace(e);

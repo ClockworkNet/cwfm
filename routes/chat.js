@@ -1,4 +1,4 @@
-exports.Controller = function(Room, User, Chat, io) {
+module.exports = function(Room, User, Chat, io) {
 	var defaultLimit = 10;
 
 	this.list = function(req, res, next) {
@@ -33,9 +33,8 @@ exports.Controller = function(Room, User, Chat, io) {
 				console.trace("Error saying something", e, room);
 				return res.jsonp(500, {error: "Error sending message"});
 			}
-			var user = new User(req.session.user);
 			var chat = new Chat({
-				author: user,
+				author: req.user,
 				content: req.body.content,
 				room: room,
 				posted: Date.now()

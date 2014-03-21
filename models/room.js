@@ -33,6 +33,12 @@ exports.build = function(mongoose, config) {
 		songStarted: Date
 	});
 
+	schema.methods.toJSON = function() {
+		var obj = this.toObject();
+		obj.currentTime = Date.now();
+		return obj;
+	};
+
 	schema.virtual('dj').get(function() {
 		return this.djs && this.djs.length > 0 ? this.djs[0] : null;
 	});
@@ -79,17 +85,19 @@ exports.build = function(mongoose, config) {
 		var ix = this.indexOf(collection, user);
 		if (ix >= 0) {
 			this[collection].splice(ix, 1);
+			return 1;
 		}
-		return this;
+		return 0;
 	};
 
 	schema.methods.removeUser = function(user) {
 		var cols = ['djs', 'listeners'];
 		var room = this;
+		var left = 0;
 		cols.forEach(function(col) {
-			room.leave(col, user);
+			left += room.leave(col, user);
 		});
-		return room;
+		return left;
 	};
 
 	return mongoose.model(name, schema);

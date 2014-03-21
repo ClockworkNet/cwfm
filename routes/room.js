@@ -1,4 +1,4 @@
-exports.Controller = function(Room, User, Playlist, Song, io) {
+module.exports = function(Room, User, Playlist, Song, io) {
 
 	// Stores the timeout used to trigger the next song.
 	// This is keyed on the room abbr.
@@ -8,10 +8,29 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	// Ensures that a song is playing if it should be.
 	var ensureSong = function(room) {
 		var remaining = room.song ? room.song.remaining(room.songStarted) : 0;
-		if (remaining <= 0) {
-			console.info("Song is expired, playing next song.", remaining);
-			nextSong(room);
+		if (remaining <= 0 && room.dj) {
+			console.info("Song is expired, playing next song.", room.song, remaining);
+			setImmediate(nextSong, room);
 		}
+	};
+
+	var rotateTable = function(room, then) {
+		var djId = room.dj._id ? room.dj._id : room.dj;
+
+		User.findById(djId)
+		.populate('playlist')
+		.exec(function(e, dj) {
+			dj.playlist.rotate().save(function(e) {
+				// Rotate DJs if necessary
+				if (room.rotateDjs()) {
+					room.save(then);
+				}
+				else {
+					then();
+				}
+			});
+		});
+
 	};
 
 	var nextSong = function(room) {
@@ -28,40 +47,35 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			room.songStarted = null;
 			room.save();
 			console.info("No DJs in the room. Stopping music.", room.abbr, room.djs);
-			io.sockets.in(room.abbr).emit("song.stopped", room);
+			io.sockets.in(room.abbr).emit("song.stopped");
 			return;
 		}
 
-		// Advance the first track of the current playlist
-		var djId = room.dj._id ? room.dj._id : room.dj;
-		User.findById(djId)
-		.populate('playlist')
-		.exec(function(e, dj) {
-			dj.playlist.rotate().save();
-		});
+		rotateTable(room, function() {
+			// Pick the new DJ's next song from her current playlist
+			// and set it on the room.
+			var djId = room.dj._id ? room.dj._id : room.dj;
 
-		// Rotate DJs if necessary
-		if (room.rotateDjs()) {
-			console.info("Rotated DJs");
-			room.save();
-		}
-
-		// Pick the new DJ's next song from her current playlist
-		// and set it on the room.
-		var djId = room.dj._id ? room.dj._id : room.dj;
-
-		User.findById(djId).populate('playlist').exec(function(e, dj) {
-			if (e || !dj) {
-				console.trace("Error finding DJ", e, dj);
-				return;
-			}
-			var songId = dj.playlist.songAt(0);
-			Song.findById(songId, function(e, song) {
-				if (e || !song) {
-					console.trace("Error finding song to play", e, song);
+			User.findById(djId).populate('playlist').exec(function(e, dj) {
+				if (e || !dj) {
+					console.trace("Error finding DJ", e, dj);
 					return;
 				}
-				playSong(room, song);
+				var songId = dj.playlist.songs[0];
+				Song.findById(songId, function(e, song) {
+					if (e) {
+						console.trace("Error finding song to play", e, songId, dj.playlist);
+						return;
+					}
+					if (!song) {
+						console.trace("Song not found for id. Removing from playlist.", songId);
+						dj.playlist.songs.shift();
+						dj.playlist.save();
+						setImmediate(nextSong, room);
+						return;
+					}
+					setImmediate(playSong, room, song);
+				});
 			});
 		});
 	};
@@ -76,7 +90,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 
 		if (!song._id) {
 			return Song.findById(song, function(e, song) {
-				playSong(room, song);
+				setImmediate(playSong, room, song);
 			});
 		}
 
@@ -91,11 +105,11 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 				return;
 			}
 			// Send a message to all clients in the room
-			io.sockets.in(room.abbr).emit('song.changed', room);
+			io.sockets.in(room.abbr).emit('song.changed', room.toJSON());
 		});
 
 		// Schedule the next song
-		console.info("Scheduling next song", song.duration * 1000);
+		console.info("Scheduling next song", song, song.duration * 1000);
 		songTimers[room.abbr] = setTimeout(nextSong, song.duration * 1000, room);
 	};
 
@@ -122,7 +136,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 			if (!room) {
 				room = new Room(req.body);
 			}
-			room.join('owners', req.session.user);
+			room.join('owners', req.user);
 			room.save(function(e) {
 				if (e) return res.jsonp(500, {error: e});
 				Room.find({}, function(e, a) {
@@ -136,7 +150,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	this.delete = function(req, res, next) {
 		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return res.jsonp(500, e);
-			var user = req.session.user;
+			var user = req.user;
 			if (!user.admin && room.indexOf('owners', user) < 0) {
 				return res.jsonp(401, {error: "You must be an owner to delete a room"});
 			}
@@ -160,7 +174,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 				return res.jsonp(404, {error: "Room doesn't exist"});
 			}
 
-			room.join('listeners', req.session.user);
+			room.join('listeners', req.user);
 			room.save(function(e) {
 				if (e) {
 					console.trace("Error saving new listener", e);
@@ -171,7 +185,8 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 				.populate('djs dj listeners song')
 				.exec(function(e, room) {
 					ensureSong(room);
-					io.sockets.in(room.abbr).emit('member.joined', req.session.user);
+					console.info("We have a new user in the room", room.name, req.user);
+					io.sockets.in(room.abbr).emit('member.joined', req.user.toJSON());
 					return res.jsonp(room);
 				});
 			});
@@ -180,45 +195,56 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 
 	// Called when a user connects to a room to listen in on the socket
 	this.listen = function(data, callback, socket) {
+		if (!socket.user) {
+			console.error("No user on socket", socket.id);
+			callback(false);;
+		}
+		console.info('listening', socket.user);
 		Room.findOne({abbr: data.abbr}, function(e, room) {
 			if (e) throw e;
 			socket.join(room.abbr);
 			console.info(socket.id, "is listening to", room.abbr);
+			callback(true);
 		});
 	};
 
 	// Called when user leaves a room
 	this.leave = function(data, callback, socket) {
-		socket.leave(data.abbr);
 		console.info(socket.id, "is leaving", data.abbr);
-		if (!socket.handshake || !socket.handshake.session || !socket.handshake.session.user) {
+		socket.leave(data.abbr);
+		if (!socket.user) {
 			console.info("No session information found. Skipping room departure");
 			return;
 		}
-		var uid = socket.handshake.session.user._id;
-		User.findById(uid, function(e, user) {
-			if (e || !user) return;
-			Room.findOne({abbr: data.abbr}, function(e, room) {
-				if (e) return;
-				room.removeUser(user);
+		Room.findOne({abbr: data.abbr}, function(e, room) {
+			if (e) return;
+			if (room.removeUser(socket.user._id)) {
 				room.save();
-				io.sockets.in(room.abbr).emit('member.departed', user);
-			});
+				console.info(socket.user.username, "left room", room.name);
+				io.sockets.in(room.abbr).emit('member.departed', socket.user.toJSON());
+			}
 		});
 	};
 
 	// Called when a socket connection is dropped
-	this.exit = function(username) {
-		User.find({username: username}, function(e, user) {
-			if (!user) return;
-			Room.find({}, function(e, a) {
-				a.forEach(function(r) {r.removeUser(user);});
+	this.exit = function(event, socket) {
+		if (!socket.user) {
+			console.error("No user to speak of during exit");
+			return;
+		}
+		Room.find({}, function(e, a) {
+			a.forEach(function(r) {
+				if (r.removeUser(socket.user._id)) {
+					console.info(socket.user.username, "exited room", r.name);
+					r.save();
+					io.sockets.in(r.abbr).emit('member.departed', socket.user.toJSON());
+				}
 			});
 		});
 	};
 
 	this.dj = function(req, res, next) {
-		User.findById(req.session.user._id)
+		User.findById(req.user._id)
 		.populate('playlist')
 		.exec(function(e, user) {
 			if (e) {
@@ -240,9 +266,9 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 				if (!room.song && user.playlist) {
 					var song = user.playlist.songAt(0);
 					console.info("starting songs", song);
-					playSong(room, song, io);
+					setImmediate(playSong, room, song);
 				}
-				io.sockets.in(room.abbr).emit('dj.joined', user);
+				io.sockets.in(room.abbr).emit('dj.joined', user.toJSON());
 			});
 		});
 	};
@@ -250,9 +276,9 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	this.undj = function(req, res, next) {
 		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return res.jsonp(500, e);
-			room.leave('djs', req.session.user);
+			room.leave('djs', req.user);
 			room.save();
-			io.sockets.in(room.abbr).emit('dj.departed', req.session.user);
+			io.sockets.in(room.abbr).emit('dj.departed', req.user.toJSON());
 		});
 	};
 
@@ -267,7 +293,7 @@ exports.Controller = function(Room, User, Playlist, Song, io) {
 	this.skip = function(req, res, next) {
 		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return;
-			nextSong(room);
+			setImmediate(nextSong, room);
 		});
 	};
 };

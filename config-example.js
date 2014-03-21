@@ -7,13 +7,19 @@ exports.settings = {
 
 	// Super secret keys
 	secret: "I've never changed my oil.",
-	cookieSecret: "C is for cookie and that is good enough for me",
-	sessionSecret: "S is for sesions and that is good enough for me",
-	sessionKey: 'cwfm.sid',
+	cookieKeys: ["SEKRIT2", "SEKRIT1"],
+	userIdKey: 'uid',
+	userAuthTokenKey: 'ut',
 
 	// The maximum number of chat records to keep for a room
 	maxChat: 40,
 
 	// The directory where music will be added
-	songDir: '/Users/barrett/Music',
+	songDir: __dirname + '/data/music',
+
+	// The pattern used to search for local avatar paths
+	avatar: {
+		pattern: /^.+\.png$/,
+		dir: __dirname + '/public/img/avatars'
+	}
 };

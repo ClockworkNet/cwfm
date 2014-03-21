@@ -1,7 +1,10 @@
 exports.build = function(mongoose) {
 	var name = 'User';
 	var schema = mongoose.Schema({
-		username: String,
+		username: {
+			type: String,
+			unique: true
+		},
 		admin: Boolean,
 		realname: String,
 		avatar: String,
@@ -14,6 +17,7 @@ exports.build = function(mongoose) {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Auth'
 		},
+		authToken: mongoose.Schema.Types.ObjectId,
 		score: Number,
 		playlist: {
 			type: mongoose.Schema.Types.ObjectId, 
@@ -21,6 +25,29 @@ exports.build = function(mongoose) {
 		},
 		socketId: String 
 	});
+
+	var blacklist = ['username', 'admin', 'authType', 'auth', 'score', 'playlist', 'socketId'];
+
+	schema.methods.toJSON = function() {
+		var obj  = this.toObject();
+		obj.auth = true;
+		return obj;
+	};
+
+	schema.methods.createAuthToken = function() {
+		this.authToken = mongoose.Types.ObjectId();
+		return this;
+	};
+
+	// Helper method to prevent tampering with important bits
+	schema.methods.merge = function(data) {
+		for (var key in data) {
+			if (!data.hasOwnProperty(key)) continue;
+			if (blacklist.indexOf(key) >= 0) continue;
+			this[key] = data[key];
+		}
+		return this;
+	};
 
 	return mongoose.model(name, schema);
 }

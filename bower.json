@@ -16,9 +16,10 @@
 	],
 	"dependencies": {
 		"jquery": "*",
-		"jplayer": "*",
+		"wavesurfer.js": "*",
 		"json2": "*",
 		"angular": "*",
+		"lvlDragDrop": "*",
 		"intro.js": "*",
 		"bootstrap": "*",
 		"wavesurfer.js": "*"

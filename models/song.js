@@ -6,6 +6,7 @@ exports.build = function(mongoose) {
 		albumartist: [String],
 		album: String,
 		year: Number,
+		genre: [String],
 		track: {
 			no: Number,
 			of: Number
@@ -16,11 +17,10 @@ exports.build = function(mongoose) {
 		},
 		type: String, // ogg, wav, mp4, mp3, fla
 		path: String,
-		pictures: [{
-			type: String,
-			path: String
+		picture: [{
+			format: String,
+			data: Buffer
 		}],
-		waveform: String,
 		duration: Number,
 		upvotes: Number,
 		downvotes: Number,
@@ -28,6 +28,14 @@ exports.build = function(mongoose) {
 		modified: Date,
 		failures: Number
 	});
+
+	// Overridden to remove binary data from output
+	schema.methods.toJSON = function() {
+		var obj = this.toObject();
+		delete obj.path;
+		delete obj.picture;
+		return obj;
+	};
 
 	schema.virtual('score').get(function() {
 		return this.upvotes - this.downvotes;

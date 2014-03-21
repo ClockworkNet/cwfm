@@ -4,41 +4,49 @@ cwfm.user = {};
 
 cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 
+	$scope.me         = $user.get();
+	$scope.avatarUrls = [];
+
+	$scope.adminMessage = '';
+
 	$user.change(function(user) {
-		$scope.user = user;
+		$scope.me = user;
 	});
 
 	var init  =  function( ) {
-		$scope.user  = $user.get();
-		$scope.error = null;
-		$scope.load_me();
+		$scope.loadMe();
 	};
 
-	var set_user = function(rsp) {
+	var setUser = function(rsp) {
 		$user.set(rsp);
 	};
 
+	var handleError = function(e) {
+		console.error("Error occurred", e);
+		$scope.error = e;
+	};
+
 	var oops  =  function(e) {
-		console.info(e);
+		console.trace("Error occurred", e);
 		$scope.error = e.error;
 	};
 
-	$scope.load_me  =  function() {
+	$scope.loadMe  =  function() {
 		$http.get('/user/me')
-			.success(set_user)
-			.error(oops);
+		.success(setUser)
+		.error(oops);
 	};
 
-	$scope.create_user  =  function( ) {
-		$http.post('/user/create', $scope.new_user)
-			.success(set_user)
-			.error(oops);
+	$scope.createUser  =  function( ) {
+		$http.post('/user/create', $scope.newUser)
+		.success(setUser)
+		.error(oops);
 	}
 
 	$scope.login  =  function( ) {
-		$http.post('/user/login', $scope.user)
+		$http.post('/user/login', $scope.me)
 		.success(function(user) {
-			set_user(user);
+			setUser(user);
 			$user.trigger('login');
 		})
 		.error(oops);
@@ -47,11 +55,57 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 	$scope.logout  =  function( ) {
 		$http.post('/user/logout', {})
 		.success(function(user) {
-			set_user(user);
+			setUser(user);
 			$user.trigger('logout');
 		})
 		.error(oops);
 	}
+
+	$scope.loadAvatars = function() {
+		if ($scope.avatarUrls.length > 0) return;
+
+		$http.get('/avatar/list')
+		.success(function(urls) {
+			$scope.avatarUrls = urls;
+		});
+	};
+
+	$scope.selectAvatar = function(url) {
+		$scope.me.avatar = url;
+	};
+
+	$scope.save = function() {
+		$http.post('/user/update', $scope.me)
+		.success(setUser)
+		.error(handleError);
+	};
+
+	// Admin functions
+	$scope.adminify = function() {
+
+	};
+
+	$scope.boot = function() {
+
+	};
+
+	$scope.scan = function(force) {
+		$http.post('/song/scan', {force: force})
+		.success(function(r) {
+			console.info("Starting scan", arguments);
+			$scope.adminMessage = {
+				type: 'info',
+				content: "Scan started"
+			};
+		})
+		.error(function(e) {
+			console.error("Error tarting scan", arguments);
+			$scope.adminMessage = {
+				type: 'error',
+				content: "Error starting scan"
+			};
+		});
+	};
 
 	init( );
 };

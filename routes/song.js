@@ -1,83 +1,89 @@
-exports.Controller = function(dir, Song, User, fs, path, mm) {
+module.exports = function(dir, Song, User, fs, path, mm) {
 	var allowed = ['.mp3', '.m4a', '.ogg', '.flac', '.wma', '.wmv'];
 	var maxFails = 5;
 
-	var processSongMeta = function(song, meta) {
-		for (var key in meta) {
-			if (!meta.hasOwnProperty(key)) continue;
-			switch (key) {
-				case 'picture':
-					// @TODO: process pictures and save path
-					break;
-				default:
-					song[key] = meta[key];
-					break;
-			}
-		}
-	}
+	var processSongTags = function(song, stats, done) {
+		var songStream = fs.createReadStream(song.path);
 
-	var generateWaveform = function(song, callback) {
-		// @TODO: add waveform processing
-		callback(null, song);
-	};
-
-	var updateSong = function(filename) {
-		if (!filename || filename.length == 0) return;
-
-		if (allowed.indexOf(path.extname(filename)) < 0) {
-			return;
-		}
-
-		var stream = fs.createReadStream(filename);
-
-		stream.on('error', function(e) {
-			console.trace("Error opening stream", e);
-			return false;
+		songStream.on('error', function(e) {
+			return done(e, song);
 		});
 
-		var parser = mm(stream, {duration: true});
-		parser.on('metadata', function(result) {
-			console.info(result);
+		var parser = mm(songStream, {duration: true});
 
-			if (!result || !result.duration) {
-				console.error("Could not read duration metadata for file", filename, result);
-				return;
+		parser.on('done', function(e) {
+			if (e) return done(e, song);
+			songStream.destroy();
+		});
+
+		parser.on('metadata', function(tags) {
+			console.info("Found song metadata. Song:", song, " Tags:", tags);
+
+			if (!tags || !tags.duration) {
+				return done(new Error("Could not read duration metadata for file"), song);
 			}
 
-			Song.findOne({path: filename}, function(e, song) {
+			var keys = ['title', 'artist', 'album', 'genre', 'albumartist', 'year', 'track', 'disk', 'picture', 'duration'];
 
+			keys.forEach(function(key) {
+				song[key] = tags[key];
+			});
+
+			done(null, song);
+		});
+	}
+
+	var updateSong = function(filename, stats, force) {
+		if (!filename || filename.length == 0) {
+			return false;
+		}
+
+		if (allowed.indexOf(path.extname(filename)) < 0) {
+			return false;
+		}
+
+		Song.findOne({path: filename}, function(e, song) {
+			if (e) {
+				console.trace("Error seeking song", e);
+				return false;
+			}
+
+			if (!song) {
+				song = new Song();
+				song.added = Date.now();
+			}
+			else if (!force && song.modified && song.modified.getTime() >= stats.ctime.getTime()) {
+				return false;
+			}
+
+			song.modified = Date.now();
+			song.path     = filename;
+
+			processSongTags(song, stats, function(e, song) {
 				if (e) {
-					console.trace("Error seeking song", e);
-					return;
+					console.error("Error processing song metadata", song, e);
+					return false;
 				}
-
-				if (!song) {
-					song = new Song();
-					song.added = Date.now();
-				}
-				song.modified = Date.now();
-				song.path     = filename;
-
-				processSongMeta(song, result);
-
-				generateWaveform(song, function(e, song) {
-					console.info("Saving song", song);
-					song.save();
+				song.save(function(e) {
+					if (e) {
+						console.error("Error saving song", song, e);
+					}
+					return true;
 				});
 			});
 		});
 	};
 
 	// Recursively scans directories for media files
-	var scan = function(dir, filename) {
+	var scan = function(dir, filename, force) {
 		var fullpath = path.join(dir, filename);
-		fs.stat(filename, function(e, stats) {
+		fs.stat(fullpath, function(e, stats) {
 			if (e) {
-				console.trace("Error getting stats for", path, e);
+				console.trace("Error getting stats for", fullpath, e);
 				return;
 			}
 			if (stats.isFile()) {
-				return updateSong(fullpath);
+				return updateSong(fullpath, stats, force);
 			}
 			if (stats.isDirectory()) {
 				fs.readdir(fullpath, function(e, paths) {
@@ -87,7 +93,7 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 					}
 					if (!paths) return;
 					paths.forEach(function(p) {
-						scan(fullpath, p);
+						scan(fullpath, p, force);
 					});
 				});
 			}
@@ -103,14 +109,39 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 			console.trace("Received weird search", req.query, e);
 			return res.jsonp([]);
 		}
-		var query = Song.find({path: terms})
-		.or({title: terms})
-		.or({album: terms})
-		.or({artist: terms}) 
-		.or({albumartist: terms});
+
+		var fields = [];
+		switch (req.query.f) {
+			case ('song'):
+				fields = ['title'];
+				break;
+			case ('album'):
+				fields = ['album'];
+				break;
+			case ('artist'):
+				fields = ['artist', 'albumartist'];
+				break;
+			default:
+				fields = ['path', 'title', 'album', 'artist', 'albumartist'];
+				break;
+		}
+
+		var like = [];
+		fields.forEach(function(field) {
+			var c = {};
+			c[field] = terms;
+			like.push(c);
+		});
+
+		var query = Song.where({$or: like})
+
+		if (req.user.playlist) {
+			query.and({_id: {$nin: req.user.playlist.songs}});
+		}
+
 		query.exec(function(e, a) {
 			if (e) {
-				console.trace(e);
+				console.trace("Error searching songs", e, query);
 				return res.jsonp(500, {error: "Error searching songs"});
 			}
 			res.jsonp({songs: a});
@@ -128,12 +159,13 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 	};
 
 	this.scan = function(req, res, next) {
-		if (!req.session.user.admin) {
+		if (!req.user.admin) {
 			return res.jsonp(401, {error: "Not authorized"});
 		}
 
 		console.info('Starting scan', dir);
-		scan(dir, '');
+		scan(dir, '', req.body.force);
+		return res.jsonp({success: true});
 	};
 
 	this.stream = function(req, res, next) {
@@ -157,20 +189,6 @@ exports.Controller = function(dir, Song, User, fs, path, mm) {
 						song.save();
 					}
 				}
-			});
-		});
-	};
-
-	this.startWatch = function() {
-		fs.exists(dir, function(exists) {
-			if (!exists) {
-				console.error("Song directory does not exist", dir);
-				return;
-			}
-			console.info("Watching song directory", dir);
-			fs.watch(dir, function(event, filename) {
-				if (!filename) return;
-				updateSong(path.join(dir, filename));
 			});
 		});
 	};
