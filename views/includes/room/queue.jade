@@ -1,5 +1,5 @@
-div.messages(ng-show="message.error") {{message.error}}
-div.messages(ng-show="message.info") {{message.info}}
+div.message(ng-show="message.error") {{message.error}}
+div.message(ng-show="message.info") {{message.info}}
 div.queue-tabs(ng-show="me.auth")
 	button.queue-button.active#queue-button(ng-show="me.playlist.name", ng-class="{active: me.playlist.name}", href="#queue") Queue
 	button.playlists-button#playlists-button(ng-class="{active: ! me.playlist.name}", href="#library") Playlists

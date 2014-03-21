@@ -88,7 +88,7 @@ a {
 	top:calc(100% - 150px);
 	width:100%;
 }
-.messages {
+#cwfmPlaylistCtrl > .message {
 	position: absolute;
 }
 
@@ -244,32 +244,43 @@ a {
 	outline:none;
 	background:rgb(28,31,38);
 }
-.chatroom ul li {
+.chatroom .chat-item {
 	display: block;
 	margin-bottom:10px;
-	padding-left:100px;
 }
 .chatroom p {
 	line-height:1.2em;
 	margin: 0;
 	padding: 0;
 }
-.chatroom ul li strong {
-	text-indent: -100px;
+.chatroom .chat-item > .username {
+	font-weight: bold;
 	display: inline-block;
 	font-size:16px;
 	color:rgb(192,197,206);
+	width: 120px;
+	padding-right: 15px;
 
-	transition:color .1s ease-in;
+	/*transition:color .1s ease-in;*/
 }
-.chatroom ul li strong:hover {
+.chatroom .chat-item > .username:hover {
 	cursor: pointer;
 	color:#ffcc00;
 }
-.chatroom span {
-	font-family: Helvetica, Arial, sans-serif;
-	font-size:13px;
+.chatroom .chat-item > div {
+	display: inline-block;
+	font-size:15px;
+	vertical-align: top;
 	color:rgb(101,115,126);
+}
+.chatroom .chat-item > .message {
+	color: #93979E;
+	width: calc(100% - 120px);
+}
+.chatroom .chat-item > .message > .timestamp {
+	display: none;
+	color: #54463e;
+	float: right;
 }
 .participants {
 	font-family: 'Brandon', Helvetica, Arial, sans-serif;
