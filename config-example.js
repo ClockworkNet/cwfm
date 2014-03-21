@@ -21,5 +21,6 @@ exports.settings = {
 	avatar: {
 		pattern: /^.+\.png$/,
 		dir: __dirname + '/public/img/avatars'
+		default: 'default.png'
 	}
 };
