@@ -32,10 +32,15 @@ ul {
 }
 .fixed-wrapper {
 	background:#333;
+	color: #fff;
 	height:100%;
 	position: fixed;
+	/*position: absolute;*/
 	top:0;
 	left:0;
+}
+a {
+	color: #ffcd05;
 }
 .right-col {
 	right:0;
@@ -58,7 +63,6 @@ ul {
 }
 .main-container.col {
 	width:75%;
-	background:rgb(250,250,250);
 }
 .stage.col {
 	width:150px;
@@ -111,6 +115,12 @@ ul {
 	left:0;
 	text-align: center;
 	background: linear-gradient(to bottom, rgba(35,40,48,1) 70%,rgba(35,40,48,.7) 85%,rgba(35,40,48,0) 100%);
+}
+#brandname {
+	width: 100%;
+}
+#brandname > img {
+	max-width: 100%;
 }
 #cwfm_logo img {
 	width:80%;
@@ -197,11 +207,13 @@ ul {
 	top:calc(100% - 270px);
 	width:75%;
 	height:calc((100% - 150px) - (100% - 270px));
+	/*height: 100px;*/
+	/*line-height: 100px;*/
 	background: linear-gradient(to bottom, rgba(43,48,59,0) 0%,rgba(43,48,59,.85) 20%,rgba(43,48,59,1) 100%);
 
 	z-index:1;
 }
-.chatroom-interface form textarea {
+.chat-input {
     resize: none;
 
 	width: calc(100% - 50px);
@@ -218,7 +230,10 @@ ul {
 	transition:background .2s ease-in;
 
 }
-.chatroom-interface form textarea:focus {
+.chat-submit {
+	margin-left: 50px;
+}
+.chat-input:focus {
 	-webkit-appearance:none;
 	outline:none;
 	background:rgb(28,31,38);

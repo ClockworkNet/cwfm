@@ -24,20 +24,20 @@ block scripts
 block right-col
 	include includes/room/queue.jade
 
-block main-col 
-	#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
-		include includes/room/control.jade
+block main-col
+	section.col.col-right.main-container
+		.col.stage
+			#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
+				include includes/room/control.jade
 
-	#cwfmUserCtrl.row(ng-controller="cwfmUserCtrl")
-		include includes/user
-	
-		#header.row(ng-show="me.auth")
+			//#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
+			//	include includes/user
+
+		#header(ng-show="me.auth")
 			h1 #{name}
 			p #{description}
 
-
-	include includes/room/chatter.jade
-
-	include includes/room/player.jade
-
-	include includes/room/playlist_old.jade
+		.col.chatroom-container
+			include includes/room/chatter.jade
+			include includes/room/player.jade
+			include includes/room/playlist_old.jade
