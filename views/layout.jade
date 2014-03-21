@@ -14,6 +14,8 @@ html.no-js(ng-app="cwfmApp")
 		link(rel='stylesheet', href='/public/css/main.css')
 		link(rel='stylesheet', href='/public/bowery/bootstrap/dist/css/bootstrap.min.css')
 		link(rel='stylesheet', href='/public/bowery/bootstrap/dist/css/bootstrap-theme.min.css')
+		link(rel='stylesheet', href='/public/css/cw-theme.css')
+		link(rel='stylesheet', href='/public/css/fonts.css')
 
 		script(src="/public/bowery/jquery/dist/jquery.min.js")
 		script(src="/public/bowery/json2/json2.js")
@@ -23,16 +25,17 @@ html.no-js(ng-app="cwfmApp")
 
 		block scripts
 	body
-		div.row
-			div.col-md-3
-				block left
+		div.wrapper
+			div.row
+				div.col-md-3
+					block left
 
-			div.col-md-6
-				block main 
+				div.col-md-6
+					block main 
 
-			div.col-md-3
-				block right
+				div.col-md-3
+					block right
 
-		div.row
-			div.col-md-12
-				block footer
+			div.row
+				div.col-md-12
+					block footer
