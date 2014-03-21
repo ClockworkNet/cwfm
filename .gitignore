@@ -2,3 +2,5 @@
 config.js
 node_modules/*
 public/bowery/*
+*.iml
+.idea

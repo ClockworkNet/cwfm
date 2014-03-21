@@ -24,7 +24,7 @@ cwfm.querystring = {
 			pair = pair.split('=');
 			var key = pair[0];
 			var value = pair[1];
-			if (!key) continue;
+			if (!key) return;
 			value = decodeURIComponent(value);
 			if (key.indexOf('[]') >= 0) {
 				key = key.substr(0, key.indexOf['[]']);

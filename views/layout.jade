@@ -10,30 +10,29 @@ html.no-js(ng-app="cwfmApp")
 		link(rel="apple-touch-icon-precomposed", sizes="72x72", href="/public/img/apple-touch-icon-ipad.png")
 		link(rel="apple-touch-icon-precomposed", sizes="114x114", href="/public/img/apple-touch-icon-iphone4.png")
 
-		link(rel='stylesheet', href='/public/css/normalize.css')
-		link(rel='stylesheet', href='/public/css/main.css')
-		link(rel='stylesheet', href='/public/bowery/bootstrap/dist/css/bootstrap.min.css')
-		link(rel='stylesheet', href='/public/bowery/bootstrap/dist/css/bootstrap-theme.min.css')
+		link(rel='stylesheet', href='/public/css/cw-theme.css')
+		link(rel='stylesheet', href='/public/css/fonts.css')
 
 		script(src="/public/bowery/jquery/dist/jquery.min.js")
 		script(src="/public/bowery/json2/json2.js")
 		script(src="/public/bowery/angular/angular.min.js")
+		script(src="/public/js/cwfm.ui.js")
 		script(src="/socket.io/socket.io.js")
 		script(src="/public/bowery/bootstrap/dist/js/bootstrap.min.js")
 
 		block scripts
 	body
-		.container-fluid
-			.row
-				#left.col-md-3
-					block left
+		div.wrapper.main-wrapper.fixed-wrapper
+			block right-col
 
-				#main.col-md-5
+			block main-col
+
+				div.col-md-6
 					block main 
 
-				#right.col-md-4
+				div.col-md-3
 					block right
 
-			.row
-				#footer.col-md-12
+			div.row
+				div.col-md-12
 					block footer
