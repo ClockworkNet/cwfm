@@ -403,7 +403,9 @@ button.lame {
 .queue-tabs > .current:hover {
 	cursor: default;
 }
-
+.playlist_wrap {
+	display: none;
+}
 .playlist {
 
 }

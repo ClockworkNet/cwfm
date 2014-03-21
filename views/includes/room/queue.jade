@@ -2,9 +2,9 @@ div(ng-show="message.error") {{message.error}}
 div(ng-show="message.info") {{message.info}}
 div.queue-tabs.group(ng-show="me.auth")
 	button.queue-button#queue-button(ng-show="me.playlist.name", ng-class="{active: me.playlist.name}", href="#queue", data-toggle="tab") Queue
-	button.library-button#library-button(ng-class="{active: ! me.playlist.name}", href="#library", data-toggle="tab") Playlists
+	button.playlists-button#playlists-button(ng-class="{active: ! me.playlist.name}", href="#library", data-toggle="tab") Playlists
 
-div.tab-pane.playlist#playlist(ng-show="me.auth")
+div.tab-pane.playlist#queue(ng-show="me.auth")
 	div.hidden(ng-show="me.playlist.name", ng-class="{active: me.playlist.name.length}")
 	div.panel-heading {{me.playlist.name}}
 	div.song-search
@@ -37,7 +37,7 @@ div.tab-pane.playlist#playlist(ng-show="me.auth")
 				a.remove(ng-click="removeSong(song)", href="#remove") 
 					span.glyphicon.glyphicon-trash
 
-div.tab-pane.library#library(ng-class="{active: ! me.playlist.name.length}")
+div.tab-pane.library#playlists(ng-class="{active: ! me.playlist.name.length}")
 	div.queue-list#my_playlists
 		ul.playlists.list-group
 			li.new_playlist.list-group-item
