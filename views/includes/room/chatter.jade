@@ -1,0 +1,23 @@
+#cwfmChatterCtrl.row(ng-controller="cwfmChatterCtrl", data-step="2", data-intro="Here's what people are saying in the room")
+		.row(ng-show="room.abbr")
+			#chat-list.col-md-10
+				ul.list-group
+					li.list-group-item(ng-repeat="m in chat | filter:content")
+						span.message {{m.content}}
+						br
+						strong.username {{m.author.username}}
+						br
+						em {{m.posted}}
+
+			#listeners.col-md-2
+				.panel
+					div(ng-repeat="listener in room.listeners") {{listener.username}}
+
+		.row(ng-show="room.abbr")
+			#chat-form.col-md-12(data-step="3", data-intro="Say something here", data-position="top")
+				form.form-inline
+					div.input-group
+						input.form-control(ng-model="message", placeholder="Say something...")
+						span.input-group-btn
+							a.btn.btn-default(href="#send", ng-click="send()") 
+								span.glyphicon.glyphicon-comment

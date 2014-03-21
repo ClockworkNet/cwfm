@@ -21,22 +21,12 @@ block scripts
 	script(src="/public/js/cwfm.room.app.js")
 	script(src="/public/js/cwfm.room.ui.js")
 
+block right-col
+	include includes/room/queue.jade
+
 block left 
 	#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
-		div(ng-show="room.abbr", data-step="1", data-intro="Here's where we keep the DJs", data-position="right")
-			a#brandname.brand(data-toggle="modal", role="button", href="/"): img(src="/public/img/cwfm.svg", alt="CWFM")
-
-			h2(ng-show="room.djs.length") DJs
-
-			div(ng-hide="djing()")
-				a(ng-click="dj()", href="#dj") Start DJing
-			div(ng-show="djing()")
-				a(ng-click="undj()", href="#undj") Stop DJing
-
-			ul.list-group
-				li.list-item(ng-repeat="dj in room.djs")
-					img(ng-src="/avatar/{{dj.avatar}}")
-					div.text-center {{dj.username}}
+		include includes/room/control.jade
 
 block main 
 	#cwfmUserCtrl.row(ng-controller="cwfmUserCtrl")
@@ -47,126 +37,8 @@ block main
 			p #{description}
 
 
-	#cwfmChatterCtrl.row(ng-controller="cwfmChatterCtrl", data-step="2", data-intro="Here's what people are saying in the room")
-		.row(ng-show="room.abbr")
-			#chat-list.col-md-10
-				ul.list-group
-					li.list-group-item(ng-repeat="m in chat | filter:content")
-						span.message {{m.content}}
-						br
-						strong.username {{m.author.username}}
-						br
-						em {{m.posted}}
+	include includes/room/chatter.jade
 
-			#listeners.col-md-2
-				.panel
-					div(ng-repeat="listener in room.listeners") {{listener.username}}
+	include includes/room/player.jade
 
-		.row(ng-show="room.abbr")
-			#chat-form.col-md-12(data-step="3", data-intro="Say something here", data-position="top")
-				form.form-inline
-					div.input-group
-						input.form-control(ng-model="message", placeholder="Say something...")
-						span.input-group-btn
-							a.btn.btn-default(href="#send", ng-click="send()") 
-								span.glyphicon.glyphicon-comment
-
-
-	#cwfmPlayerCtrl.row(ng-controller="cwfmPlayerCtrl", data-step="4", data-intro="Here's where you'll find the current song", data-position="top")
-		div(ng-show="room.song")
-			.row
-				.col-md-11
-					#player.player(data-height="45", data-pixelRatio="1", data-cursorWidth="5", data-markerWidth="5", data-dragSelection="false")
-				.col-md-1
-					a.btn.btn-lg.btn-default.pull-right(ng-click="toggleMuting()", ng-class="{active: muted}")
-						span.glyphicon.glyphicon-volume-off(ng-show="muted")
-						span.glyphicon.glyphicon-volume-up(ng-hide="muted")
-
-			.row
-				strong.song-dj(ng-show="room.djs.length") {{room.djs[0].username}} 
-				em.song-dj(ng-hide="room.djs.length") Someone 
-				span is spinning 
-				strong.song-title {{room.song.title}} 
-				span ({{played | time}} of {{room.song.duration | time}}) 
-				span by 
-				strong.song-artist(ng-repeat="artist in room.song.artist") {{artist}} 
-
-			h2 Actions
-			ul
-				li(ng-show="room.song")
-					a(ng-click="upvote()", href="#upvote") Upvote
-				li(ng-show="room.song")
-					a(ng-click="downvote()", href="#downvote") Downvote
-				li(ng-show="room.song && (djing(me) || me.admin)")
-					a(ng-click="skipSong()", href="#skip") Skip Song
-
-
-block right
-	#cwfmPlaylistCtrl.playlist_wrap(ng-controller="cwfmPlaylistCtrl", data-step="6", data-intro="Here's where you manage your own playlists", data-position="left")
-		div(ng-show="message.error") {{message.error}}
-		div(ng-show="message.info") {{message.info}}
-
-		ul.nav.nav-tabs(ng-show="me.auth")
-			li(ng-show="me.playlist.name", ng-class="{active: me.playlist.name}")
-				a(href="#queue", data-toggle="tab") Queue
-			li(ng-class="{active: ! me.playlist.name}")
-				a(href="#library", data-toggle="tab") Library
-
-		div.tab-content(ng-show="me.auth")
-			div.tab-pane.panel.panel-default#queue(ng-show="me.playlist.name", ng-class="{active: me.playlist.name.length}")
-				div.panel-heading {{me.playlist.name}}
-				div.queue_wrap.panel-body
-					div.queue
-						div.add_song_wrap
-							.btn-group.btn-group-justified
-								.btn-group
-									button.btn.btn-default.btn-sm(ng-class="{active: searchFilter==''}", ng-click="setFilter('')") All
-								.btn-group
-									button.btn.btn-default.btn-sm(ng-class="{active: searchFilter=='artist'}", ng-click="setFilter('artist')") Artist
-								.btn-group
-									button.btn.btn-default.btn-sm(ng-class="{active: searchFilter=='album'}", ng-click="setFilter('album')") Album
-								.btn-group
-									button.btn.btn-default.btn-sm(ng-class="{active: searchFilter=='song'}", ng-click="setFilter('song')") Song
-							.input-group
-								input#add_song.form-control(ng-model="query", ng-keyup="search()", placeholder="Add a Song")
-								span.input-group-btn(ng-hide="query.length")
-									button.btn.btn-default(ng-click="search()")
-										span.glyphicon.glyphicon-zoom-in
-								span.input-group-btn(ng-show="query.length")
-									button.btn.btn-default(ng-click="clearSearch()")
-										span.glyphicon.glyphicon-zoom-out
-
-							ul#song_results_list.list-group(ng-show="query.length")
-								li.list-group-item(ng-show="!result.songs.length && query.length")
-									em No results found
-								li.list-group-item(ng-repeat="song in result.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
-									a(ng-click="addSong(song)", href="#add") {{songName(song)}}
-									br
-									strong {{song.album}}
-									br
-									em {{song.artist}}
-
-						#myqueue_wrap
-							ul#my_queue.songs_list.list-group
-								li.songs_item.list-group-item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", x-lvl-drop-target="true", x-on-drop="songDropped(dragEl, dropEl)", data-index="{{$index}}") 
-									div.song_wrapper(x-lvl-draggable="true", data-song="{{song}}")
-										span {{songName(song)}}
-										a.remove(ng-click="removeSong(song)", href="#remove") 
-											span.glyphicon.glyphicon-trash
-
-			div.tab-pane.panel.panel-default#library(ng-class="{active: ! me.playlist.name.length}")
-				div.panel-heading Playlists
-				div.library_wrap.panel-body
-					ul.playlists.list-group
-						li.new_playlist.list-group-item
-							form.form-inline
-								div.input-group
-									label.sr-only(for="playlist-name") Name 
-									input#playlist-name.form-control(ng-model="newPlaylist.name", placeholder="Create a new playlist...")
-									span.input-group-btn
-										button.btn.btn-default(ng-click="create()", href="#create") 
-											span.glyphicon.glyphicon-plus-sign
-						li.list-group-item(ng-repeat="playlist in playlists", ng-class="{active: active(playlist)}")
-							span.badge.pull-right {{playlist.songs.length}}
-							a.playlists_item(ng-click="select(playlist)", href="#load", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{last:$last}").
-								{{playlist.name}}
+	include includes/room/playlist_old.jade
