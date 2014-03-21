@@ -43,14 +43,12 @@ cwfm.song.factory = function() {
 			playerContainer.after(preloadContainer);
 
 			var preloadOptions = angular.copy(options);
-			console.info(preloadOptions);
 			preloadOptions.container = '#' + preloadContainer.attr('id');
 			players[1].init(preloadOptions);
 
 			players.forEach(function(p, i) {
 				p.setVolume(0.0);
 				p.on('ready', function() {
-					console.info('Song ready on', i);
 					var loadTime = Date.now() - loadStart;
 					var offset   = playSkip + loadTime;
 					active  = i;
@@ -75,12 +73,12 @@ cwfm.song.factory = function() {
 			if (skip < 0) {
 				var next = active ? 0 : 1;
 				players[next].load(file);
-				console.info("loading file on next player", next);
+				console.info("loading file", file, "on next player", next);
 			}
 			else {
 				// No point in preloading the file, we're already behind!
 				players[active].load(file);
-				console.info("loading file on current player", active);
+				console.info("loading file", file, "on current player", active);
 			}
 		}
 		, unmute: function() {
