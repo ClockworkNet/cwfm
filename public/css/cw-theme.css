@@ -108,6 +108,10 @@ a {
 	background:rgba(10,10,10,1);
 	padding-top:17px;
 }
+.dj-item > .avatar {
+	max-width: 100%;
+	padding: 20px;
+}
 #cwfm_logo {
 	z-index: 10;
 	width:150px;
