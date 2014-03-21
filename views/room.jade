@@ -22,22 +22,23 @@ block scripts
 	script(src="/public/js/cwfm.room.ui.js")
 
 block right-col
-	include includes/room/queue.jade
+	section.col.right-col.queue#cwfmPlaylistCtrl.playlist_wrap(ng-controller="cwfmPlaylistCtrl", data-step="6", data-intro="Here's where you manage your own playlists", data-position="left")
+		include includes/room/queue.jade
 
 block main-col 
-	#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
-		include includes/room/control.jade
+	section.col.left-col.main-container
+		#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
+			include includes/room/control.jade
 
-	#cwfmUserCtrl.row(ng-controller="cwfmUserCtrl")
-		include includes/user
-	
-		#header.row(ng-show="me.auth")
-			h1 #{name}
-			p #{description}
+		#cwfmUserCtrl.row(ng-controller="cwfmUserCtrl")
+			include includes/user
+		
+			#header.row(ng-show="me.auth")
+				h1 #{name}
+				p #{description}
 
+		include includes/room/chatter.jade
 
-	include includes/room/chatter.jade
+		include includes/room/player.jade
 
-	include includes/room/player.jade
-
-	include includes/room/playlist_old.jade
+		include includes/room/playlist_old.jade
