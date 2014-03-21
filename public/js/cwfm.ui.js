@@ -17,6 +17,7 @@ $( document ).ready(function() {
 	$playlist_btn.on('click', function() {
 		$queue.hide();
 		$playlists.show();
-
+		$playlist_btn.addClass('active');
+		$queue_btn.removeClass('active');
 	});
 });
