@@ -34,8 +34,7 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 	};
 
 	$socket.on('song.stopped', function() {
-		$scope.room.song = null;
-		$scope.room.songStarted = null;
+		setRoom(room);
 		$scope.stopSong();
 	});
 
@@ -58,7 +57,8 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 		var start = $scope.songStartTime();
 		var skip  = Date.now() - start;
 
-		console.info("Requesting: ", url, " Skipping to:", skip);
+		// @todo: implement a cross-fade effect
+		console.info("Requesting: ", url, " Song started: ", start, " Skipping to:", skip);
 
 		$song.play(url, skip);
 	};
