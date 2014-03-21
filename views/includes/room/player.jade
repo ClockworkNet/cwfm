@@ -1,0 +1,27 @@
+#cwfmPlayerCtrl.row(ng-controller="cwfmPlayerCtrl", data-step="4", data-intro="Here's where you'll find the current song", data-position="top")
+		div(ng-show="room.song")
+			.row
+				.col-md-11
+					#player.player(data-height="45", data-pixelRatio="1", data-cursorWidth="5", data-markerWidth="5", data-dragSelection="false")
+				.col-md-1
+					a.btn.btn-lg.btn-default.pull-right(ng-click="toggleMuting()", ng-class="{active: muted}")
+						span.glyphicon.glyphicon-volume-off(ng-show="muted")
+						span.glyphicon.glyphicon-volume-up(ng-hide="muted")
+
+			.row
+				strong.song-dj(ng-show="room.djs.length") {{room.djs[0].username}} 
+				em.song-dj(ng-hide="room.djs.length") Someone 
+				span is spinning 
+				strong.song-title {{room.song.title}} 
+				span ({{played | time}} of {{room.song.duration | time}}) 
+				span by 
+				strong.song-artist(ng-repeat="artist in room.song.artist") {{artist}} 
+
+			h2 Actions
+			ul
+				li(ng-show="room.song")
+					a(ng-click="upvote()", href="#upvote") Upvote
+				li(ng-show="room.song")
+					a(ng-click="downvote()", href="#downvote") Downvote
+				li(ng-show="room.song && (djing(me) || me.admin)")
+					a(ng-click="skipSong()", href="#skip") Skip Song

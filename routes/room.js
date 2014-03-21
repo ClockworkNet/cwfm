@@ -105,21 +105,23 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			});
 		}
 
-		room.song = song;
+		room.song = song._id;
 		room.songStarted = Date.now() + preloadTime;
 		room.save(function(e) {
-			Room.populate(room, 'djs song', function(e, room) {
+			Room.populate(room, 'djs', function(e, r) {
 				if (e) {
 					console.trace("Error populating room for socket emitting", e);
 					return;
 				}
 				// Send a message to all clients in the room
-				io.sockets.in(room.abbr).emit('song.changed', room.toJSON());
+				var roomData = room.toJSON();
+				roomData.song = song.toJSON();
+				io.sockets.in(room.abbr).emit('song.changed', roomData);
 			});
 		});
 
 		// Schedule the next song
-		console.info("Scheduling next song", song, song.duration * 1000);
+		console.info("Scheduling next song", song.filename, song.duration * 1000);
 		var delay = (song.duration * 1000) - preloadTime;
 		songTimers[room.abbr] = setTimeout(nextSong, song.duration * 1000, room);
 	};

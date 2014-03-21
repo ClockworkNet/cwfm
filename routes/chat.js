@@ -45,7 +45,7 @@ module.exports = function(Room, User, Chat, io) {
 					return res.jsonp(500, {e: "Error saving chat"});
 				}
 				chat.populate('author room', function(e, chat) {
-					io.sockets.in(req.params.abbr).emit('chat', chat);
+					io.sockets.in(req.params.abbr).emit('chat', chat.toJSON());
 					return res.jsonp(chat);
 				});
 			});
