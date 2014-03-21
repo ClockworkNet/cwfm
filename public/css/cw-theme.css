@@ -59,7 +59,7 @@ a {
 }
 .queue.col {
 	width:25%;
-	background:rgb(220,220,220);
+	background:rgb(255,255,255);
 }
 .main-container.col {
 	width:75%;
@@ -400,8 +400,26 @@ button.lame {
 .queue-tabs > .current:hover {
 	cursor: default;
 }
+
+.playlist {
+
+}
+.panel-heading {
+
+}
+.queue .panel-heading {
+	width:100%;
+	padding:10px 5px;
+	background:rgb(192,197,206);
+	border-bottom:1px solid rgb(178,182,190);
+	font-family: 'Brandon';
+	font-weight: 700;
+	color:rgb(51,61,70);
+	text-transform: uppercase;
+
+}
 .song-search {
-	border-bottom:1px solid rgb(180,180,180);
+	border-bottom:1px solid rgb(178,182,190);
 }
 .song-search form {
 	width:100%;
