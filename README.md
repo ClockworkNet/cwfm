@@ -21,6 +21,7 @@ A social music player that uses node.js to manage music rooms.
 1. `brew install mongodb`
 1. `sudo mkdir -p ./cwfm/data/db`
 1. `sudo chown `id -u` ./cwfm/data/db`
+1. `brew install ffmpeg`
 1. `cp ./cwfm/config-example.js ./cwfm/config.js`
 1. Configure your `config.js` file.
 
