@@ -1,4 +1,4 @@
-exports.build = function(mongoose, config) {
+exports.build = function(mongoose, config, toJSON) {
 	var name = 'Room';
 	var schema = mongoose.Schema({
 		name: {
@@ -37,6 +37,12 @@ exports.build = function(mongoose, config) {
 		var obj = this.toObject();
 		obj.currentTime = +new Date;
 		obj.songStarted += 0;
+
+		obj.owners    = toJSON(obj.owners);
+		obj.djs       = toJSON(obj.djs);
+		obj.listeners = toJSON(obj.listeners);
+		obj.song      = toJSON(obj.song);
+
 		return obj;
 	};
 

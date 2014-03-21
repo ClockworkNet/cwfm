@@ -1,4 +1,4 @@
-exports.build = function(mongoose) {
+exports.build = function(mongoose, toJSON) {
 	var name = 'Song';
 	var schema = mongoose.Schema({
 		title: String,
@@ -19,10 +19,21 @@ exports.build = function(mongoose) {
 
 	// Overridden to remove binary data from output
 	schema.methods.toJSON = function() {
-		var obj = this.toObject();
-		obj.filename = this.filename;
-		delete obj.path;
-		return obj;
+		return {
+			_id         : this.id,
+			title       : this.title,
+			artist      : this.artist,
+			album       : this.album,
+			year        : this.year,
+			type        : this.type,
+			filename    : this.filename,
+			duration    : this.duration,
+			score       : this.score,
+			upvotes     : this.upvotes,
+			downvotes   : this.downvotes,
+			modified    : this.modified,
+			failures    : this.failures,
+		};
 	};
 
 	schema.virtual('filename').get(function() {

@@ -8,6 +8,7 @@ var fs             = require('fs');
 var probe          = require('node-ffprobe');
 var encrypt        = require('sha1');
 var Cookies        = require('cookies');
+var util           = require('./lib/util');
 
 var app    = express();
 var server = http.createServer(app);
@@ -23,19 +24,21 @@ app.use(Cookies.express(config.cookieKeys));
 app.use(require('static-favicon')());
 app.use(require('body-parser')());
 app.use(require('method-override')());
+app.use(util.jsonp);
 
 
 var registerRoutes = function() {
 
-	var inject = require('./lib/util').inject;
+	var inject = util.inject;
+	var toJSON = util.toJSON;
 
 	console.log("Building models");
-	var Auth     = require('./models/auth').build(mongoose, encrypt, config);
-	var User     = require('./models/user').build(mongoose);
-	var Song     = require('./models/song').build(mongoose);
-	var Playlist = require('./models/playlist').build(mongoose);
-	var Room     = require('./models/room').build(mongoose, config);
-	var Chat     = require('./models/chat').build(mongoose, config);
+	var Auth     = require('./models/auth').build(mongoose, encrypt, config, toJSON);
+	var User     = require('./models/user').build(mongoose, toJSON);
+	var Song     = require('./models/song').build(mongoose, toJSON);
+	var Playlist = require('./models/playlist').build(mongoose, toJSON);
+	var Room     = require('./models/room').build(mongoose, config, toJSON);
+	var Chat     = require('./models/chat').build(mongoose, config, toJSON);
 
 	console.log("Loading routes");
 	var routes = {

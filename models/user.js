@@ -1,4 +1,4 @@
-exports.build = function(mongoose) {
+exports.build = function(mongoose, toJSON) {
 	var name = 'User';
 	var schema = mongoose.Schema({
 		username: {
@@ -30,7 +30,9 @@ exports.build = function(mongoose) {
 
 	schema.methods.toJSON = function() {
 		var obj  = this.toObject();
-		obj.auth = true;
+		obj.auth = !!obj.auth;
+		obj.playlist = toJSON(obj.playlist);
+		delete obj.authToken;
 		return obj;
 	};
 

@@ -7,8 +7,7 @@ div.queue-tabs(ng-show="me.auth")
 div.tab-pane.playlist#queue(ng-show="me.auth")
 	div.hidden(ng-show="me.playlist.name", ng-class="{active: me.playlist.name.length}")
 	div.panel-heading 
-		strong Playlist: 
-		{{me.playlist.name}}
+		strong Playlist: {{me.playlist.name}}
 	div.song-search
 		form
 			input#add_song.form-control.song-search-input(type="search", name="q", placeholder="Want to add something?", ng-model="query", ng-keyup="search()", autocomplete="off")

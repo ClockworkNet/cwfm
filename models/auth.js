@@ -1,4 +1,4 @@
-exports.build = function(mongoose, encrypt, config) {
+exports.build = function(mongoose, encrypt, config, toJSON) {
 	var name = 'Auth';
 	var schema = mongoose.Schema({
 		credentials: {

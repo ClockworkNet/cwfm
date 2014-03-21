@@ -1,4 +1,4 @@
-exports.build = function(mongoose) {
+exports.build = function(mongoose, toJSON) {
 	var name = 'Playlist';
 	var schema = mongoose.Schema({
 		name: String,
@@ -6,6 +6,34 @@ exports.build = function(mongoose) {
 		owners: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 		songs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Song' }]
 	});
+
+	schema.methods.toJSON = function() {
+		var obj = this.toObject();
+
+		// Limit the song information
+		if (obj.songs) {
+			obj.songs.forEach(function(song, i) {
+				if (!song._id) return;
+				obj.songs[i] = {
+					_id         : song._id,
+					title       : song.title,
+					artist      : song.artist,
+					album       : song.album,
+					year        : song.year,
+					type        : song.type,
+					filename    : song.filename,
+					duration    : song.duration,
+					score       : song.score,
+					upvotes     : song.upvotes,
+					downvotes   : song.downvotes,
+					modified    : song.modified,
+					failures    : song.failures
+				};
+			});
+		}
+		obj.owners = toJSON(obj.owners);
+		return obj;
+	};
 
 	// Pops the first song in the list and shifts it to the end of the list
 	schema.methods.rotate = function() {
