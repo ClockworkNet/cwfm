@@ -512,3 +512,7 @@ button.lame {
 .song-list .song-artist {
 	color:rgb(120,120,120);
 }
+.song-item {
+	display: block;
+	padding: 10px 5px;
+}
