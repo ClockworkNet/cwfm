@@ -488,6 +488,15 @@ button.lame {
 #song_results_list .song-list li {
 	background:white;
 }
+#song_results_list .song-item a {
+	display: block;
+	width: 100%;
+	padding: 15px 5px;
+}
+#song_results_list .song-item {
+	padding:0;
+	border-bottom:1px solid rgb(230,230,230);
+}
 .song-list-pane {
 	/*position: relative;*/
 	width:100%;
@@ -496,6 +505,7 @@ button.lame {
 .song-search form input[type="search"] {
 	width:100%;
 	margin: 10px 0;
+	font-size:large;
 	/*position: absolute;*/
 	top:0;
 	left:0;
@@ -503,12 +513,22 @@ button.lame {
 .song-list {
 	width:100%;
 	background:white;
-	min-height:calc(100% - 40px);
-	max-height:calc(100% - 40px);
 	display: block;
-	overflow-y:scroll;
+	/*overflow-y:scroll;*/
 	/*outline:1px solid red;*/
 	color:rgb(120,120,120);
+}
+.queue-list {
+	overflow-y: scroll;
+	display: block;
+	position: absolute;
+	width:100%;
+}
+#queue .queue-list {
+	height: calc(100% - 125px);
+}
+#playlists .queue-list {
+	height: calc(100% - 82px);
 }
 .song-list a {
 	color:rgb(51,61,70);

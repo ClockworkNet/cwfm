@@ -6,12 +6,12 @@ div.queue-tabs(ng-show="me.auth")
 
 div.tab-pane.playlist#queue(ng-show="me.auth")
 	div.hidden(ng-show="me.playlist.name", ng-class="{active: me.playlist.name.length}")
-	div.panel-heading {{me.playlist.name}}
+	div.panel-heading 
+		strong Playlist: 
+		{{me.playlist.name}}
 	div.song-search
 		form
 			input#add_song.form-control.song-search-input(type="search", name="q", placeholder="Want to add something?", ng-model="query", ng-keyup="search()", autocomplete="off")
-			button.btn.btn-default(ng-click="clearSearch()", ng-show="query.length")
-			button.btn.btn-default(ng-click="clearSearch()", ng-show="query.length")
 
 		div#song_results_list(ng-show="query.length")
 			div.add_song_wrap
@@ -24,11 +24,9 @@ div.tab-pane.playlist#queue(ng-show="me.auth")
 				li(ng-show="!result.songs.length && query.length")
 					em No results found
 				li.song-item(ng-repeat="song in result.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
-					a.song-name(ng-click="addSong(song)", href="#add") {{songName(song)}}
-					br
-					strong {{song.album}}
-					br
-					em.song-artist {{song.artist}}
+					a.song-name(ng-click="addSong(song); clearSearch()", href="#add") {{songName(song)}}
+						strong(ng-show="song.legnth") {{song.album}}
+						em.song-artist(ng-show="song.legnth") {{song.artist}}
 	div.queue-list
 		ul.song-list#my_queue
 			li.song-item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", x-lvl-drop-target="true", x-on-drop="songDropped(dragEl, dropEl)", data-index="{{$index}}") 
