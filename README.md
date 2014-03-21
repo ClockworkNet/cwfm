@@ -22,3 +22,11 @@ A social music player that uses node.js to manage music rooms.
 ## Running
 1. `mongod`
 2. `node app.js`
+
+## @todo
+ - Scoring
+ - Admin features
+ - Song length issues
+ - Drag drop for queue
+ - barrett: Crossfade
+ - Authentication audit
