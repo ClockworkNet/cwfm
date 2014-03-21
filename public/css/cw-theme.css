@@ -88,7 +88,7 @@ a {
 	top:calc(100% - 150px);
 	width:100%;
 }
-.message {
+.messages {
 	position: absolute;
 }
 
@@ -435,13 +435,37 @@ button.lame {
 	padding:0 5px;
 	height:40px;
 }
+.add_song_wrap {
+	position: relative;
+	/*margin-top:-1px;*/
+	background:transparent;
+}
+.add_song_wrap button {
+	width:25%;
+	background:rgb(192,197,206);
+	border:none;
+	border-bottom:1px solid rgb(178,182,190);
+	margin:0;
+	font-family: 'Brandon';
+	font-weight:400;
+	text-transform: uppercase;
+	color:rgb(51,61,70);
+}
+.add_song_wrap button:hover, .add_song_wrap button.active {
+	background:rgb(101,115,126);
+	color:rgb(43,48,59);
+	border-bottom:1px solid rgb(51,61,70);
+}
 #song_results_list {
 	position:absolute;
 	width:100%;
 	z-index:1;
-	outline:1px solid red;
-	background:white;
+	background:transparent;
 	box-shadow:0 2px 3px rgba(0,0,0,.2);
+}
+#song_results_list .song-list {
+	background: white;
+	padding:20px 5px;
 }
 .song-list-pane {
 	/*position: relative;*/
@@ -490,7 +514,7 @@ button.lame {
 	border-bottom-color:rgb(200,200,200);
 	cursor: pointer;
 }
-.song-list li > span {
+.song-list li span {
 	display: block;
 	font-family: 'Brandon', Helvetica, Arial, sans-serif;
 }
@@ -515,4 +539,7 @@ button.lame {
 .song-item {
 	display: block;
 	padding: 10px 5px;
+}
+.song-item .remove {
+	float:right;
 }
