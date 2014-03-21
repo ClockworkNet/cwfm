@@ -25,6 +25,6 @@ $( document ).ready(function() {
 	}
 
 	$('#admin_btn').on( 'click', function() {
-		$('#user-control').show();
+		$('#cwfmUserCtrl').show();
 	})
 });
