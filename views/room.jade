@@ -25,12 +25,14 @@ block right-col
 	section.col.right-col.queue#cwfmPlaylistCtrl.playlist_wrap(ng-controller="cwfmPlaylistCtrl", data-step="6", data-intro="Here's where you manage your own playlists", data-position="left")
 		include includes/room/queue.jade
 
-block main-col 
-	#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
-		include includes/room/control.jade
+block main-col
+	section.col.col-right.main-container
+		.col.stage
+			#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
+				include includes/room/control.jade
 
-			//- #cwfmUserCtrl(ng-controller="cwfmUserCtrl")
-			//- 	include includes/user
+			#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
+				include includes/user
 
 		#header(ng-show="me.auth")
 			h1 #{name}

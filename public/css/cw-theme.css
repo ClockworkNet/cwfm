@@ -88,6 +88,9 @@ a {
 	top:calc(100% - 150px);
 	width:100%;
 }
+.message {
+	position: absolute;
+}
 
 /*pieces*/
 .chatroom {
@@ -115,6 +118,9 @@ a {
 	left:0;
 	text-align: center;
 	background: linear-gradient(to bottom, rgba(35,40,48,1) 70%,rgba(35,40,48,.7) 85%,rgba(35,40,48,0) 100%);
+}
+#user-control {
+	display:none;
 }
 #brandname {
 	width: 100%;
@@ -427,6 +433,14 @@ button.lame {
 	padding:0 5px;
 	height:40px;
 }
+#song_results_list {
+	position:absolute;
+	width:100%;
+	z-index:1;
+	outline:1px solid red;
+	background:white;
+	box-shadow:0 2px 3px rgba(0,0,0,.2);
+}
 .song-list-pane {
 	/*position: relative;*/
 	width:100%;
@@ -446,7 +460,15 @@ button.lame {
 	max-height:calc(100% - 40px);
 	display: block;
 	overflow-y:scroll;
-	outline:1px solid red;
+	/*outline:1px solid red;*/
+	color:rgb(120,120,120);
+}
+.song-list a {
+	color:rgb(51,61,70);
+	text-decoration: none;
+}
+.song-list a:hover {
+	text-decoration: underline;
 }
 .song-list.hidden {
 	display: none; 
@@ -458,7 +480,8 @@ button.lame {
 	position: relative;
 	background:white;
 	transition: color .1s ease-in, 
-				background .1s ease-in;
+	background .1s ease-in;
+	color:rgb(120,120,120);
 }
 .queue-list ul li:hover {
 	background:rgb(192,197,206);
