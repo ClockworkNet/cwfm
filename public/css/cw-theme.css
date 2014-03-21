@@ -126,6 +126,7 @@ a {
 	width: 100%;
 }
 #brandname > img {
+	padding: 10px;
 	max-width: 100%;
 }
 #cwfm_logo img {
