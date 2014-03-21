@@ -22,7 +22,7 @@ block scripts
 	script(src="/public/js/cwfm.room.ui.js")
 
 block right-col
-	section.col.right-col.queue#cwfmPlaylistCtrl.playlist_wrap(ng-controller="cwfmPlaylistCtrl", data-step="6", data-intro="Here's where you manage your own playlists", data-position="left")
+	section.col.right-col.queue#cwfmPlaylistCtrl(ng-controller="cwfmPlaylistCtrl", data-step="6", data-intro="Here's where you manage your own playlists", data-position="left")
 		include includes/room/queue.jade
 
 block main-col
