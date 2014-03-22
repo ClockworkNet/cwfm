@@ -5,7 +5,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	var songTimers = {};
 
 	// The time in ms to start preloading the next song.
-	var preloadTime = 2500;
+	var preloadTime = 5000;
 
 
 	// Ensures that a song is playing if it should be.

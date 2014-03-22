@@ -1,23 +1,19 @@
-module.exports = function(dir, Song, User, fs, path, probe) {
-	var allowed = ['.mp3', '.m4a', '.ogg', '.flac', '.wma', '.wmv'];
+module.exports = function(Song, User, scanner, probe) {
 	var maxFails = 5;
 
-	var processSongTags = function(song, stats, done) {
-
+	var processSongTags = function(song, done) {
 		probe(song.path, function(err, probeData) {
 
-			if (err) {
-				return done(err, song);
-			}
+			if (err) return done(err, song);
 
-			song['title'] = probeData.metadata.title;
-			song['artist'] = probeData.metadata.artist;
-			song['album'] = probeData.metadata.album;
-			song['genre'] = probeData.metadata.genre;
+			song['title']       = probeData.metadata.title;
+			song['artist']      = probeData.metadata.artist;
+			song['album']       = probeData.metadata.album;
+			song['genre']       = probeData.metadata.genre;
 			song['albumartist'] = probeData.metadata.album_artist;
-			song['year'] = probeData.metadata.date;
-			song['track'] = probeData.metadata.track;
-			song['duration'] = probeData.format.duration;
+			song['year']        = probeData.metadata.date;
+			song['track']       = probeData.metadata.track;
+			song['duration']    = probeData.format.duration;
 
 			console.info("Found song metadata. Song:", song);
 
@@ -26,14 +22,6 @@ module.exports = function(dir, Song, User, fs, path, probe) {
 	}
 
 	var updateSong = function(filename, stats, force) {
-		if (!filename || filename.length == 0) {
-			return false;
-		}
-
-		if (allowed.indexOf(path.extname(filename)) < 0) {
-			return false;
-		}
-
 		Song.findOne({path: filename}, function(e, song) {
 			if (e) {
 				console.trace("Error seeking song", e);
@@ -51,46 +39,17 @@ module.exports = function(dir, Song, User, fs, path, probe) {
 			song.modified = Date.now();
 			song.path     = filename;
 
-			processSongTags(song, stats, function(e, song) {
+			processSongTags(song, function(e, song) {
 				if (e) {
 					console.error("Error processing song metadata", song, e);
-					return false;
+					return;
 				}
 				song.save(function(e) {
-					if (e) {
-						console.error("Error saving song", song, e);
-					}
-					return true;
+					if (e) console.error("Error saving song", song, e);
 				});
 			});
 		});
 	};
-
-	// Recursively scans directories for media files
-	var scan = function(dir, filename, force) {
-		var fullpath = path.join(dir, filename);
-		fs.stat(fullpath, function(e, stats) {
-			if (e) {
-				console.trace("Error getting stats for", fullpath, e);
-				return;
-			}
-			if (stats.isFile()) {
-				return updateSong(fullpath, stats, force);
-			}
-			if (stats.isDirectory()) {
-				fs.readdir(fullpath, function(e, paths) {
-					if (e) {
-						console.trace("Error reading", filename, e);
-						return;
-					}
-					if (!paths) return;
-					paths.forEach(function(p) {
-						scan(fullpath, p, force);
-					});
-				});
-			}
-		});
-	}
 
 	this.search = function(req, res, next){
 		var terms = null;
@@ -155,8 +114,18 @@ module.exports = function(dir, Song, User, fs, path, probe) {
 			return res.jsonp(401, {error: "Not authorized"});
 		}
 
-		console.info('Starting scan', dir);
-		scan(dir, '', req.body.force);
+		console.info('Starting scan');
+
+		var force = !!req.body.force;
+		var handler = function(url, stats) {
+			updateSong(url, stats, force);
+		};
+
+		scanner.on('file', handler);
+		scanner.on('error', console.trace);
+		scanner.on('dir', console.info);
+
+		scanner.start();
 		return res.jsonp({success: true});
 	};
 

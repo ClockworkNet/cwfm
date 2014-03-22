@@ -9,6 +9,7 @@ var probe          = require('node-ffprobe');
 var encrypt        = require('sha1');
 var Cookies        = require('cookies');
 var util           = require('./lib/util');
+var Scanner        = require('./lib/scanner');
 
 var app    = express();
 var server = http.createServer(app);
@@ -42,26 +43,32 @@ var registerRoutes = function() {
 
 	console.log("Loading routes");
 	var routes = {
-		home: require('./routes/home'),
-		room: require('./routes/room'),
-		song: require('./routes/song'),
-		user: require('./routes/user'),
-		auth: require('./routes/auth'),
-		avatar: require('./routes/avatar'),
-		chat: require('./routes/chat'),
-		playlist: require('./routes/playlist')
+		home     : require('./routes/home'),
+		room     : require('./routes/room'),
+		song     : require('./routes/song'),
+		user     : require('./routes/user'),
+		auth     : require('./routes/auth'),
+		avatar   : require('./routes/avatar'),
+		chat     : require('./routes/chat'),
+		playlist : require('./routes/playlist')
 	};
 
 	console.log("Loading controllers");
+
+	// Set up the scanner for finding music
+	var scanner = new Scanner(config.songDir, {
+		filePattern: Scanner.patterns.music
+	});
+
 	var controllers = {
-		home: new routes.home(Room, User),
-		room: new routes.room(Room, User, Playlist, Song, io),
-		song: new routes.song(config.songDir, Song, User, fs, path, probe),
-		user: new routes.user(User, Auth),
-		auth: new routes.auth(config, User, Auth),
-		avatar: new routes.avatar(config.avatar, fs, path, User),
-		chat: new routes.chat(Room, User, Chat, io),
-		playlist: new routes.playlist(Playlist, Song, User)
+		home     : new routes.home(Room, User),
+		room     : new routes.room(Room, User, Playlist, Song, io),
+		song     : new routes.song(Song, User, scanner, probe),
+		user     : new routes.user(User, Auth),
+		auth     : new routes.auth(config, User, Auth),
+		avatar   : new routes.avatar(config.avatar, fs, path, User),
+		chat     : new routes.chat(Room, User, Chat, io),
+		playlist : new routes.playlist(Playlist, Song, User)
 	};
 
 	var loadUser = controllers.auth.loadUser;
