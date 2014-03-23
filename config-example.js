@@ -11,9 +11,6 @@ exports.settings = {
 	userIdKey: 'uid',
 	userAuthTokenKey: 'ut',
 
-	// The maximum number of chat records to keep for a room
-	maxChat: 40,
-
 	// The directory where music will be added
 	songDir: __dirname + '/data/music',
 

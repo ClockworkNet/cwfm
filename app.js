@@ -9,6 +9,7 @@ var probe          = require('node-ffprobe');
 var encrypt        = require('sha1');
 var Cookies        = require('cookies');
 var util           = require('./lib/util');
+var chain          = require('./lib/chain');
 var Scanner        = require('./lib/scanner');
 
 var app    = express();
@@ -80,7 +81,7 @@ var registerRoutes = function() {
 	app.get('/avatar/:name'            , controllers.avatar.show);
 	app.get('/avatar/'                 , controllers.avatar.show);
 
-	// Public views 
+	// Public views
 	app.get('/'                        , loadUser, controllers.home.home);
 	app.get('/room'                    , loadUser, controllers.home.room);
 
@@ -134,20 +135,16 @@ var registerRoutes = function() {
 
 	// Sockets
 	console.log("Setting up session sockets");
+	var SocketCookies = require('./lib/cookies.socket.io'),
+		socketCookies = new SocketCookies(Cookies, config.cookieKeys);
 
 	io.sockets.on('connection', function(socket) {
-		socket.cookies = new Cookies(socket.request, {}, config.cookieKeys);
-		console.info('socket connected', socket.id);
+		var attachCookies = socketCookies.attach;
+		var loadSocketUser = controllers.auth.loadUserOnSocket;
 
-		controllers.auth.loadUserOnSocket(socket, function(e, socket) {
-			if (e) {
-				console.error("Error loading user on socket", e);
-				return;
-			}
-			socket.on('listen', inject(controllers.room.listen, socket));
-			socket.on('leave', inject(controllers.room.leave, socket));
-			socket.on('disconnect', inject(controllers.room.exit, socket));
-		});
+		socket.on('listen', chain(attachCookies, loadSocketUser, inject(controllers.room.listen, socket)));
+		socket.on('leave', chain(attachCookies, loadSocketUser, inject(controllers.room.leave, socket)));
+		socket.on('disconnect', chain(attachCookies, loadSocketUser, inject(controllers.room.exit, socket)));
 	});
 
 	console.log("Socket routing registered");

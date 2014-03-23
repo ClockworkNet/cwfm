@@ -21,8 +21,8 @@ module.exports = function(config, User, Auth) {
 		socket.user = null;
 
 		if (!socket.cookies) {
-			console.info("Could not load user on socket", e, socket.cookies);
-			return next(new Error("Cookies not found on socket"), socket);
+			console.error("Could not load user on socket", socket.cookies);
+			return;
 		}
 
 		var uid = socket.cookies.get(userIdKey);
@@ -30,7 +30,7 @@ module.exports = function(config, User, Auth) {
 
 		if (!uid || !ut) {
 			console.info("No cookie information available");
-			return next(null, socket);
+			return;
 		}
 
 		User.findById(uid)
@@ -38,14 +38,14 @@ module.exports = function(config, User, Auth) {
 		.exec(function(e, user) {
 			if (e || ! user) {
 				console.trace("Error finding user", uid, e);
-				return next(new Error("Could not find user " + uid), socket);
+				return;
 			}
 			if (!user.authToken || user.authToken != ut) {
 				console.error("Invalid credentials", user);
-				return next(new Error("Invalid credentials for user " + uid), socket);
+				return;
 			}
 			socket.user = user;
-			next(null, socket);
+			next();
 		});
 	};
 
