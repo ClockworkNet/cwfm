@@ -20,7 +20,7 @@ exports.settings = {
 	// The pattern used to search for local avatar paths
 	avatar: {
 		pattern: /^.+\.png$/,
-		dir: __dirname + '/public/img/avatars'
+		dir: __dirname + '/public/img/avatars',
 		default: 'default.png'
 	}
 };
