@@ -14,7 +14,7 @@ var Scanner        = require('./lib/scanner');
 
 var app    = express();
 var server = http.createServer(app);
-var io     = require('socket.io').listen(server);
+var io     = require('socket.io')(server);
 
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
@@ -138,13 +138,14 @@ var registerRoutes = function() {
 	var SocketCookies = require('./lib/cookies.socket.io'),
 		socketCookies = new SocketCookies(Cookies, config.cookieKeys);
 
-	io.sockets.on('connection', function(socket) {
+	io.on('connection', function(socket) {
+		console.info("connection with socket", socket.id);
 		var attachCookies = socketCookies.attach;
 		var loadSocketUser = controllers.auth.loadUserOnSocket;
 
-		socket.on('listen', chain(attachCookies, loadSocketUser, inject(controllers.room.listen, socket)));
-		socket.on('leave', chain(attachCookies, loadSocketUser, inject(controllers.room.leave, socket)));
-		socket.on('disconnect', chain(attachCookies, loadSocketUser, inject(controllers.room.exit, socket)));
+		socket.on('listen', chain(attachCookies, loadSocketUser, controllers.room.listen).prepend(socket));
+		socket.on('leave', chain(attachCookies, loadSocketUser, controllers.room.leave).prepend(socket));
+		socket.on('disconnect', chain(attachCookies, loadSocketUser, controllers.room.exit).prepend(socket, {}));
 	});
 
 	console.log("Socket routing registered");

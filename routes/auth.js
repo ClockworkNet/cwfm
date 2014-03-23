@@ -16,7 +16,7 @@ module.exports = function(config, User, Auth) {
 		user.save();
 	};
 
-	this.loadUserOnSocket = function(socket, next) {
+	this.loadUserOnSocket = function(socket, data, callback, next) {
 		next = next || function() {};
 		socket.user = null;
 

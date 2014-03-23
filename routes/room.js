@@ -207,7 +207,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	};
 
 	// Called when a user connects to a room to listen in on the socket
-	this.listen = function(data, callback, socket) {
+	this.listen = function(socket, data, callback, next) {
 		if (!socket.user) {
 			console.error("No user on socket", socket.id);
 			callback(false);;
@@ -221,7 +221,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	};
 
 	// Called when user leaves a room
-	this.leave = function(data, callback, socket) {
+	this.leave = function(socket, data, callback, next) {
 		console.info(socket.id, "is leaving", data.abbr);
 		socket.leave(data.abbr);
 		if (!socket.user) {
@@ -239,7 +239,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	};
 
 	// Called when a socket connection is dropped
-	this.exit = function(event, socket) {
+	this.exit = function(socket, data, next) {
 		if (!socket.user) {
 			console.error("No user to speak of during exit");
 			return;
