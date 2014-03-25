@@ -14,11 +14,11 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 		if (!them) {
 			$scope.room[collection] = [];
 		}
-		for (var i=0; i<them.length; i++) {
-			if (them[i].username == user.username) {
-				console.info(user.username, "is already the", collection);
-				return;
-			}
+		var exists = them.every(function(other) {
+			return other.username != user.username;
+		});
+		if (exists) {
+			return;
 		}
 		$scope.room[collection].push(user);
 		console.info(user.username, "joined the", collection, $scope.room);
@@ -31,7 +31,6 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 			if (them[i].username == user.username) {
 				$scope.room[collection].splice(i, 1);
 				console.info(user.username, "left the", collection, $scope.room);
-				return;
 			}
 		}
 	};

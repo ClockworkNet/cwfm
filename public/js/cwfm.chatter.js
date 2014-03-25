@@ -23,9 +23,43 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
 		});
 	};
 
+	$socket.on('member.joined', function(data) {
+		$scope.chat.push({
+			author: data,
+			content: 'joined the room.',
+			room: $scope.room,
+			posted: Date.now()
+		});
+	});
+
+	$socket.on('member.departed', function(data) {
+		$scope.chat.push({
+			author: data,
+			content: 'left the room.',
+			room: $scope.room,
+			posted: Date.now()
+		});
+	});
+
+	$socket.on('song.changed', function(data) {
+		var delay = Date.parse(data.songStarted) - Date.now();
+		var add = function() {
+			$scope.chat.push({
+				author: data.songDj,
+				content: 'started playing ' + data.song.name,
+				room: $scope.room,
+				posted: data.songStarted
+			});
+		};
+		if (delay > 0) {
+			setTimeout(add, delay);
+		}
+		else {
+			add();
+		}
+	});
+
 	$socket.on('chat', function(data) {
-		if (!$scope.chat) $scope.chat = [];
-		console.info(data);
 		$scope.chat.push(data);
 	});
 

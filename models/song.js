@@ -22,6 +22,7 @@ exports.build = function(mongoose, toJSON) {
 		return {
 			_id         : this.id,
 			title       : this.title,
+			name        : this.name,
 			artist      : this.artist,
 			album       : this.album,
 			year        : this.year,
@@ -35,6 +36,13 @@ exports.build = function(mongoose, toJSON) {
 			failures    : this.failures,
 		};
 	};
+
+	schema.virtual('name').get(function() {
+		if (this.title) return this.title;
+		var filename = this.filename;
+		var name     = filename.substring(0, filename.lastIndexOf('.'));
+		return name;
+	});
 
 	schema.virtual('filename').get(function() {
 		return this.path.substring(this.path.lastIndexOf('/') + 1);

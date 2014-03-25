@@ -22,13 +22,13 @@ div.tab-pane.playlist#queue(ng-show="me.auth")
 			ul.song-list
 				li(ng-show="!result.songs.length && query.length")
 					em No results found
-				li.song-item(ng-repeat="song in result.songs", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
+				li.song-item(ng-repeat="song in result.songs track by $index", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{'last':$last}")
 					a.song-name(ng-click="addSong(song); clearSearch()", href="#add") {{songName(song)}}
 						strong(ng-show="song.legnth") {{song.album}}
 						em.song-artist(ng-show="song.legnth") {{song.artist}}
 	div.queue-list
 		ul.song-list#my_queue
-			li.song-item(ng-repeat="song in me.playlist.songs", ng-class-odd="'odd'", ng-class-even="'even'", x-lvl-drop-target="true", x-on-drop="songDropped(dragEl, dropEl)", data-index="{{$index}}") 
+			li.song-item(ng-repeat="song in me.playlist.songs track by $index", ng-class-odd="'odd'", ng-class-even="'even'", x-lvl-drop-target="true", x-on-drop="songDropped(dragEl, dropEl)", data-index="{{$index}}") 
 				div.song_wrapper(x-lvl-draggable="true", data-song="{{song}}")
 					span {{songName(song)}}
 					span.song-name

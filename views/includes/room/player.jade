@@ -9,12 +9,11 @@
 						span.glyphicon.glyphicon-volume-up(ng-hide="muted")
 
 			.row
-				strong.song-dj(ng-show="room.djs.length") {{room.djs[0].username}} 
-				em.song-dj(ng-hide="room.djs.length") Someone 
+				strong.song-dj {{room.songDj.username}} 
 				span is spinning 
-				strong.song-title {{room.song.title}} 
+				strong.song-title {{room.song.name}} 
 				span ({{played | time}} of {{room.song.duration | time}}) 
-				span by 
+				span(ng-show="room.song.artist") by 
 				strong.song-artist(ng-repeat="artist in room.song.artist") {{artist}} 
 
 			h2 Actions

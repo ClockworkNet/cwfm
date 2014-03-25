@@ -167,6 +167,9 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 	};
 
 	$scope.songName = function(song) {
+		if (song.name) {
+			return song.name;
+		}
 		if (song.title) {
 			return song.title;
 		}

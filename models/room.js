@@ -18,6 +18,10 @@ exports.build = function(mongoose, config, toJSON) {
 			ref: 'User',
 			unique: true
 		}],
+		djIndex: {
+			type: Number,
+			default: 0
+		},
 		djs: [{
 			type: mongoose.Schema.Types.ObjectId, 
 			ref: 'User',
@@ -30,6 +34,11 @@ exports.build = function(mongoose, config, toJSON) {
 		}],
 
 		song: { type: mongoose.Schema.Types.ObjectId, ref: 'Song' },
+		songDj: {
+			type: mongoose.Schema.Types.ObjectId, 
+			ref: 'User',
+			unique: true
+		},
 		songStarted: Date
 	});
 
@@ -40,23 +49,29 @@ exports.build = function(mongoose, config, toJSON) {
 
 		obj.owners    = toJSON(obj.owners);
 		obj.djs       = toJSON(obj.djs);
+		obj.dj        = toJSON(obj.dj);
 		obj.listeners = toJSON(obj.listeners);
 		obj.song      = toJSON(obj.song);
+		obj.songDj    = toJSON(obj.songDj);
 
 		return obj;
 	};
 
 	schema.virtual('dj').get(function() {
-		return this.djs && this.djs.length > 0 ? this.djs[0] : null;
+		return this.djs[this.djIndex];
 	});
 
 	schema.methods.rotateDjs = function() {
+		var currentIndex = this.djIndex;
 		if (!this.djs || this.djs.length < 2) {
-			return false;
+			this.djIndex = 0;
 		}
-		var dj = this.djs.shift();
-		this.djs.push(dj);
-		return true;
+		else {
+			var index = this.djIndex + 1;
+			if (index >= this.djs.length) index = 0;
+			this.djIndex = index;
+		}
+		return currentIndex != this.djIndex;
 	};
 
 	schema.methods.indexOf = function(collection, model) {
