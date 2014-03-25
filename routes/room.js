@@ -239,7 +239,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	};
 
 	// Called when a socket connection is dropped
-	this.exit = function(socket, data, next) {
+	this.exit = function(socket, data, callback, next) {
 		if (!socket.user) {
 			console.error("No user to speak of during exit");
 			return;

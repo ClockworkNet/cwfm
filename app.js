@@ -8,8 +8,8 @@ var fs             = require('fs');
 var probe          = require('node-ffprobe');
 var encrypt        = require('sha1');
 var Cookies        = require('cookies');
-var util           = require('./lib/util');
 var chain          = require('./lib/chain');
+var util           = require('./lib/util');
 var Scanner        = require('./lib/scanner');
 
 var app    = express();
@@ -31,7 +31,6 @@ app.use(util.jsonp);
 
 var registerRoutes = function() {
 
-	var inject = util.inject;
 	var toJSON = util.toJSON;
 
 	console.log("Building models");
@@ -140,12 +139,28 @@ var registerRoutes = function() {
 
 	io.on('connection', function(socket) {
 		console.info("connection with socket", socket.id);
+
 		var attachCookies = socketCookies.attach;
 		var loadSocketUser = controllers.auth.loadUserOnSocket;
 
-		socket.on('listen', chain(attachCookies, loadSocketUser, controllers.room.listen).prepend(socket));
-		socket.on('leave', chain(attachCookies, loadSocketUser, controllers.room.leave).prepend(socket));
-		socket.on('disconnect', chain(attachCookies, loadSocketUser, controllers.room.exit).prepend(socket, {}));
+		// All middleware should expect the params: socket, data, callback, next
+		socket.on('listen', chain(
+			attachCookies,
+			loadSocketUser,
+			controllers.room.listen)
+			.injectFirst(socket));
+		socket.on('leave', chain(
+			attachCookies,
+			loadSocketUser,
+			controllers.room.leave)
+			.injectFirst(socket));
+		// Disconnect is weird because it receives just an "event name" parameter
+		// so it needs to be cuddled by the socket and a null callback
+		socket.on('disconnect', chain(
+			attachCookies,
+			loadSocketUser,
+			controllers.room.exit)
+			.injectFirst(socket).injectLast(null));
 	});
 
 	console.log("Socket routing registered");
