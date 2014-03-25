@@ -1,5 +1,6 @@
 exports.settings = {
 	database: 'mongodb://localhost/cwfm',
+	defaultPort: 1501,
 
 	// Login settings
 	maxLoginAttempts: 5,

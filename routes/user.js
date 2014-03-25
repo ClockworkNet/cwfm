@@ -15,6 +15,36 @@ module.exports = function(User, Auth) {
 		});
 	};
 
+	this.search = function(req, res, next) {
+		var terms = null;
+		try {
+			terms = new RegExp(req.query.q, 'i');
+		}
+		catch (e) {
+			console.trace("Received weird search", req.query, e);
+			return res.jsonp([]);
+		}
+
+		var fields = ['username', 'realname'];
+
+		var like = [];
+		fields.forEach(function(field) {
+			var c = {};
+			c[field] = terms;
+			like.push(c);
+		});
+
+		var query = User.where({$or: like})
+
+		query.exec(function(e, a) {
+			if (e) {
+				console.trace("Error searching users", e, query);
+				return res.jsonp(500, {error: "Error searching users"});
+			}
+			res.jsonp({users: a});
+		});
+	};
+
 	this.me = function(req, res, next) {
 		var user = req.user || {};
 		return res.jsonp(user);
@@ -65,6 +95,35 @@ module.exports = function(User, Auth) {
 				}
 				return res.jsonp(user);
 			});
+		});
+	};
+
+	this.boot = function(req, res, next) {
+		var un = req.body.username;
+		User.update({username: un}, {authToken: null}, function(e, c) {
+			if (e) {
+				console.trace("Error updating user", un, e);
+				return res.jsonp(500, {error: "Error booting user"});
+			}
+			if (c < 1) {
+				return res.jsonp(404, {error: "User not found"});
+			}
+			return res.jsonp({info: "User booted"});
+		});
+	};
+
+	this.adminify = function(req, res, next) {
+		var un  = req.body.username;
+		var set = req.body.demoted ? false : true;
+		User.update({username: un}, {admin: set}, function(e, c) {
+			if (e) {
+				console.trace("Error updating user", un, e);
+				return res.jsonp(500, {error: "Error updating user"});
+			}
+			if (c < 1) {
+				return res.jsonp(404, {error: "User not found"});
+			}
+			return res.jsonp({info: "User updated"});
 		});
 	};
 };

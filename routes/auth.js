@@ -83,6 +83,15 @@ module.exports = function(config, User, Auth) {
 		});
 	};
 
+	this.restrictToAdmin = function(req, res, next) {
+		loadUser(req, res, function() {
+			if (!req.user || !req.user.admin) {
+				return res.jsonp(401, {error: "Unauthorized"});
+			}
+			return next();
+		});
+	};
+
 	this.restrict = function(req, res, next) {
 		loadUser(req, res, function() {
 			if (!req.user) {

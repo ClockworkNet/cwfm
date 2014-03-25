@@ -21,26 +21,25 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 		$user.set(rsp);
 	};
 
-	var handleError = function(e) {
-		console.error("Error occurred", e);
-		$scope.error = e;
+	var handleSuccess = function(o) {
+		$scope.message = o;
 	};
 
-	var oops  =  function(e) {
-		console.trace("Error occurred", e);
-		$scope.error = e.error;
+	var handleError = function(e) {
+		console.error("Error occurred", e);
+		$scope.message = e;
 	};
 
 	$scope.loadMe  =  function() {
 		$http.get('/user/me')
 		.success(setUser)
-		.error(oops);
+		.error(handleError);
 	};
 
 	$scope.createUser  =  function( ) {
 		$http.post('/user/create', $scope.newUser)
 		.success(setUser)
-		.error(oops);
+		.error(handleError);
 	}
 
 	$scope.login  =  function( ) {
@@ -49,7 +48,7 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 			setUser(user);
 			$user.trigger('login');
 		})
-		.error(oops);
+		.error(handleError);
 	};
 
 	$scope.logout  =  function( ) {
@@ -58,7 +57,7 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 			setUser(user);
 			$user.trigger('logout');
 		})
-		.error(oops);
+		.error(handleError);
 	}
 
 	$scope.loadAvatars = function() {
@@ -82,11 +81,27 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 
 	// Admin functions
 	$scope.adminify = function() {
+		$http.post('/user/adminify', {
+			username: $scope.user.username,
+			demoted: false 
+		})
+		.success(handleSuccess)
+		.error(handleError);
+	};
 
+	$scope.demote = function() {
+		$http.post('/user/adminify', {
+			username: $scope.user.username,
+			demoted: true
+		})
+		.success(handleSuccess)
+		.error(handleError);
 	};
 
 	$scope.boot = function() {
-
+		$http.post('/user/boot', {username: $scope.user.username})
+		.success(handleSuccess)
+		.error(handleError);
 	};
 
 	$scope.scan = function(force) {

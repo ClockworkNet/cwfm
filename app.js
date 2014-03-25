@@ -16,7 +16,7 @@ var app    = express();
 var server = http.createServer(app);
 var io     = require('socket.io')(server);
 
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || config.defaultPort || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
@@ -73,6 +73,7 @@ var registerRoutes = function() {
 
 	var loadUser = controllers.auth.loadUser;
 	var restrict = controllers.auth.restrict;
+	var restrictToAdmin = controllers.auth.restrictToAdmin;
 
 	// Public Avatars API
 	app.get('/avatar/list'             , controllers.avatar.list);
@@ -99,14 +100,19 @@ var registerRoutes = function() {
 	app.get('/user/list'               , restrict, controllers.user.list);
 	app.get('/user/detail/:username'   , restrict, controllers.user.detail);
 	app.get('/user/me'                 , restrict, controllers.user.me);
+	app.get('/user/search'             , restrict, controllers.user.search);
 	app.post('/user/update'            , restrict, controllers.user.update);
 	app.post('/user/logout'            , restrict, controllers.auth.logout);
+
+	// Admin restricted User API
+	app.post('/user/adminify'          , restrictToAdmin, controllers.user.adminify);
+	app.post('/user/boot'              , restrictToAdmin, controllers.user.boot);
 
 	// Restricted Song API
 	app.get('/song/search'             , restrict, controllers.song.search);
 	app.get('/song/detail/:id'         , restrict, controllers.song.detail);
 	app.get('/song/:id'                , restrict, controllers.song.stream);
-	app.post('/song/scan'              , restrict, controllers.song.scan);
+	app.post('/song/scan'              , restrictToAdmin, controllers.song.scan);
 
 	// Restricted Playlist API
 	app.get('/playlist/list'           , restrict, controllers.playlist.list);

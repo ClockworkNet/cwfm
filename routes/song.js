@@ -110,10 +110,6 @@ module.exports = function(Song, User, scanner, probe) {
 	};
 
 	this.scan = function(req, res, next) {
-		if (!req.user.admin) {
-			return res.jsonp(401, {error: "Not authorized"});
-		}
-
 		console.info('Starting scan');
 
 		var force = !!req.body.force;
