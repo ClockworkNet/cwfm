@@ -140,27 +140,21 @@ var registerRoutes = function() {
 	io.on('connection', function(socket) {
 		console.info("connection with socket", socket.id);
 
-		var attachCookies = socketCookies.attach;
-		var loadSocketUser = controllers.auth.loadUserOnSocket;
-
 		// All middleware should expect the params: socket, data, callback, next
-		socket.on('listen', chain(
-			attachCookies,
-			loadSocketUser,
-			controllers.room.listen)
-			.injectFirst(socket));
-		socket.on('leave', chain(
-			attachCookies,
-			loadSocketUser,
-			controllers.room.leave)
-			.injectFirst(socket));
-		// Disconnect is weird because it receives just an "event name" parameter
-		// so it needs to be cuddled by the socket and a null callback
-		socket.on('disconnect', chain(
-			attachCookies,
-			loadSocketUser,
-			controllers.room.exit)
-			.injectFirst(socket).injectLast(null));
+		var sock = function(method) {
+			return function(data, callback) {
+				data = data || {};
+				callback = callback || {};
+				chain(
+					socketCookies.attach,
+					controllers.auth.loadUserOnSocket,
+					method)(socket, data, callback);
+			};
+		};
+
+		socket.on('listen', sock(controllers.room.listen));
+		socket.on('leave', sock(controllers.room.leave));
+		socket.on('disconnect', sock(controllers.room.exit));
 	});
 
 	console.log("Socket routing registered");
