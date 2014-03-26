@@ -1,3 +1,5 @@
+var random = require('../lib/random');
+
 exports.build = function(mongoose, toJSON) {
 	var name = 'User';
 	var schema = mongoose.Schema({
@@ -17,7 +19,7 @@ exports.build = function(mongoose, toJSON) {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Auth'
 		},
-		authToken: mongoose.Schema.Types.ObjectId,
+		authToken: String,
 		score: Number,
 		playlist: {
 			type: mongoose.Schema.Types.ObjectId, 
@@ -37,7 +39,7 @@ exports.build = function(mongoose, toJSON) {
 	};
 
 	schema.methods.createAuthToken = function() {
-		this.authToken = mongoose.Types.ObjectId();
+		this.authToken = random.id(32);
 		return this;
 	};
 
