@@ -5,15 +5,13 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	var songTimers = {};
 
 	// The time in ms to start preloading the next song.
-	var preloadTime = 5000;
+	var preloadTime = 2000;
 
 
 	// Ensures that a song is playing if it should be.
 	var ensureSong = function(room) {
 		var remaining = room.song ? room.song.remaining(room.songStarted) : 0;
-		console.info("Time remaining on song", remaining);
 		if (remaining <= 0) {
-			console.info("Song is expired, playing next song.", room.song, remaining);
 			setImmediate(nextSong, room);
 		}
 	};
@@ -63,8 +61,13 @@ module.exports = function(Room, User, Playlist, Song, io) {
 		room.song = null;
 		room.songDj = null;
 		room.songStarted = null;
-		room.save();
-		io.sockets.in(room.abbr).emit("song.stopped", room.toJSON());
+		room.save(function(e) {
+			if (e) {
+				console.trace("Error saving room after song stop", room, e);
+			}
+			console.info("Song has stopped", room);
+			io.sockets.in(room.abbr).emit("song.stopped", room.toJSON());
+		});
 	}
 
 	var nextSong = function(room) {
@@ -76,8 +79,10 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			clearTimeout(songTimers[room.abbr]);
 		}
 
-		if (!room.dj) {
-			console.info("No DJs in the room. Stopping music.", room.abbr, room.djs);
+		console.info("nextSong", room.djs);
+
+		if (room.djs.length < 1) {
+			console.info("No DJs in the room. Stopping music.", room.abbr);
 			stopSong(room);
 			return;
 		}
@@ -125,26 +130,34 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			});
 		}
 
-		room.song = song._id;
-		room.songDj = dj._id;
-		room.songStarted = Date.now() + preloadTime;
-		room.save(function(e) {
-			Room.populate(room, 'djs songDj', function(e, r) {
+		var started = new Date();
+		started.setMilliseconds(preloadTime);
+
+		Room.findById(room._id)
+		.populate('djs')
+		.exec(function(e, room) {
+			room.song = song;
+			room.songDj = dj;
+			room.songStarted = started;
+			room.save(function(e) {
 				if (e) {
 					console.trace("Error populating room for socket emitting", e);
 					return;
 				}
+
+				// Schedule the next song
+				console.info("Scheduling next song", song.duration * 1000);
+				var delay = (song.duration * 1000) - preloadTime;
+				songTimers[room.abbr] = setTimeout(nextSong, song.duration * 1000, room);
+
 				// Send a message to all clients in the room
 				var roomData = room.toJSON();
 				roomData.song = song.toJSON();
+				roomData.songDj = dj.toJSON();
+				console.info("Playing song", song.path, roomData);
 				io.sockets.in(room.abbr).emit('song.changed', roomData);
 			});
 		});
-
-		// Schedule the next song
-		console.info("Scheduling next song", song.filename, song.duration * 1000);
-		var delay = (song.duration * 1000) - preloadTime;
-		songTimers[room.abbr] = setTimeout(nextSong, song.duration * 1000, room);
 	};
 
 
@@ -310,10 +323,21 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	this.undj = function(req, res, next) {
 		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return res.jsonp(500, e);
-			room.leave('djs', req.user);
-			room.save();
-			io.sockets.in(room.abbr).emit('dj.departed', req.user.toJSON());
-			res.jsonp({info: "Left djs"});
+			if (room.leave('djs', req.user)) {
+				console.info("BEFORE SAVE", room.djs);
+				room.save(function(e) {
+					console.info("AFTER SAVE", room.djs);
+					if (e) {
+						console.trace("Error undjing", e);
+						return;
+					}
+					io.sockets.in(room.abbr).emit('dj.departed', req.user.toJSON());
+					res.jsonp({info: "Left djs"});
+				});
+			}
+			else {
+				return res.jsonp(404, {error: "DJ not found"});
+			}
 		});
 	};
 

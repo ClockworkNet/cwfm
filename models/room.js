@@ -34,11 +34,7 @@ exports.build = function(mongoose, config, toJSON) {
 		}],
 
 		song: { type: mongoose.Schema.Types.ObjectId, ref: 'Song' },
-		songDj: {
-			type: mongoose.Schema.Types.ObjectId, 
-			ref: 'User',
-			unique: true
-		},
+		songDj: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 		songStarted: Date
 	});
 

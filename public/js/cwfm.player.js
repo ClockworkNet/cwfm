@@ -50,7 +50,8 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 		console.error(e);
 	};
 
-	$socket.on('song.stopped', function() {
+	$socket.on('song.stopped', function(room) {
+		console.info("Song has stopped", room);
 		setRoom(room, $scope.stopSong);
 	});
 
@@ -71,6 +72,11 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 		var url = '/song/' + song._id;
 		var start = $scope.songStartTime();
 		var skip  = Date.now() - start;
+
+		if (song.duration < skip) {
+			console.info("Song is done", song);
+			return;
+		}
 
 		console.info("Requesting: ", url, " Song started: ", start, " Skipping to:", skip);
 

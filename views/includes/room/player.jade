@@ -1,5 +1,5 @@
 #cwfmPlayerCtrl.row(ng-controller="cwfmPlayerCtrl", data-step="4", data-intro="Here's where you'll find the current song", data-position="top")
-		div(ng-show="room.song")
+		div(ng-show="remaining > 0")
 			.row
 				.col-md-11
 					#player.player(data-height="45", data-pixelRatio="1", data-cursorWidth="5", data-markerWidth="5", data-dragSelection="false")
@@ -11,16 +11,16 @@
 			.row
 				strong.song-dj {{room.songDj.username}} 
 				span is spinning 
-				strong.song-title {{room.song.name}} 
-				span ({{played | time}} of {{room.song.duration | time}}) 
-				span(ng-show="room.song.artist") by 
-				strong.song-artist(ng-repeat="artist in room.song.artist") {{artist}} 
+				strong.song-title {{song.name}} 
+				span ({{played | time}} of {{song.duration | time}}) 
+				span(ng-show="song.artist") by 
+				strong.song-artist(ng-repeat="artist in song.artist") {{artist}} 
 
 			h2 Actions
 			ul
-				li(ng-show="room.song")
+				li(ng-show="song")
 					a(ng-click="upvote()", href="#upvote") Upvote
-				li(ng-show="room.song")
+				li(ng-show="song")
 					a(ng-click="downvote()", href="#downvote") Downvote
-				li(ng-show="room.song && (djing(me) || me.admin)")
+				li(ng-show="song && (djing(me) || me.admin)")
 					a(ng-click="skipSong()", href="#skip") Skip Song

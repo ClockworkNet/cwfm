@@ -34,7 +34,5 @@ A social music player that uses node.js to manage music rooms.
 ## Development @todo
  - Scoring
  - Admin features
- - Room notifications in chat
  - Drag drop for queue
  - Crossfade?
- - Authentication audit

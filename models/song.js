@@ -52,10 +52,11 @@ exports.build = function(mongoose, toJSON) {
 		return this.upvotes - this.downvotes;
 	});
 
-	schema.methods.remaining = function(start) {
+	schema.methods.remaining = function(startDate) {
 		if (!this.duration) return 0;
+		if ('date' != typeof startDate) return 0;
 
-		var end = Date.parse(start) + (this.duration * 1000);
+		var end = start.getTime() + (this.duration * 1000);
 		var now = Date.now();
 
 		return end - now;
