@@ -1,12 +1,8 @@
 #cwfmPlayerCtrl.row(ng-controller="cwfmPlayerCtrl", data-step="4", data-intro="Here's where you'll find the current song", data-position="top")
 		div(ng-show="remaining > 0")
 			.row
-				.col-md-11
+				.waveform
 					#player.player(data-height="45", data-pixelRatio="1", data-cursorWidth="5", data-markerWidth="5", data-dragSelection="false")
-				.col-md-1
-					a.btn.btn-lg.btn-default.pull-right(ng-click="toggleMuting()", ng-class="{active: muted}")
-						span.glyphicon.glyphicon-volume-off(ng-show="muted")
-						span.glyphicon.glyphicon-volume-up(ng-hide="muted")
 
 			.row
 				strong.song-dj {{room.songDj.username}} 
@@ -15,12 +11,17 @@
 				span ({{played | time}} of {{song.duration | time}}) 
 				span(ng-show="song.artist") by 
 				strong.song-artist(ng-repeat="artist in song.artist") {{artist}} 
+				.mutebtn
+					a.btn.btn-lg.btn-default.pull-right(ng-click="toggleMuting()", ng-class="{active: muted}")
+						span.glyphicon.glyphicon-volume-off(ng-show="muted")
+						span.glyphicon.glyphicon-volume-up(ng-hide="muted")
 
-			h2 Actions
 			ul
 				li(ng-show="song")
-					a(ng-click="upvote()", href="#upvote") Upvote
+					a(ng-click="upvote()", href="#upvote") 
+						span.glyphicon.glyphicon-thumbs-up Upvote
 				li(ng-show="song")
-					a(ng-click="downvote()", href="#downvote") Downvote
+					a(ng-click="downvote()", href="#downvote") 
+						span.glyphicon.glyphicon-thumbs-down Downvote
 				li(ng-show="song && (djing(me) || me.admin)")
 					a(ng-click="skipSong()", href="#skip") Skip Song

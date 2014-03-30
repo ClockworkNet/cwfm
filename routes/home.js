@@ -11,26 +11,24 @@ module.exports = function(Room, User) {
 	};
 
 	this.room = function(req, res, next) {
-		for (var abbr in req.query) {
-			Room.findOne({abbr: abbr})
-			.populate('djs listeners song')
-			.exec(function(e, room) {
-				if (e || ! room) {
+		var abbr = Object.keys(req.query)[0];
+		Room.findOne({abbr: abbr})
+		.populate('djs listeners song')
+		.exec(function(e, room) {
+			if (e || ! room) {
+				console.trace("Error getting room", req.params, e);
+				return res.redirect('/');
+			}
+			console.info(room);
+			res.render('room', room, function(e, html) {
+				if (e) {
 					console.trace(e);
-					return res.redirect('/');
+					res.send('');
 				}
-				console.info(room);
-				res.render('room', room, function(e, html) {
-					if (e) {
-						console.trace(e);
-						res.send('');
-					}
-					else {
-						res.send(html);
-					}
-				});
+				else {
+					res.send(html);
+				}
 			});
-			break;
-		}
+		});
 	};
 }

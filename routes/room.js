@@ -258,16 +258,20 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	this.leave = function(socket, data, callback, next) {
 		console.info(socket.id, "is leaving", data.abbr);
 		socket.leave(data.abbr);
-		if (!socket.user) {
+
+		var user = socket.user;
+		var uid = user && user._id;
+		if (!uid) {
 			console.info("No session information found. Skipping room departure");
 			return;
 		}
 		Room.findOne({abbr: data.abbr}, function(e, room) {
 			if (e || !room) return;
-			if (room.removeUser(socket.user._id)) {
-				room.save();
-				console.info(socket.user.username, "left room", room.name);
-				io.sockets.in(room.abbr).emit('member.departed', socket.user.toJSON());
+			if (room.removeUser(uid)) {
+				room.save(function(e) {
+					console.info(socket.user.username, "left room", room.name);
+					io.sockets.in(room.abbr).emit('member.departed', user.toJSON());
+				});
 			}
 		});
 	};

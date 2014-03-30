@@ -1,17 +1,18 @@
 div(ng-show="room.abbr", data-step="1", data-intro="Here's where we keep the DJs", data-position="right")
-			a#brandname.brand(data-toggle="modal", role="button", href="/"): img(src="/public/img/cwfm.svg", alt="CWFM")
+	a#brandname.brand(data-toggle="modal", role="button", href="/") 
+		img(src="/public/img/cwfm.svg", alt="CWFM")
 
-			h2(ng-show="room.djs.length") DJs
+	h2(ng-show="room.djs.length") DJs
 
-			div(ng-hide="djing()")
-				a(ng-click="dj()", href="#dj") Start DJing
-			div(ng-show="djing()")
-				a(ng-click="undj()", href="#undj") Stop DJing
+	div(ng-hide="djing()")
+		a(ng-click="dj()", href="#dj") Start DJing
+	div(ng-show="djing()")
+		a(ng-click="undj()", href="#undj") Stop DJing
 
-			div
-				a#admin_btn(href="#admin_btn") Admin
+	div
+		a#admin_btn(href="#admin_btn") Admin
 
-			ul
-				li.dj-item(ng-repeat="dj in room.djs")
-					img.avatar(ng-src="/avatar/{{dj.avatar}}")
-					div.text-center {{dj.username}}
+	ul
+		li.dj-item(ng-repeat="dj in room.djs")
+			img.avatar(ng-src="/avatar/{{dj.avatar}}")
+			div.text-center {{dj.username}}
