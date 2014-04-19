@@ -41,7 +41,7 @@ exports.build = function(mongoose, toJSON) {
 			return this;
 		}
 		var song = this.songs.shift();
-		this.songs.splice(-1, 0, song);
+		this.songs.push(song);
 		return this;
 	};
 
