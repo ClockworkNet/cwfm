@@ -8,7 +8,7 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 	$scope.timeOffset = 0;
 	$scope.me         = {};
 
-	$scope.muted     = true;
+	$scope.muted     = false;
 	$scope.played    = 0;
 	$scope.remaining = 0;
 	$scope.percent   = 0;

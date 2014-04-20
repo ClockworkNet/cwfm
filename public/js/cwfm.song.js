@@ -47,7 +47,7 @@ cwfm.song.factory = function() {
 			players[1].init(preloadOptions);
 
 			players.forEach(function(p, i) {
-				p.setVolume(0.0);
+				p.setVolume(onVolume);
 				p.on('ready', function() {
 					var loadTime = Date.now() - loadStart;
 					var offset   = playSkip + loadTime;
