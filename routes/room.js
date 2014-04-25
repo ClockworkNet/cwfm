@@ -231,7 +231,6 @@ module.exports = function(Room, User, Playlist, Song, io) {
 				Room.findById(room._id)
 				.populate('djs songDj listeners song')
 				.exec(function(e, room) {
-					ensureSong(room);
 					console.info("We have a new user in the room", room.name, req.user.username);
 					io.sockets.in(room.abbr).emit('member.joined', req.user.toJSON());
 					return res.jsonp(room);
@@ -265,11 +264,16 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			console.info("No session information found. Skipping room departure");
 			return;
 		}
+
 		Room.findOne({abbr: data.abbr}, function(e, room) {
 			if (e || !room) return;
+
+			if (room.isDj(user)) {
+				handleDjLeave(room, user);
+			}
+
 			if (room.removeUser(uid)) {
 				room.save(function(e) {
-					console.info(socket.user.username, "left room", room.name);
 					io.sockets.in(room.abbr).emit('member.departed', user.toJSON());
 				});
 			}
@@ -278,12 +282,18 @@ module.exports = function(Room, User, Playlist, Song, io) {
 
 	// Called when a socket connection is dropped
 	this.exit = function(socket, data, callback, next) {
+		console.info(socket.id, "dropped", data.abbr);
 		if (!socket.user) {
 			console.error("No user to speak of during exit");
 			return;
 		}
 		Room.find({}, function(e, a) {
 			a.forEach(function(r) {
+
+				if (r.isDj(socket.user)) {
+					handleDjLeave(r, user);
+				}
+
 				if (r.removeUser(socket.user._id)) {
 					console.info(socket.user.username, "exited room", r.name);
 					r.save();
@@ -327,21 +337,23 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	this.undj = function(req, res, next) {
 		Room.findOne({abbr: req.params.abbr}, function(e, room) {
 			if (e) return res.jsonp(500, e);
-			if (room.leave('djs', req.user)) {
-				console.info("BEFORE SAVE", room.djs);
-				room.save(function(e) {
-					console.info("AFTER SAVE", room.djs);
-					if (e) {
-						console.trace("Error undjing", e);
-						return;
-					}
-					io.sockets.in(room.abbr).emit('dj.departed', req.user.toJSON());
-					res.jsonp({info: "Left djs"});
-				});
-			}
-			else {
+
+			if (!room.isDj(req.user)) {
 				return res.jsonp(404, {error: "DJ not found"});
 			}
+
+			handleDjLeave(room, req.user);
+
+			console.info("BEFORE SAVE", room.djs);
+			room.save(function(e) {
+				console.info("AFTER SAVE", room.djs);
+				if (e) {
+					console.trace("Error undjing", e);
+					return;
+				}
+				io.sockets.in(room.abbr).emit('dj.departed', req.user.toJSON());
+				res.jsonp({info: "Left djs"});
+			});
 		});
 	};
 
@@ -359,4 +371,19 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			setImmediate(nextSong, room);
 		});
 	};
+
+	var handleDjLeave = function(room, user) {
+
+		// if current dj, stop the song
+		if (room.isCurrentDj(user)) {
+			if (room.djs.length < 2) {
+				stopSong(room);
+			}
+			else {
+				nextSong(room);
+			}
+		}
+		
+		room.leave('djs', user);
+	}
 };

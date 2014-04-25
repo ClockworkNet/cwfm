@@ -41,7 +41,6 @@ exports.build = function(mongoose, config, toJSON) {
 	schema.methods.toJSON = function() {
 		var obj = this.toObject();
 		obj.currentTime = +new Date;
-		obj.songStarted += 0;
 
 		obj.owners    = toJSON(obj.owners);
 		obj.djs       = toJSON(obj.djs);
@@ -117,6 +116,24 @@ exports.build = function(mongoose, config, toJSON) {
 		});
 		return left;
 	};
+
+	schema.methods.isCurrentDj = function(user) {
+
+		var ix = this.indexOf('djs', user);
+		if (ix >= 0 && ix == this.djIndex) {
+			return true;
+		}
+		return false;
+	}
+
+	schema.methods.isDj = function(user) {
+
+		var ix = this.indexOf('djs', user);
+		if (ix >= 0) {
+			return true;
+		}
+		return false;
+	}
 
 	return mongoose.model(name, schema);
 }

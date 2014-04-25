@@ -71,9 +71,10 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 
 		var url = '/song/' + song._id;
 		var start = $scope.songStartTime();
-		var skip  = Date.now() - start;
 
-		if (song.duration < skip) {
+		var skip = Date.now() - start;
+
+		if ((song.duration * 1000) < skip) { // milliseconds
 			console.info("Song is done", song);
 			return;
 		}

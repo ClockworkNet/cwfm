@@ -4,3 +4,4 @@ node_modules/*
 public/bowery/*
 *.iml
 .idea
+npm-debug.log
