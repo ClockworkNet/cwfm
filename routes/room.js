@@ -17,7 +17,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	};
 
 	var rotateTable = function(room, then) {
-		var djId = room.dj._id ? room.dj._id : room.dj;
+		var djId = room.songDj._id ? room.songDj._id : room.songDj;
 
 		if (!djId) {
 			then();
@@ -26,7 +26,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 
 		var rotateDjs = function(e) {
 			if (e) {
-				console.trace("Error rotating table", room.dj, e);
+				console.trace("Error rotating table", room.songDj, e);
 			}
 			if (room.rotateDjs()) {
 				console.info("Rotated DJs.");
@@ -51,7 +51,6 @@ module.exports = function(Room, User, Playlist, Song, io) {
 				dj.playlist.rotate().save(rotateDjs);
 			}
 		});
-
 	};
 
 	var stopSong = function(room) {
@@ -71,46 +70,50 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	}
 
 	var nextSong = function(room) {
-		if (!room) {
-			console.error("No room");
-		}
 
-		if (songTimers[room.abbr]) {
-			clearTimeout(songTimers[room.abbr]);
-		}
+		// make sure we have a fresh copy, since this is sometimes trigger by a timer
+		Room.findById(room._id)
+		.populate('djs songDj listeners song')
+		.exec(function(e, room) {
+			if (!room) {
+				console.error("No room");
+			}
 
-		console.info("nextSong", room.djs);
+			if (songTimers[room.abbr]) {
+				clearTimeout(songTimers[room.abbr]);
+			}
 
-		if (room.djs.length < 1) {
-			console.info("No DJs in the room. Stopping music.", room.abbr);
-			stopSong(room);
-			return;
-		}
+			if (room.djs.length < 1) {
+				console.info("No DJs in the room. Stopping music.", room.abbr);
+				stopSong(room);
+				return;
+			}
 
-		rotateTable(room, function() {
-			// Pick the new DJ's next song from her current playlist
-			// and set it on the room.
-			var djId = room.dj._id ? room.dj._id : room.dj;
+			rotateTable(room, function() {
+				// Pick the new DJ's next song from her current playlist
+				// and set it on the room.
+				var djId = room.songDj._id ? room.songDj._id : room.songDj;
 
-			User.findById(djId).populate('playlist').exec(function(e, dj) {
-				if (e || !dj) {
-					console.trace("Error finding DJ", e, dj);
-					return;
-				}
-				var songId = dj.playlist.songs[0];
-				Song.findById(songId, function(e, song) {
-					if (e) {
-						console.trace("Error finding song to play", e, songId, dj.playlist);
+				User.findById(djId).populate('playlist').exec(function(e, dj) {
+					if (e || !dj) {
+						console.trace("Error finding DJ", e, dj);
 						return;
 					}
-					if (!song) {
-						console.trace("Song not found for id. Removing from playlist.", songId);
-						dj.playlist.songs.shift();
-						dj.playlist.save();
-						setImmediate(nextSong, room);
-						return;
-					}
-					setImmediate(playSong, room, dj, song);
+					var songId = dj.playlist.songs[0];
+					Song.findById(songId, function(e, song) {
+						if (e) {
+							console.trace("Error finding song to play", e, songId, dj.playlist);
+							return;
+						}
+						if (!song) {
+							console.trace("Song not found for id. Removing from playlist.", songId);
+							dj.playlist.songs.shift();
+							dj.playlist.save();
+							setImmediate(nextSong, room);
+							return;
+						}
+						setImmediate(playSong, room, dj, song);
+					});
 				});
 			});
 		});
@@ -265,7 +268,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			return;
 		}
 
-		Room.findOne({abbr: data.abbr}, function(e, room) {
+		Room.findOne({abbr: data.abbr}).populate('djs songDj').exec( function(e, room) {
 			if (e || !room) return;
 
 			if (room.isDj(user)) {
@@ -287,9 +290,9 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			console.error("No user to speak of during exit");
 			return;
 		}
-		Room.find({}, function(e, a) {
+		Room.find().populate('djs songDj').exec( function(e, a) {
 			a.forEach(function(r) {
-
+				
 				if (r.isDj(socket.user)) {
 					handleDjLeave(r, user);
 				}
@@ -335,26 +338,28 @@ module.exports = function(Room, User, Playlist, Song, io) {
 	};
 
 	this.undj = function(req, res, next) {
-		Room.findOne({abbr: req.params.abbr}, function(e, room) {
-			if (e) return res.jsonp(500, e);
+		Room.findOne({abbr: req.params.abbr})
+			.populate('djs songDj listeners song')
+			.exec(function(e, room) {
+				if (e) return res.jsonp(500, e);
 
-			if (!room.isDj(req.user)) {
-				return res.jsonp(404, {error: "DJ not found"});
-			}
-
-			handleDjLeave(room, req.user);
-
-			console.info("BEFORE SAVE", room.djs);
-			room.save(function(e) {
-				console.info("AFTER SAVE", room.djs);
-				if (e) {
-					console.trace("Error undjing", e);
-					return;
+				if (!room.isDj(req.user)) {
+					return res.jsonp(404, {error: "DJ not found"});
 				}
-				io.sockets.in(room.abbr).emit('dj.departed', req.user.toJSON());
-				res.jsonp({info: "Left djs"});
+
+				handleDjLeave(room, req.user);
+
+				console.info("BEFORE SAVE", room.djs);
+				room.save(function(e) {
+					console.info("AFTER SAVE", room.djs);
+					if (e) {
+						console.trace("Error undjing", e);
+						return;
+					}
+					io.sockets.in(room.abbr).emit('dj.departed', req.user.toJSON());
+					res.jsonp({info: "Left djs"});
+				});
 			});
-		});
 	};
 
 	this.upvote = function(req, res, next) {

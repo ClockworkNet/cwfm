@@ -44,7 +44,6 @@ exports.build = function(mongoose, config, toJSON) {
 
 		obj.owners    = toJSON(obj.owners);
 		obj.djs       = toJSON(obj.djs);
-		obj.dj        = toJSON(obj.dj);
 		obj.listeners = toJSON(obj.listeners);
 		obj.song      = toJSON(obj.song);
 		obj.songDj    = toJSON(obj.songDj);
@@ -52,12 +51,11 @@ exports.build = function(mongoose, config, toJSON) {
 		return obj;
 	};
 
-	schema.virtual('dj').get(function() {
-		return this.djs[this.djIndex];
-	});
-
 	schema.methods.rotateDjs = function() {
-		var currentIndex = this.djIndex;
+
+		var currentIndex = this.indexOf('djs', this.songDj);
+		this.djIndex = currentIndex;
+
 		if (!this.djs || this.djs.length < 2) {
 			this.djIndex = 0;
 		}
@@ -66,6 +64,9 @@ exports.build = function(mongoose, config, toJSON) {
 			if (index >= this.djs.length) index = 0;
 			this.djIndex = index;
 		}
+
+		this.songDj = this.djs[this.djIndex];
+
 		return currentIndex != this.djIndex;
 	};
 
@@ -119,8 +120,7 @@ exports.build = function(mongoose, config, toJSON) {
 
 	schema.methods.isCurrentDj = function(user) {
 
-		var ix = this.indexOf('djs', user);
-		if (ix >= 0 && ix == this.djIndex) {
+		if (this.isDj(user) && (this.songDj.username == user.username)) {
 			return true;
 		}
 		return false;
@@ -128,8 +128,7 @@ exports.build = function(mongoose, config, toJSON) {
 
 	schema.methods.isDj = function(user) {
 
-		var ix = this.indexOf('djs', user);
-		if (ix >= 0) {
+		if (this.indexOf('djs', user) >= 0) {
 			return true;
 		}
 		return false;

@@ -19,7 +19,7 @@ module.exports = function(Room, User) {
 				console.trace("Error getting room", req.params, e);
 				return res.redirect('/');
 			}
-			console.info(room);
+			console.info('Entering room: ', room);
 			res.render('room', room, function(e, html) {
 				if (e) {
 					console.trace(e);
