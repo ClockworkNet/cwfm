@@ -294,7 +294,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			a.forEach(function(r) {
 				
 				if (r.isDj(socket.user)) {
-					handleDjLeave(r, user);
+					handleDjLeave(r, socket.user);
 				}
 
 				if (r.removeUser(socket.user._id)) {
