@@ -18,7 +18,7 @@
 		"jquery": "*",
 		"wavesurfer.js": "*",
 		"json2": "*",
-		"angular": "*",
+		"angular": "1.2.13",
 		"lvlDragDrop": "*",
 		"intro.js": "*",
 		"wavesurfer.js": "*"
