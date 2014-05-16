@@ -104,23 +104,5 @@ cwfm.user.ctrl  =  function( $scope, $http, $user ) {
 		.error(handleError);
 	};
 
-	$scope.scan = function(force) {
-		$http.post('/song/scan', {force: force})
-		.success(function(r) {
-			console.info("Starting scan", arguments);
-			$scope.adminMessage = {
-				type: 'info',
-				content: "Scan started"
-			};
-		})
-		.error(function(e) {
-			console.error("Error tarting scan", arguments);
-			$scope.adminMessage = {
-				type: 'error',
-				content: "Error starting scan"
-			};
-		});
-	};
-
 	init( );
 };

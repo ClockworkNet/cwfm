@@ -181,6 +181,15 @@ cwfm.playlist.ctrl  =  function( $scope, $http, $socket, $util, $room, $user ) {
 		return song._id;
 	};
 
+	$scope.songArtist = function(song) {
+		console.log((song.artist instanceof Array));
+		if (!song.artist || song.artist.length == 0) {
+			return '';
+		}
+		var name = song.artist[0];
+		return name;
+	}
+
 	$scope.notInPlaylist = function(song) {
 		return ! $scope.inPlaylist(song);
 	};

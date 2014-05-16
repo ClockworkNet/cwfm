@@ -5,12 +5,10 @@ var path           = require('path');
 var logger         = require('morgan');
 var io             = require('socket.io');
 var fs             = require('fs');
-var probe          = require('node-ffprobe');
 var encrypt        = require('sha1');
 var Cookies        = require('cookies');
 var chain          = require('./lib/chain');
 var util           = require('./lib/util');
-var Scanner        = require('./lib/scanner');
 
 var app    = express();
 var server = http.createServer(app);
@@ -55,15 +53,10 @@ var registerRoutes = function() {
 
 	console.log("Loading controllers");
 
-	// Set up the scanner for finding music
-	var scanner = new Scanner(config.songDir, {
-		filePattern: Scanner.patterns.music
-	});
-
 	var controllers = {
 		home     : new routes.home(Room, User),
 		room     : new routes.room(Room, User, Playlist, Song, io),
-		song     : new routes.song(Song, User, scanner, probe),
+		song     : new routes.song(Song, User),
 		user     : new routes.user(User, Auth),
 		auth     : new routes.auth(config, User, Auth),
 		avatar   : new routes.avatar(config.avatar, fs, path, User),
@@ -112,7 +105,6 @@ var registerRoutes = function() {
 	app.get('/song/search'             , restrict, controllers.song.search);
 	app.get('/song/detail/:id'         , restrict, controllers.song.detail);
 	app.get('/song/:id'                , restrict, controllers.song.stream);
-	app.post('/song/scan'              , restrictToAdmin, controllers.song.scan);
 
 	// Restricted Playlist API
 	app.get('/playlist/list'           , restrict, controllers.playlist.list);

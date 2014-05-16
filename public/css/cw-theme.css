@@ -575,26 +575,20 @@ button.lame {
 	border-bottom-color:rgb(200,200,200);
 	cursor: pointer;
 }
-.song-list li {
-	display: block;
-	font-family: 'Brandon', Helvetica, Arial, sans-serif;
-}
-.song-list .song-length {
-	font-size:.8em;
-	color:rgb(180,180,180);
-	position: absolute;
-	right:10px;
-	top:34px;
-	line-height:1.2em;
+.song-list li span {
 }
 .song-list .song-name, .song-list .song-artist {
 	font-size:1em;
 	line-height:1.2em;
 }
 .song-list .song-name {
+	display: block;
+	font-family: 'Brandon', Helvetica, Arial, sans-serif;
 	font-weight:bold;
 }
 .song-list .song-artist {
+	display: block;
+	font-family: 'Brandon', Helvetica, Arial, sans-serif;
 	color:rgb(120,120,120);
 }
 .song-item {

@@ -1,55 +1,5 @@
-module.exports = function(Song, User, scanner, probe) {
+module.exports = function(Song, User) {
 	var maxFails = 5;
-
-	var processSongTags = function(song, done) {
-		probe(song.path, function(err, probeData) {
-
-			if (err) return done(err, song);
-
-			song['title']       = probeData.metadata.title;
-			song['artist']      = probeData.metadata.artist;
-			song['album']       = probeData.metadata.album;
-			song['genre']       = probeData.metadata.genre;
-			song['albumartist'] = probeData.metadata.album_artist;
-			song['year']        = probeData.metadata.date;
-			song['track']       = probeData.metadata.track;
-			song['duration']    = probeData.format.duration;
-
-			console.info("Found song metadata. Song:", song);
-
-			done(null, song);
-		});
-	}
-
-	var updateSong = function(filename, stats, force) {
-		Song.findOne({path: filename}, function(e, song) {
-			if (e) {
-				console.trace("Error seeking song", e);
-				return false;
-			}
-
-			if (!song) {
-				song = new Song();
-				song.added = Date.now();
-			}
-			else if (!force && song.modified && song.modified.getTime() >= stats.ctime.getTime()) {
-				return false;
-			}
-
-			song.modified = Date.now();
-			song.path     = filename;
-
-			processSongTags(song, function(e, song) {
-				if (e) {
-					console.error("Error processing song metadata", song, e);
-					return;
-				}
-				song.save(function(e) {
-					if (e) console.error("Error saving song", song, e);
-				});
-			});
-		});
-	};
 
 	this.search = function(req, res, next){
 		var terms = null;
@@ -107,22 +57,6 @@ module.exports = function(Song, User, scanner, probe) {
 			}
 			res.jsonp(song);
 		});
-	};
-
-	this.scan = function(req, res, next) {
-		console.info('Starting scan');
-
-		var force = !!req.body.force;
-		var handler = function(url, stats) {
-			updateSong(url, stats, force);
-		};
-
-		scanner.on('file', handler);
-		scanner.on('error', console.trace);
-		scanner.on('dir', console.info);
-
-		scanner.start();
-		return res.jsonp({success: true});
 	};
 
 	this.stream = function(req, res, next) {

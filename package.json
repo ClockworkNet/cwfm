@@ -20,7 +20,6 @@
 		"socket.io": "1.0.x",
 
 		"mongoose": "3.8.x",
-		"node-ffprobe": "1.2.x",
 		"sha1": "1.1.x"
 	}
 }
