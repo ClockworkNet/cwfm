@@ -18,10 +18,6 @@ exports.build = function(mongoose, config, toJSON) {
 			ref: 'User',
 			unique: true
 		}],
-		djIndex: {
-			type: Number,
-			default: 0
-		},
 		djs: [{
 			type: mongoose.Schema.Types.ObjectId, 
 			ref: 'User',
@@ -35,12 +31,12 @@ exports.build = function(mongoose, config, toJSON) {
 
 		song: { type: mongoose.Schema.Types.ObjectId, ref: 'Song' },
 		songDj: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: false },
-		songStarted: Date
+		songStarted: Number
 	});
 
 	schema.methods.toJSON = function() {
 		var obj = this.toObject();
-		obj.currentTime = +new Date;
+		obj.currentTime = Date.now();
 
 		obj.owners    = toJSON(obj.owners);
 		obj.djs       = toJSON(obj.djs);
@@ -54,20 +50,13 @@ exports.build = function(mongoose, config, toJSON) {
 	schema.methods.rotateDjs = function() {
 
 		var currentIndex = this.indexOf('djs', this.songDj);
-		this.djIndex = currentIndex;
 
-		if (!this.djs || this.djs.length < 2) {
-			this.djIndex = 0;
-		}
-		else {
-			var index = this.djIndex + 1;
-			if (index >= this.djs.length) index = 0;
-			this.djIndex = index;
-		}
+		var index = currentIndex + 1;
+		if (index >= this.djs.length) index = 0;
 
-		this.songDj = this.djs[this.djIndex];
+		this.songDj = this.djs[index];
 
-		return currentIndex != this.djIndex;
+		return currentIndex != index;
 	};
 
 	schema.methods.indexOf = function(collection, model) {
@@ -119,6 +108,10 @@ exports.build = function(mongoose, config, toJSON) {
 	};
 
 	schema.methods.isCurrentDj = function(user) {
+
+		if (!this.songDj) {
+			return false;
+		}
 
 		if (this.isDj(user) && (this.songDj.username == user.username)) {
 			return true;

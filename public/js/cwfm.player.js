@@ -19,7 +19,7 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 	var setRoom = function(room, then) {
 		$scope.timeOffset = Date.now() - room.currentTime;
 
-		var now = +new Date();
+		var now = Date.now();
 		var startTime = $scope.songStartTime(room.songStarted);
 
 		var songSetDelay = 0;
@@ -101,7 +101,7 @@ cwfm.player.ctrl = function($scope, $http, $socket, $room, $user, $song, $timeou
 	$scope.songStartTime = function(songStarted) {
 		songStarted = songStarted || $scope.room.songStarted;
 		if (!songStarted) return 0;
-		var serverTime = Date.parse(songStarted);
+		var serverTime = songStarted;
 		return serverTime - $scope.timeOffset;
 	};
 

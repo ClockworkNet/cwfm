@@ -133,8 +133,7 @@ module.exports = function(Room, User, Playlist, Song, io) {
 			});
 		}
 
-		var started = new Date();
-		started.setMilliseconds(preloadTime);
+		var started = Date.now() + preloadTime;
 
 		Room.findById(room._id)
 		.populate('djs')

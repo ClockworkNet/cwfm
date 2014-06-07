@@ -14,10 +14,10 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 		if (!them) {
 			$scope.room[collection] = [];
 		}
-		var exists = them.every(function(other) {
+		var okay = them.every(function(other) {
 			return other.username != user.username;
 		});
-		if (exists) {
+		if (!okay) {
 			return;
 		}
 		$scope.room[collection].push(user);
