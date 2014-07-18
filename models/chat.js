@@ -13,7 +13,11 @@ exports.build = function(mongoose, config) {
 		posted: {
 			type: Date,
 			default: Date.now
-		}
+		},
+    msg_type: {
+      type: String,
+      default: 'message'
+    }
 	});
 
 	return mongoose.model(name, schema);
