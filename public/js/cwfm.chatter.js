@@ -28,7 +28,8 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
 			author: data,
 			content: 'joined the room.',
 			room: $scope.room,
-			posted: Date.now()
+			posted: Date.now(),
+      msg_type: 'notice'
 		});
 	});
 
@@ -37,7 +38,8 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
 			author: data,
 			content: 'left the room.',
 			room: $scope.room,
-			posted: Date.now()
+			posted: Date.now(),
+      msg_type: 'notice'
 		});
 	});
 
@@ -48,7 +50,8 @@ cwfm.chatter.ctrl  =  function( $scope, $http, $socket, $room ) {
 				author: data.songDj,
 				content: 'started playing ' + data.song.name,
 				room: $scope.room,
-				posted: data.songStarted
+				posted: data.songStarted,
+        msg_type: 'notice'
 			});
 		};
 		if (delay > 0) {

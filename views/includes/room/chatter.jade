@@ -2,9 +2,9 @@
 		div(ng-show="room.abbr")
 			#chat-list.upper-chin.chatroom.overflow
 				ul
-					li.chat-item(ng-repeat="m in chat | filter:content")
-						div.username {{m.author.username}}:
-						div.message {{m.content}}
+					li.chat-item(class="chat-item--{{chat[$index].msg_type}}" ng-repeat="m in chat | filter:content")
+						span.username {{m.author.username}}
+						span.message {{m.content}}
 							em.timestamp {{m.posted}}
 
 			#listeners.col-md-2

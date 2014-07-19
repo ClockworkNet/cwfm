@@ -271,7 +271,9 @@ a {
 }
 .chatroom .chat-item {
 	display: block;
-	margin-bottom:10px;
+	margin-bottom: 8px;
+  font-size:15px;
+  color:rgb(101,115,126);
 }
 .chatroom p {
 	line-height:1.2em;
@@ -280,11 +282,9 @@ a {
 }
 .chatroom .chat-item > .username {
 	font-weight: bold;
-	display: inline-block;
 	font-size:16px;
 	color:rgb(192,197,206);
-	width: 120px;
-	padding-right: 15px;
+	padding-right: 4px;
 
 	/*transition:color .1s ease-in;*/
 }
@@ -292,21 +292,29 @@ a {
 	cursor: pointer;
 	color:#ffcc00;
 }
-.chatroom .chat-item > div {
-	display: inline-block;
-	font-size:15px;
-	vertical-align: top;
-	color:rgb(101,115,126);
+
+.chatroom .chat-item--message > .username::after {
+  content: ":";
 }
+
 .chatroom .chat-item > .message {
 	color: #93979E;
-	width: calc(100% - 120px);
 }
 .chatroom .chat-item > .message > .timestamp {
-	display: none;
+  display: none;
 	color: #54463e;
 	float: right;
 }
+
+.chatroom .chat-item--notice {
+  font-style: italic;
+}
+
+.chatroom .chat-item--notice > .username,
+.chatroom .chat-item--notice > .message{
+  color: #666;
+}
+
 .participants {
 	font-family: 'Brandon', Helvetica, Arial, sans-serif;
 	position: absolute;
