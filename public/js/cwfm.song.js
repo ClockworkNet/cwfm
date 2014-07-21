@@ -46,6 +46,9 @@ cwfm.song.factory = function() {
 			players[1].init(preloadOptions);
 
 			players.forEach(function(p, i) {
+        // Disable all user interactions with the player.
+        p.disableInteraction();
+
 				p.setVolume(onVolume);
 				p.on('ready', function() {
 					var loadTime = Date.now() - loadStart;
