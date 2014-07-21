@@ -31,8 +31,7 @@ cwfm.song.factory = function() {
 		init: function(containerId, options) {
 			options = options ? options : {};
 			options.container = containerId;
-			options.__proto = defaults;
-
+			options.__proto__ = defaults;
 			players[0].init(options);
 
 			// Create a second player, hidden beneath the first.
