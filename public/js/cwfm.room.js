@@ -41,13 +41,13 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
   /**
    * Add a user to the specified collection of users for this room.
    *
-   * Valid collections are 'listners', and 'djs'. Collections are used to keep
+   * Valid collections are 'listeners', and 'djs'. Collections are used to keep
    * track of a rooms participants and what they are currently doing in the
    * room.
    *
    * @param (string) collection
    *   The collection to add the user too. Valid options are 'djs', and
-   *   'listners'.
+   *   'listeners'.
    * @param (mongoose/Auth) user
    *   The Auth object representing the user to add to the specified collection.
    */
@@ -77,7 +77,7 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
    *
    * @param (string) collection
    *   The name of the collection to remove the user from. Valid options are
-   *   'djs', and 'listners'.
+   *   'djs', and 'listeners'.
    * @param (mongoose/Auth) user
    *   The Auth object representing the user to remove from the specified
    *   collection.
@@ -139,14 +139,14 @@ cwfm.room.ctrl  =  function( $scope, $http, $socket, $room, $user ) {
 	});
 
   /**
-   * When a listner joins the room add them to the list of listners.
+   * When a listener joins the room add them to the list of listener.
    */
 	$socket.on('member.joined', function(user) {
 		addUser('listeners', user);
 	});
 
   /**
-   * When a listner leaves the room remove them from the list of listners, and
+   * When a listener leaves the room remove them from the list of listeners, and
    * the list of DJs in the case they where DJing when they departed.
    */
 	$socket.on('member.departed', function(user) {
