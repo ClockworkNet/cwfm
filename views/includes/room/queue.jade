@@ -6,7 +6,7 @@ div.queue-tabs(ng-show="me.auth")
 
 div.tab-pane.playlist#queue(ng-show="me.auth")
 	div.hidden(ng-show="me.playlist.name", ng-class="{active: me.playlist.name.length}")
-	div.panel-heading 
+	div.panel-heading
 		strong Playlist: {{me.playlist.name}}
 	div.song-search
 		form
@@ -28,7 +28,8 @@ div.tab-pane.playlist#queue(ng-show="me.auth")
 						span.song-artist {{songArtist(song)}}
 	div.queue-list
 		ul.song-list#my_queue
-			li.song-item(ng-repeat="song in me.playlist.songs track by $index", ng-class-odd="'odd'", ng-class-even="'even'", x-lvl-drop-target="true", x-on-drop="songDropped(dragEl, dropEl)", data-index="{{$index}}") 
+			li.empty(ng-show="!me.playlist.songs.length") This playlist is empty
+			li.song-item(ng-repeat="song in me.playlist.songs track by $index", ng-class-odd="'odd'", ng-class-even="'even'", x-lvl-drop-target="true", x-on-drop="songDropped(dragEl, dropEl)", data-index="{{$index}}")
 				div.song_wrapper(x-lvl-draggable="true", data-song="{{song}}")
 					a.remove(ng-click="removeSong(song)", href="#remove")
 						span.glyphicon.glyphicon-trash
@@ -42,12 +43,12 @@ div.library#playlists(ng-class="{active: ! me.playlist.name.length}", style="dis
 			li.new_playlist
 				form
 					div
-						label.sr-only(for="playlist-name") New playlist: 
+						label.sr-only(for="playlist-name") New playlist:
 						input#playlist-name(ng-model="newPlaylist.name", placeholder="What should we call it?")
 						span
-							button(ng-click="create()", href="#create") 
+							button(ng-click="create()", href="#create")
 								span.glyphicon.glyphicon-plus-sign
 			li(ng-repeat="playlist in playlists", ng-class="{active: active(playlist)}")
-				span.badge.pull-right {{playlist.songs.length}}
-				a.playlists_item(ng-click="select(playlist)", href="#load", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{last:$last}").
+				a.playlists_item(ng-click="select(playlist)", href="#load", ng-class-odd="'odd'", ng-class-even="'even'", ng-class="{last:$last}", title="Make this the active playlist").
 					{{playlist.name}}
+				span.badge  ({{playlist.songs.length}} songs)

@@ -453,9 +453,10 @@ button.lame {
 .playlist_wrap {
 	display: none;
 }
-.playlist {
-
+.playlists .active {
+  background: #ffcc00;
 }
+
 .panel-heading {
 
 }
