@@ -56,7 +56,7 @@ cwfm.song.factory = function() {
   Song.init = function(containerId, options) {
     options = options ? options : {};
     options.container = containerId;
-    options.__proto = defaults;
+    options.__proto__ = defaults;
 
     players[0].init(options);
 
@@ -73,6 +73,8 @@ cwfm.song.factory = function() {
     players[1].init(preloadOptions);
 
     players.forEach(function(p, i) {
+      // Disable all user interactions with the player
+      p.disableInteraction();
       p.setVolume(onVolume);
       p.on('ready', function() {
         var loadTime = Date.now() - loadStart;
