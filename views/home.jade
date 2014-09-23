@@ -8,7 +8,6 @@ block scripts
 	script(src="/public/js/cwfm.home.app.js")
 
 block main
-	a#admin_btn(href="#admin_btn") Log In
 	div#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
 		h2(ng-show="user.auth") Welcome back {{user.username}}!
 		include includes/user
@@ -23,7 +22,7 @@ block main
 					input.form-control(ng-model="new_room.abbr", placeholder="Abbreviation")
 				div.form-group
 					textarea.form-control(ng-model="new_room.description", placeholder="Description")
-				button.btn.btn-default(ng-click="make_room()") Create a room 
+				button.btn.btn-default(ng-click="make_room()") Create a room
 					span.glyphicon.glyphicon-plus-sign
 
 			h2 Join a room

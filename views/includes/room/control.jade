@@ -9,9 +9,6 @@ div(ng-show="room.abbr", data-step="1", data-intro="Here's where we keep the DJs
 	div(ng-show="djing()")
 		a(ng-click="undj()", href="#undj") Stop DJing
 
-	div
-		a#admin_btn(href="#admin_btn") Admin
-
 	ul
 		li.dj-item(ng-repeat="dj in room.djs")
 			img.avatar(ng-src="/avatar/{{dj.avatar}}")

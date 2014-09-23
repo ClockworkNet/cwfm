@@ -21,14 +21,15 @@ block scripts
 	script(src="/public/js/cwfm.room.app.js")
 	script(src="/public/js/cwfm.room.ui.js")
 
+block header
+	header#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
+		include includes/user
+
 block right-col
 	section.col.right-col.queue#cwfmPlaylistCtrl(ng-controller="cwfmPlaylistCtrl", data-step="6", data-intro="Here's where you manage your own playlists", data-position="left")
 		include includes/room/queue.jade
 
 block main-col
-	#cwfmUserCtrl(ng-controller="cwfmUserCtrl")
-		include includes/user
-
 	section.col.col-right.main-container
 		.col.stage
 			#cwfmRoomCtrl(ng-controller="cwfmRoomCtrl")
