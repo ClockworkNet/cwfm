@@ -28,6 +28,12 @@ A social music player that uses node.js to manage music rooms.
 1. Configure your `config.js` file.
 
 ## Running
+If you use Grunt:
+
+1. `grunt server`
+
+Otherwise:
+
 1. `mongod --dbpath=./data/db`
 2. `node app.js`
 
