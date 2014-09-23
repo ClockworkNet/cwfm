@@ -19,6 +19,15 @@ body {
 html, body {
 	height:100%;
 }
+
+a {
+  text-decoration: underline;
+}
+
+a:hover {
+  cursor: pointer;
+}
+
 ul {
 	list-style: none;
 	margin: 0;
@@ -42,15 +51,172 @@ ul {
 a {
 	color: #ffcd05;
 }
-#cwfmUserCtrl {
-	display: none;
-	overflow-y: scroll;
-	position: absolute;
-	height: 100%;
-	width: 100%;
-	z-index: 999;
-	background: rgba(43, 43, 43, 0.90);
+
+header {
+  padding: 5px 20px;
 }
+
+.header__dropdown_menu {
+  background: #333;
+  padding: 20px;
+  position: absolute;
+  z-index: 999;
+}
+
+.header__dropdown_menu li {
+  margin: 10px 0;
+}
+
+#cwfmUserCtrl {
+	display: block;
+}
+
+.modal {
+  display: block;
+  background: #f3cc2e;
+  border: 5px solid #fff;
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  webkit-border-radius: 8px;
+  -webkit-box-shadow: 0px -1px 20px #f3cc2e;
+  -moz-box-shadow: 0px -1px 20px #f3cc2e;
+  box-shadow: 0px -1px 20px #f3cc2e;
+  left: 12.5%;
+  max-height: 85%;
+  overflow-y: scroll;
+  padding: 20px;
+  position: absolute;
+  top: 40px;
+  width: 75%;
+  z-index: 999;
+}
+
+button.close {
+  background: #000;
+  border: 4px solid #fff;
+  border-radius: 22.5px;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 20px;
+  right: 11.5%;
+  height: 45px;
+  width: 45px;
+  z-index: 1000;
+}
+
+.modal .modal-header,
+.modal .modal-content {
+  float: left;
+  clear: both;
+  width: 100%;
+}
+
+.cwfmUserCtrl-hidden {
+  display: none;
+}
+
+.cwfmUserCtrl-visible {
+  display: block;
+}
+
+.modal .column {
+  float: left;
+  padding: 20px;
+  width: 45%;
+}
+
+.modal .column:first-of-type {
+  border-right: 5px solid #fff;
+  height: 100%;
+  margin-bottom: -500px;
+  margin-right: 5%;
+  padding-bottom: 480px;
+  padding-right: 5%;
+}
+
+.modal a {
+  color: #000;
+}
+
+.modal h3 {
+  color: #000;
+  font-size: 2em;
+  margin: 0 0 .25em 0;
+}
+
+.modal label {
+  color: #000;
+}
+
+.modal input {
+  border: 1px solid #fff;
+  font-size: 1em;
+  outline: none;
+  padding: 8px 12px;;
+
+  -webkit-transition: all 0.30s ease-in-out;
+  -moz-transition: all 0.30s ease-in-out;
+  -ms-transition: all 0.30s ease-in-out;
+  -o-transition: all 0.30s ease-in-out;
+  transition: all 0.30s ease-in-out;
+
+  -webkit-box-shadow:inset 0 0 2px #999;
+  -moz-box-shadow:inset 0 0 2px #999;
+  box-shadow:inset 0 0 2px #999;
+}
+
+.modal input:focus {
+  border: 1px solid rgba(0, 0, 0, 1);
+}
+
+.modal button {
+  background: #000;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1.2em;
+  margin: 8px;
+  padding: 8px 12px;
+}
+
+.modal button span {
+  margin-left: 12px;
+}
+
+#user-login input,
+#user-login button {
+  margin: 8px 0;
+  width: 100%;
+}
+
+.modal button:hover {
+  color: #f3cc2e;
+  cursor: pointer;
+}
+
+.avatar img {
+  min-width: 75px;
+  width: 10%;
+}
+
+#avatar-list {
+  float: left;
+  width: 100%;
+}
+
+#avatar-list div {
+  float: left;
+  min-width: 40px;
+  width: 5%;
+}
+
+#avatar-list div img {
+  min-width: 35px;
+  width: 100%;
+}
+
 .right-col {
 	right:0;
 	position: fixed;

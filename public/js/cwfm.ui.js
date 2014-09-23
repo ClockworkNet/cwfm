@@ -23,11 +23,4 @@ $( document ).ready(function() {
 		$playlists_btn.addClass('active');
 		$queue_btn.removeClass('active');
 	}
-
-	$('#admin_btn').on( 'click', function() {
-		$('#cwfmUserCtrl').show();
-	});
-	$('button.close').on('click', function() {
-		$('#cwfmUserCtrl').hide();
-	});
 });

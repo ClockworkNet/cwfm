@@ -1,21 +1,23 @@
-#user-control.pull-right(ng-show="me.auth")
+#user-control(ng-show="me.auth")
 	h3(ng-if="error") {{error}}
 
-	.dropdown
-		img(ng-src="/avatar/{{me.avatar}}", height="30px")
-		a.dropdown-toggle.btn.btn-link.btn-lg(data-toggle="dropdown", href="#user") {{me.username}} 
+	.header__dropdown
+		a.header__dropdown_toggle(ng-model="toggle_dropdown", ng-click="toggle_dropdown=!toggle_dropdown")
+			img(ng-src="/avatar/{{me.avatar}}", height="30px")
+			{{me.username}}
 
-		ul.dropdown-menu
+
+		ul.header__dropdown_menu(ng-show="toggle_dropdown")
 			li
-				a(data-toggle="modal", data-target="#user-edit", href="#edit-user") 
+				a(ng-model="show_user_modal", ng-click="show_user_modal=!show_user_modal")
 					span.glyphicon.glyphicon-edit &nbsp;
 					span Edit profile
 			li(ng-show="me.admin")
-				a(data-toggle="modal", data-target="#admin-panel", href="#admin")
+				a(ng-model="show_user_modal", ng-click="show_user_modal=!show_user_modal")
 					span.glyphicon.glyphicon-cog &nbsp;
 					span Administration
 			li
-				a(onclick="javascript:introJs().start(); return false;", href="#tour") 
+				a(onclick="javascript:introJs().start(); return false;", href="#tour")
 					span.glyphicon.glyphicon-road &nbsp;
 					span Tour Guide
 			li
@@ -23,52 +25,43 @@
 					span.glyphicon.glyphicon-log-out &nbsp;
 					span Log Out
 
-	.modal#user-edit
+	button.close(ng-model="show_user_modal", ng-click="show_user_modal=!show_user_modal" ng-show="!me.auth || show_user_modal") &times;
+	.modal#user-edit(ng-show="!me.auth || show_user_modal")
 		.modal-dialog.modal-lg
 			.modal-content
-				.modal-header
-					button.close(data-dismiss="modal") &times;
-					h3 Update your Profile 
 				.modal-body
+					h3 Update your Profile
 					form
 						.row
+							.avatar
+								strong(ng-show="avatarUrls") Select a New Avatar
+								.form-group.center-block
+									a(ng-click="loadAvatars()", href="#select-avatar")
+										img(ng-src="/avatar/{{me.avatar}}")
+								.row#avatar-list(ng-show="avatarUrls")
+									.col-md-3(ng-repeat="url in avatarUrls")
+										a.thumbnail(ng-click="selectAvatar(url)", href="#select-avatar")
+											img(ng-src="/avatar/{{url}}")
 							.col-md-4
 								.form-group
 									label(for="realname") Real name
 									input#realname(ng-model="me.realname", placeholder="Your real name")
 
-								.form-group.center-block
-									a(ng-click="loadAvatars()", href="#select-avatar")
-										img(ng-src="/avatar/{{me.avatar}}")
-
-							.col-md-8
-								strong(ng-show="avatarUrls") Select a New Avatar
-								.row#avatar-list(ng-show="avatarUrls")
-									.col-md-3(ng-repeat="url in avatarUrls")
-										a.thumbnail(ng-click="selectAvatar(url)", href="#select-avatar")
-											img(ng-src="/avatar/{{url}}")
 					.clearfix
-				.modal-footer
 					button.btn.btn-default(data-dismiss="modal") Cancel
 					button.btn.btn-primary(data-dismiss="modal", ng-click="save()") Save Changes
 
-	.modal#admin-panel
-		.modal-dialog
-			.modal-content
-				.modal-header
-					button.close(data-dismiss="modal") &times;
 					h3 Administration
-					.alert.alert-info.alert-dismissable(ng-show="adminMessage", ng-class="{{adminMessage.type}}") 
+					.alert.alert-info.alert-dismissable(ng-show="adminMessage", ng-class="{{adminMessage.type}}")
 						button.close(data-dismiss="alert") &times;
 						span {{adminMessage.content}}
-				.modal-body
 					.row
 						.col-md-6
 							.input-group
 								input.form-control(ng-model="user.username", placeholder="Find a user")
 								.dropdown.input-group-btn
-									a.btn.btn-default.dropdown-toggle(data-toggle="dropdown", href="#Change") Modify 
-										span.caret 
+									a.btn.btn-default.dropdown-toggle(data-toggle="dropdown", href="#Change") Modify
+										span.caret
 									ul.dropdown-menu.pull-right
 										li
 											a(ng-click="adminify()", href="#make-admin")
@@ -77,34 +70,35 @@
 										li
 											a(ng-click="demote()", href="#demote")
 												span.glyphicon.glyphicon-thumbs-down &nbsp;
-												span Demote 
+												span Demote
 										li
 											a(ng-click="boot()", href="#boot")
 												span.glyphicon.glyphicon-fire &nbsp;
 												span Boot
 
 div(ng-hide="me.auth")
-	div.col-md-6
-		h3 Log in
-		form(role="form")
-			div.form-group
-				input.form-control(ng-model="me.username", placeholder="Username")
-			div.form-group
-				input.form-control(ng-model="me.password", type="password", placeholder="Password")
-			button.btn.btn-default(ng-click="login()") Log in 
-				span.glyphicon.glyphicon-log-in 
+	.modal#user-login
+		div.column
+			h3 Log in
+			form(role="form")
+				div.form-group
+					input.form-control(ng-model="me.username", placeholder="Username")
+				div.form-group
+					input.form-control(ng-model="me.password", type="password", placeholder="Password")
+				button.btn.btn-default(ng-click="login()") Log in
+					span.glyphicon.glyphicon-log-in
 
-	div.col-md-6
-		h3 Create an Account
-		form(role="form")
-			div.form-group
-				label.sr-only(for="new-username") Create a username
-				input#new-username.form-control(ng-model="newUser.username", placeholder="Username")
-			div.form-group
-				label.sr-only(for="new-password1") Create a password
-				input#new-password1.form-control(ng-model="newUser.password1", type="password", placeholder="Create a password")
-			div.form-group
-				label.sr-only(for="new-password2") Enter your password again
-				input#new-password2.form-control(ng-model="newUser.password2", type="password", placeholder="Enter your password again")
-			button.btn.btn-default(ng-click="createUser()") Create an Account 
-				span.glyphicon.glyphicon-plus-sign
+		div.column
+			h3 Create an Account
+			form(role="form")
+				div.form-group
+					label.sr-only(for="new-username") Create a username
+					input#new-username.form-control(ng-model="newUser.username", placeholder="Username")
+				div.form-group
+					label.sr-only(for="new-password1") Create a password
+					input#new-password1.form-control(ng-model="newUser.password1", type="password", placeholder="Create a password")
+				div.form-group
+					label.sr-only(for="new-password2") Enter your password again
+					input#new-password2.form-control(ng-model="newUser.password2", type="password", placeholder="Enter your password again")
+				button.btn.btn-default(ng-click="createUser()") Create an Account
+					span.glyphicon.glyphicon-plus-sign
